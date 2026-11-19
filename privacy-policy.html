@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - DocErena</title>
+  <style>
+    :root {
+      --primary: #7C3AED;
+      --primary-light: #EDE9FE;
+      --text: #1E1B18;
+      --text-muted: #64748B;
+      --bg: #FCFAFD;
+      --card-bg: #FFFFFF;
+      --border: #E2E8F0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 40px 32px;
+      border-radius: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      border: 1px border var(--border);
+    }
+    .header {
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+    p, li {
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+    ul {
+      margin-left: 20px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    .highlight-card {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+    .highlight-card p {
+      color: #5B21B6;
+      font-weight: 600;
+      margin: 0;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">100% Offline Guarantee</span>
+      <h1>Privacy Policy for DocErena</h1>
+      <p class="meta"><strong>Effective Date:</strong> November 19, 2026 | <strong>Package:</strong> com.digitalerena.docerena</p>
+    </div>
+
+    <div class="highlight-card">
+      <p>DocErena is a 100% offline mobile document scanner. It does not collect, record, track, transmit, upload, or sell any of your personal information, document scans, camera streams, or device data.</p>
+    </div>
+
+    <h2>1. Overview & Core Privacy Guarantee</h2>
+    <p>DocErena is built from the ground up as a privacy-first mobile document scanner. We believe your sensitive personal documents, contracts, identification cards, and receipts should remain completely private. All processing occurs locally on your device's hardware processor.</p>
+
+    <h2>2. Zero Network Connection Guarantee</h2>
+    <ul>
+      <li><strong>No Internet Permission:</strong> DocErena does not include <code>android.permission.INTERNET</code> in its application manifest.</li>
+      <li><strong>Offline Processing:</strong> Document edge detection, perspective homography warping, Magic Color image enhancement, and ISO 32000-1 binary PDF compilation run 100% on-device.</li>
+      <li><strong>Zero Cloud Telemetry:</strong> No analytics trackers, advertising SDKs, third-party trackers, or cloud backups. No data ever leaves your device.</li>
+    </ul>
+
+    <h2>3. Device Permissions & How They Are Used</h2>
+    <h3>A. Camera (<code>android.permission.CAMERA</code>)</h3>
+    <p>Used strictly to display the live camera viewfinder and allow you to capture physical documents, pages, books, and identification cards. Camera frames are processed strictly in local device memory and are never transmitted over any network.</p>
+
+    <h3>B. Notifications (<code>android.permission.POST_NOTIFICATIONS</code>)</h3>
+    <p>On devices running Android 13 (API 33) or higher, DocErena requests this permission to notify you when an offline PDF export, page batch compilation, or backup operation finishes. Alerts are generated purely locally on your operating system.</p>
+
+    <h3>C. Storage Access (Storage Access Framework)</h3>
+    <p>When you choose to export a PDF document or import an existing image from your device, DocErena interacts with the standard Android Storage Access Framework (SAF), accessing only the specific files or folders you explicitly select.</p>
+
+    <h2>4. Data Storage, Retention, and Deletion</h2>
+    <ul>
+      <li><strong>Local Storage Only:</strong> All scanned pages, folders, favorites, and documents are stored exclusively within DocErena's sandboxed private application storage.</li>
+      <li><strong>User Control:</strong> You retain full ownership and control over all documents. You can rename, reorder, export, or delete any document at any time.</li>
+      <li><strong>Permanent Erasure:</strong> When you delete a document and empty the Recycle Bin (Trash), the file data is permanently and irreversibly destroyed.</li>
+      <li><strong>App Uninstallation:</strong> Uninstalling DocErena permanently removes all local documents and settings stored within the app sandbox.</li>
+    </ul>
+
+    <h2>5. Third-Party Services & Libraries</h2>
+    <p>DocErena does not integrate with or use any third-party services that collect personal data. There are no analytics libraries (Firebase, Google Analytics), no ad networks, no social sign-ins, and no external CDNs.</p>
+
+    <h2>6. Children's Privacy</h2>
+    <p>Because DocErena collects no data whatsoever from any user, it fully complies with the Children’s Online Privacy Protection Act (COPPA), the General Data Protection Regulation (GDPR), and the California Consumer Privacy Act (CCPA).</p>
+
+    <h2>7. Contact Information</h2>
+    <p>If you have any questions regarding this Privacy Policy or DocErena's offline privacy commitments, please contact:</p>
+    <ul>
+      <li><strong>Developer:</strong> Aamish Khan (DigitalErena)</li>
+      <li><strong>Repository:</strong> <a href="https://github.com/AAMISHKHAN0/doc_erena" target="_blank">github.com/AAMISHKHAN0/doc_erena</a></li>
+      <li><strong>Support Email:</strong> <a href="mailto:aamishkhan0@gmail.com">aamishkhan0@gmail.com</a></li>
+    </ul>
+
+    <div class="footer">
+      &copy; 2026 DocErena / DigitalErena. All rights reserved. 100% Offline Mobile Document Studio.
+    </div>
+  </div>
+</body>
+</html>

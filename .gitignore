@@ -1,0 +1,78 @@
+# Build & Temporary Artifacts
+*.tmp
+*.log
+__pycache__/
+*.pyc
+
+# Third-party binary tools
+build_apk/bundletool-all.jar
+
+# Obsolete build APKs & duplicates
+*v2*.apk
+*v3*.apk
+*v4*.apk
+docerena.apk
+build_apk/*.apk
+build_apk/*.aab
+web_preview/*.apk
+web_preview/*.aab
+
+# Loose root debug files
+/*.png
+/*.jpg
+/*.xml
+/*.idsig
+/check_back.py
+/subagent_last_report.txt
+
+# Scratch debug dumps and temporary screenshots
+scratch/*.xml
+scratch/*.png
+scratch/*.jpg
+scratch/*.pdf
+scratch/*.raw
+scratch/*.json
+scratch/*.js
+scratch/*.ps1
+scratch/screenshots_v5/
+scratch/test_*.py
+scratch/check_*.py
+scratch/inspect_*.py
+scratch/locate_*.py
+scratch/read_*.py
+scratch/save_*.py
+scratch/scan_*.py
+scratch/update_*.py
+scratch/verify_*.py
+scratch/tess_test/
+scratch/parts_backup/
+
+# Intermediate build outputs
+build_apk/classes/
+build_apk/dex/
+build_apk/base.apk
+build_apk/aligned_v4.apk
+build_apk/unaligned_v4.apk
+build_apk/aligned_v5.apk
+build_apk/unaligned_v5.apk
+build_apk/bundle_apks.apks
+build_apk/bundle_module/
+build_apk/base_proto.zip
+build_apk/base_module.zip
+build_apk/compiled_res.zip
+
+# Large duplicate review package zips (keep in releases, avoid git bloat)
+*.zip
+
+# Android Studio / Gradle
+.gradle/
+build/
+android/app/build/
+android/.gradle/
+local.properties
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
