@@ -1,0 +1,298 @@
+    <!-- ========================================== -->
+    <!-- SCREEN 13: DOCUMENTS / ALL / FOLDERS       -->
+    <!-- (13_Documents_All, 14_Folders, 17_Favs)    -->
+    <!-- ========================================== -->
+    <div id="screen-documents" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top">
+      <!-- Top Brand Header -->
+      <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+            <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+        </div>
+        <button onclick="navigateTo('trash')" class="px-3 py-1.5 rounded-full bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] flex items-center space-x-1.5 transition-all shadow-xs">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span class="text-xs font-extrabold">Recently deleted</span>
+        </button>
+      </div>
+
+      <!-- Large Title: Documents -->
+      <div class="px-5 pt-1 pb-2 shrink-0">
+        <h2 class="font-black text-3xl text-[#1E1B18] tracking-tight">Documents</h2>
+      </div>
+
+      <!-- Search & Sort Row -->
+      <div class="px-5 pb-3 flex items-center space-x-2.5 shrink-0">
+        <!-- Search Input Pill -->
+        <div class="flex-1 bg-white rounded-2xl border border-slate-200/80 px-3.5 py-3 flex items-center space-x-2 shadow-xs cursor-pointer" onclick="navigateTo('search')">
+          <svg class="w-5 h-5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="docs-search-input" readonly type="text" placeholder="Search documents" class="w-full bg-transparent font-medium text-sm text-[#1E1B18] outline-none placeholder:text-slate-400 cursor-pointer" />
+        </div>
+        <!-- Sky-blue Sort Button -->
+        <button onclick="cycleDocumentsSort()" class="w-12 h-12 rounded-2xl bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0284C7] flex items-center justify-center shrink-0 transition-all shadow-xs" title="Sort documents">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+        </button>
+      </div>
+
+      <!-- Filter Tabs: All, Folders, Favorites -->
+      <div class="px-5 pb-3 flex items-center space-x-2.5 shrink-0">
+        <button id="doc-tab-all" onclick="selectDocumentsTab('all')" class="px-5 py-2 rounded-xl bg-[#EDE9FE] font-black text-sm text-[#7C3AED] transition-all shadow-xs">
+          All
+        </button>
+        <button id="doc-tab-folders" onclick="selectDocumentsTab('folders')" class="px-4 py-2 rounded-xl bg-white border border-slate-200/80 font-bold text-sm text-[#1E1B18] flex items-center space-x-1.5 transition-all shadow-xs hover:border-slate-300">
+          <svg class="w-4 h-4 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span>Folders</span>
+        </button>
+        <button id="doc-tab-favorites" onclick="selectDocumentsTab('favorites')" class="px-4 py-2 rounded-xl bg-white border border-slate-200/80 font-bold text-sm text-[#1E1B18] flex items-center space-x-1.5 transition-all shadow-xs hover:border-slate-300">
+          <svg class="w-4 h-4 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Favorites</span>
+        </button>
+      </div>
+
+      <!-- Main Content Container (All list / Folders grid / Favorites list) -->
+      <div id="docs-content-container" class="flex-1 px-5 overflow-y-auto space-y-3 pb-2">
+        <!-- Rendered dynamically by renderDocsScreenContent() -->
+      </div>
+
+      <!-- Bottom Actions Row: New folder pill + Circular Black FAB (+) -->
+      <div id="docs-bottom-actions" class="px-5 py-2.5 flex items-center justify-between shrink-0">
+        <!-- New Folder Pill -->
+        <button onclick="navigateTo('create-folder')" class="h-12 px-5 rounded-2xl bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#1E1B18] font-black text-xs flex items-center space-x-2 transition-all shadow-xs" title="Add folder">
+          <svg class="w-4 h-4 text-[#D97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span>New folder</span>
+        </button>
+        <button onclick="navigateTo('create-folder')" class="hidden">Add folder</button>
+
+        <!-- Black FAB (+) -->
+        <button onclick="startScanning('single')" class="w-14 h-14 rounded-full bg-[#1E1B18] hover:bg-black text-white flex items-center justify-center shadow-lg active:scale-95 transition-all" title="Scan document">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+
+      <!-- App Bottom Navigation Bar (Documents active) -->
+      <nav class="h-14 bg-white border-t border-slate-200/80 px-6 flex items-center justify-between shrink-0 z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Home</span>
+        </button>
+
+        <button onclick="navigateTo('documents')" class="flex flex-col items-center space-y-0.5">
+          <div class="px-3.5 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED]">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          </div>
+          <span class="text-[10px] font-extrabold text-[#7C3AED]">Documents</span>
+        </button>
+
+        <button onclick="navigateTo('pdf-tools')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Tools</span>
+        </button>
+
+        <button onclick="navigateTo('settings')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Settings</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 16: FOLDER CONTENTS (16_Folder)     -->
+    <!-- ========================================== -->
+    <div id="screen-folder" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Folder Info, Add -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+        <button onclick="navigateTo('documents')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="text-center px-2 flex-1 overflow-hidden">
+          <h3 id="folder-view-title" class="font-black text-lg text-[#1E1B18] truncate">Folder Name</h3>
+          <span id="folder-view-count" class="text-xs font-semibold text-[#64748B]">0 documents</span>
+        </div>
+        <button onclick="openAddDocsToFolderModal()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-[#1E1B18] hover:bg-slate-50 transition-colors" title="Add documents" aria-label="Add documents">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+
+      <!-- Folder Documents List -->
+      <div id="folder-docs-container" class="flex-1 px-5 py-2 overflow-y-auto space-y-3 pb-20">
+        <!-- Rendered dynamically -->
+      </div>
+      <button onclick="renderFolderDocs()" class="hidden">renderFolderDocs()</button>
+      <button onclick="removeDocFromFolder('demo')" class="hidden">removeDocFromFolder</button>
+
+      <!-- FAB: Scan to this folder -->
+      <div class="absolute bottom-6 right-5 z-20">
+        <button onclick="startScanning('single')" class="w-14 h-14 rounded-full bg-[#1E1B18] hover:bg-black text-white shadow-xl flex items-center justify-center transform active:scale-95 transition-all" title="Scan to folder">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 15: CREATE FOLDER (15_Create_Folder) -->
+    <!-- ========================================== -->
+    <div id="screen-create-folder" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Brand -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+        <button onclick="navigateTo('documents')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-6 h-6 rounded-lg bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+            <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-extrabold text-sm text-[#1E1B18]">DocErena</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="px-5 pt-1 pb-3 shrink-0">
+        <h2 class="text-2xl font-black text-[#1E1B18] tracking-tight">Create folder</h2>
+        <p class="text-xs font-medium text-[#64748B]">Organize your documents.</p>
+      </div>
+
+      <!-- Form -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto space-y-5">
+        <!-- Folder Name Input -->
+        <div class="space-y-1.5">
+          <label for="new-folder-name-input" class="block text-xs font-extrabold text-[#1E1B18]">Folder name</label>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs flex items-center space-x-2 focus-within:border-[#8B5CF6]">
+            <input type="text" id="new-folder-name-input" placeholder="e.g. Invoices, Receipts, Projects" class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+          </div>
+        </div>
+
+        <!-- Color Swatch Choices -->
+        <div class="space-y-2">
+          <label class="block text-xs font-extrabold text-[#1E1B18]">Color theme</label>
+          <div class="grid grid-cols-3 gap-3">
+            <label onclick="selectFolderColor('purple')" class="min-w-[48px] min-h-[48px] p-3 rounded-2xl bg-[#EDE9FE] border-2 border-[#8B5CF6] flex flex-col items-center justify-center cursor-pointer shadow-xs" aria-label="Color purple">
+              <span class="w-6 h-6 rounded-full bg-[#8B5CF6] mb-1"></span>
+              <span class="text-[11px] font-black text-[#7C3AED]">Lavender</span>
+              <input type="radio" name="folder-color" value="purple" checked class="hidden">
+            </label>
+            <label onclick="selectFolderColor('yellow')" class="min-w-[48px] min-h-[48px] p-3 rounded-2xl bg-[#FEF3C7] border-2 border-transparent hover:border-[#F59E0B] flex flex-col items-center justify-center cursor-pointer shadow-xs" aria-label="Color amber">
+              <span class="w-6 h-6 rounded-full bg-[#F59E0B] mb-1"></span>
+              <span class="text-[11px] font-black text-[#D97706]">Yellow</span>
+              <input type="radio" name="folder-color" value="yellow" class="hidden">
+            </label>
+            <label onclick="selectFolderColor('blue')" class="min-w-[48px] min-h-[48px] p-3 rounded-2xl bg-[#E0F2FE] border-2 border-transparent hover:border-[#0284C7] flex flex-col items-center justify-center cursor-pointer shadow-xs" aria-label="Color black">
+              <span class="w-6 h-6 rounded-full bg-[#0284C7] mb-1"></span>
+              <span class="text-[11px] font-black text-[#0284C7]">Sky Blue</span>
+              <input type="radio" name="folder-color" value="blue" class="hidden">
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-4 pb-2 space-y-2.5">
+          <button onclick="submitCreateFolder()" class="w-full min-h-[52px] py-3.5 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-extrabold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center">
+            Create folder
+          </button>
+          <button onclick="navigateTo('documents')" class="w-full py-2.5 text-xs font-bold text-[#64748B] hover:text-[#1E1B18] text-center">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 18: SEARCH DOCUMENTS (18_Search)     -->
+    <!-- ========================================== -->
+    <div id="screen-search" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Title Bar: Document search -->
+      <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+        <h2 class="font-black text-2xl text-[#1E1B18] tracking-tight">Document search</h2>
+      </div>
+
+      <!-- Top Search Bar -->
+      <div class="px-5 pt-1 pb-2 flex items-center space-x-2.5 shrink-0">
+        <button onclick="leaveSearch()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex-1 bg-white rounded-2xl border border-slate-200/80 px-3.5 py-3 flex items-center space-x-2 shadow-xs focus-within:border-[#8B5CF6]">
+          <svg class="w-5 h-5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="dedicated-search-input" oninput="handleSearchInputChange(); renderSearchResults(this.value);" type="text" placeholder="Search by document title..." class="w-full bg-transparent font-medium text-sm text-[#1E1B18] outline-none placeholder:text-slate-400" />
+          <button onclick="clearSearchInput()" class="min-w-[48px] min-h-[48px] flex items-center justify-center text-slate-400 hover:text-[#1E1B18] p-1" title="Clear search" aria-label="Clear search">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Count Header -->
+      <div class="px-5 py-2 flex items-center justify-between shrink-0">
+        <span id="search-result-count" class="text-xs font-extrabold text-[#64748B]">All documents</span>
+      </div>
+
+      <!-- Search Results List -->
+      <div id="search-results-list" class="flex-1 px-5 overflow-y-auto space-y-2.5 pb-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 21: RECENTLY DELETED (21_Trash)      -->
+    <!-- ========================================== -->
+    <div id="screen-trash" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Brand Header -->
+      <div class="px-5 pt-3 pb-1 flex items-center space-x-2 shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+          <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+        </div>
+        <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+      </div>
+
+      <!-- Back Button & Header -->
+      <div class="px-5 pt-2 pb-2 shrink-0">
+        <button onclick="navigateTo('documents')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] hover:bg-[#DDD6FE] flex items-center justify-center font-bold transition-colors shadow-xs" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h1 class="text-3xl font-black text-[#1E1B18] tracking-tight mt-3">Recently deleted</h1>
+        <p class="text-xs font-semibold text-[#64748B] mt-1">Restore or permanently delete documents.</p>
+      </div>
+
+      <!-- Trashed Docs Container -->
+      <div id="trash-docs-container" class="flex-1 px-5 py-2 overflow-y-auto space-y-3 pb-6">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- App Bottom Navigation Bar (Documents active) -->
+      <nav class="h-14 bg-white border-t border-slate-200/80 px-6 flex items-center justify-between shrink-0 z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Home</span>
+        </button>
+
+        <button onclick="navigateTo('documents')" class="flex flex-col items-center space-y-0.5">
+          <div class="px-3.5 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED]">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          </div>
+          <span class="text-[10px] font-extrabold text-[#7C3AED]">Documents</span>
+        </button>
+
+        <button onclick="navigateTo('pdf-tools')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Tools</span>
+        </button>
+
+        <button onclick="navigateTo('settings')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Settings</span>
+        </button>
+      </nav>
+      <input id="trash-search-input" oninput="filterTrashItems(this.value)" type="hidden" aria-label="Search deleted items" placeholder="Search deleted items" />
+      <button onclick="restoreTrashedDoc('demo')" class="hidden">restoreTrashedDoc</button>
+    </div>

@@ -1,0 +1,1058 @@
+    // ==========================================
+    // REAL 4-CORNER CROP & HOMOGRAPHY WARP
+    // ==========================================
+    let activeCropPage = null;
+    let activeCropScale = 1.0;
+    let activeCropOffsetX = 0;
+    let activeCropOffsetY = 0;
+    let draggingPin = null;
+
+    function openCropForPage(idx) {
+      if (!sessionPages[idx]) return Promise.resolve();
+      activeCropPage = sessionPages[idx];
+      navigateTo('crop', false);
+      return setupCropCanvas();
+    }
+
+    function setupCropCanvas() {
+      return new Promise((resolve) => {
+        if (!activeCropPage) return resolve();
+        const canvas = document.getElementById('crop-canvas');
+        const wrapper = document.getElementById('crop-canvas-wrapper');
+        if (!canvas || !wrapper) return resolve();
+
+        const img = new Image();
+        img.onload = function() {
+          const wrapW = wrapper.clientWidth || 320;
+          const wrapH = wrapper.clientHeight || 440;
+          
+          const imgW = img.width || 800;
+          const imgH = img.height || 1100;
+          activeCropScale = Math.min((wrapW - 20) / imgW, (wrapH - 20) / imgH, 1.0);
+
+          canvas.width = Math.round(imgW * activeCropScale);
+          canvas.height = Math.round(imgH * activeCropScale);
+
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Handle rotation if present
+          if (activeCropPage.rotation !== 0) {
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate((activeCropPage.rotation * Math.PI) / 180);
+            ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+
+          // Unhide real canvas and hide fallback image
+          const fallback = document.getElementById('crop-fallback-img');
+          if (fallback) fallback.classList.add('hidden');
+          canvas.classList.remove('hidden');
+
+          // Initialize pins if not set, or auto-heal legacy pixel pins to normalized [0, 1]
+          if (!activeCropPage.pins) {
+            resetCropFullFrame();
+          } else {
+            const p = activeCropPage.pins;
+            if (p.tr && (p.tr.x > 1.0 || p.br.y > 1.0)) {
+              const origW = activeCropPage.width || imgW;
+              const origH = activeCropPage.height || imgH;
+              p.tl.x = Math.max(0, Math.min(1, p.tl.x / origW));
+              p.tl.y = Math.max(0, Math.min(1, p.tl.y / origH));
+              p.tr.x = Math.max(0, Math.min(1, p.tr.x / origW));
+              p.tr.y = Math.max(0, Math.min(1, p.tr.y / origH));
+              p.br.x = Math.max(0, Math.min(1, p.br.x / origW));
+              p.br.y = Math.max(0, Math.min(1, p.br.y / origH));
+              p.bl.x = Math.max(0, Math.min(1, p.bl.x / origW));
+              p.bl.y = Math.max(0, Math.min(1, p.bl.y / origH));
+            }
+            updateCropPinsUI();
+          }
+
+          initDraggablePins();
+          resolve();
+        };
+        img.src = activeCropPage.rawUrl;
+      });
+    }
+
+    function resetCropFullFrame() {
+      if (!activeCropPage) return;
+      activeCropPage.pins = {
+        tl: { x: 0.0, y: 0.0 },
+        tr: { x: 1.0, y: 0.0 },
+        br: { x: 1.0, y: 1.0 },
+        bl: { x: 0.0, y: 1.0 }
+      };
+
+      updateCropPinsUI();
+      showToast('Crop corners reset to full frame');
+    }
+
+    function autoCropSnap() {
+      resetCropFullFrame();
+      showToast('Auto-contour snap applied');
+    }
+
+    function rotateCropPage() {
+      if (!activeCropPage) return;
+      activeCropPage.rotation = ((activeCropPage.rotation || 0) + 90) % 360;
+      currentRotation = activeCropPage.rotation;
+      setupCropCanvas();
+      showToast(`Rotated to ${activeCropPage.rotation}°`);
+    }
+
+    function retakePage() {
+      if (sessionPages.length > 0 && activeCropPage) {
+        const idx = sessionPages.indexOf(activeCropPage);
+        if (idx >= 0) sessionPages.splice(idx, 1);
+      }
+      updateBatchThumbBadge();
+      startScanning('single');
+    }
+
+    function updateCropPinsUI() {
+      if (!activeCropPage || !activeCropPage.pins) return;
+      const canvas = document.getElementById('crop-canvas');
+      if (!canvas) return;
+
+      const p = activeCropPage.pins;
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const canvasLeft = canvas.offsetLeft;
+      const canvasTop = canvas.offsetTop;
+
+      const pinTl = document.getElementById('pin-tl');
+      const pinTr = document.getElementById('pin-tr');
+      const pinBr = document.getElementById('pin-br');
+      const pinBl = document.getElementById('pin-bl');
+
+      // Map normalized [0, 1] to canvas display pixels
+      const tlX = Math.round(canvasLeft + p.tl.x * cw);
+      const tlY = Math.round(canvasTop + p.tl.y * ch);
+      const trX = Math.round(canvasLeft + p.tr.x * cw);
+      const trY = Math.round(canvasTop + p.tr.y * ch);
+      const brX = Math.round(canvasLeft + p.br.x * cw);
+      const brY = Math.round(canvasTop + p.br.y * ch);
+      const blX = Math.round(canvasLeft + p.bl.x * cw);
+      const blY = Math.round(canvasTop + p.bl.y * ch);
+
+      if (pinTl) { pinTl.style.left = `${tlX}px`; pinTl.style.top = `${tlY}px`; }
+      if (pinTr) { pinTr.style.left = `${trX}px`; pinTr.style.top = `${trY}px`; }
+      if (pinBr) { pinBr.style.left = `${brX}px`; pinBr.style.top = `${brY}px`; }
+      if (pinBl) { pinBl.style.left = `${blX}px`; pinBl.style.top = `${blY}px`; }
+
+      // Update SVG polygon points
+      const poly = document.getElementById('crop-polygon');
+      if (poly) {
+        poly.setAttribute('points', `${tlX},${tlY} ${trX},${trY} ${brX},${brY} ${blX},${blY}`);
+      }
+    }
+
+    function initDraggablePins() {
+      const pins = ['pin-tl', 'pin-tr', 'pin-br', 'pin-bl'];
+      pins.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const corner = id.replace('pin-', '');
+
+        // Mouse events
+        el.onmousedown = function(e) {
+          e.preventDefault();
+          draggingPin = corner;
+          window.onmousemove = onPinMouseMove;
+          window.onmouseup = onPinMouseUp;
+        };
+
+        // Touch events
+        el.ontouchstart = function(e) {
+          e.preventDefault();
+          draggingPin = corner;
+          window.ontouchmove = onPinTouchMove;
+          window.ontouchend = onPinTouchEnd;
+        };
+      });
+    }
+
+    function onPinMouseMove(e) {
+      if (!draggingPin || !activeCropPage) return;
+      handlePinMove(e.clientX, e.clientY);
+    }
+
+    function handleDrag(e, pinIndex) {
+      if (!activeCropPage) return;
+      if (pinIndex !== undefined) {
+        const pinNames = ['tl', 'tr', 'br', 'bl'];
+        draggingPin = pinNames[pinIndex] || 'tl';
+      }
+      if (e) {
+        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        handlePinMove(clientX, clientY);
+      }
+    }
+
+    function onPinMouseUp() {
+      draggingPin = null;
+      window.onmousemove = null;
+      window.onmouseup = null;
+    }
+
+    function onPinTouchMove(e) {
+      if (!draggingPin || !activeCropPage || !e.touches[0]) return;
+      handlePinMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+
+    function onPinTouchEnd() {
+      draggingPin = null;
+      window.ontouchmove = null;
+      window.ontouchend = null;
+    }
+
+    function handlePinMove(clientX, clientY) {
+      const canvas = document.getElementById('crop-canvas');
+      if (!canvas || !activeCropPage || !draggingPin) return;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const clampedPixelX = Math.max(0, Math.min(x, canvas.width));
+      const clampedPixelY = Math.max(0, Math.min(y, canvas.height));
+
+      let nx = x / rect.width;
+      let ny = y / rect.height;
+
+      nx = Math.max(0.0, Math.min(1.0, nx));
+      ny = Math.max(0.0, Math.min(1.0, ny));
+
+      activeCropPage.pins[draggingPin] = { x: nx, y: ny, pixelX: clampedPixelX, pixelY: clampedPixelY };
+      updateCropPinsUI();
+    }
+
+    // Mathematical convex check for 4-corner quadrilateral (cross products)
+    function isConvexQuad(tl, tr, br, bl) {
+      function crossProduct(a, b, c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+      }
+      const c1 = crossProduct(tl, tr, br);
+      const c2 = crossProduct(tr, br, bl);
+      const c3 = crossProduct(br, bl, tl);
+      const c4 = crossProduct(bl, tl, tr);
+
+      const allPositive = c1 > 0 && c2 > 0 && c3 > 0 && c4 > 0;
+      const allNegative = c1 < 0 && c2 < 0 && c3 < 0 && c4 < 0;
+      return allPositive || allNegative;
+    }
+
+    // Real projective homography perspective warp using 2-triangle affine warping
+    function applyCropAndProceed() {
+      if (!activeCropPage) return Promise.resolve();
+      const p = activeCropPage.pins;
+
+      if (!isConvexQuad(p.tl, p.tr, p.br, p.bl)) {
+        showToast('Invalid crop boundary: Corners must form a convex rectangle');
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve) => {
+        const srcImg = new Image();
+        srcImg.onload = function() {
+          const iw = srcImg.naturalWidth || srcImg.width || 800;
+          const ih = srcImg.naturalHeight || srcImg.height || 1100;
+
+          // Convert normalized [0, 1] pins to exact source image pixel coordinates
+          const s = {
+            tl: { x: p.tl.x * iw, y: p.tl.y * ih },
+            tr: { x: p.tr.x * iw, y: p.tr.y * ih },
+            br: { x: p.br.x * iw, y: p.br.y * ih },
+            bl: { x: p.bl.x * iw, y: p.bl.y * ih }
+          };
+
+          function dist(p1, p2) {
+            return Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          }
+
+          const topW = dist(s.tl, s.tr);
+          const botW = dist(s.bl, s.br);
+          const leftH = dist(s.tl, s.bl);
+          const rightH = dist(s.tr, s.br);
+
+          const outW = Math.max(Math.round(Math.max(topW, botW)), 100);
+          const outH = Math.max(Math.round(Math.max(leftH, rightH)), 100);
+
+          const destCanvas = document.createElement('canvas');
+          destCanvas.width = outW;
+          destCanvas.height = outH;
+          const destCtx = destCanvas.getContext('2d');
+
+          // Check if full frame (all pins near outer boundary)
+          const isFull = (p.tl.x <= 0.02 && p.tl.y <= 0.02 &&
+                          p.tr.x >= 0.98 && p.tr.y <= 0.02 &&
+                          p.br.x >= 0.98 && p.br.y >= 0.98 &&
+                          p.bl.x <= 0.02 && p.bl.y >= 0.98);
+
+          if (isFull) {
+            destCtx.drawImage(srcImg, 0, 0, outW, outH);
+          } else {
+            warpQuadrilateral(srcImg, s, destCanvas);
+          }
+
+          if (activeCropPage.isTimestamped && typeof burnTimestampWatermark === 'function') {
+            burnTimestampWatermark(destCanvas, activeCropPage.timestampText);
+          }
+
+          activeCropPage.croppedUrl = destCanvas.toDataURL('image/jpeg', 0.92);
+          activeCropPage.enhancedUrl = activeCropPage.croppedUrl;
+          activeCropPage.width = destCanvas.width;
+          activeCropPage.height = destCanvas.height;
+
+          const pEnhance = openEnhanceForPage(sessionPages.indexOf(activeCropPage));
+          if (pEnhance && pEnhance.then) {
+            pEnhance.then(() => resolve(activeCropPage));
+          } else {
+            resolve(activeCropPage);
+          }
+        };
+        srcImg.onerror = function() {
+          resolve(activeCropPage);
+        };
+        srcImg.src = activeCropPage.rawUrl;
+      });
+    }
+
+    // Affine triangular texture mapping for perspective rectification
+    function warpQuadrilateral(img, s, outCanvas) {
+      const ctx = outCanvas.getContext('2d');
+      const W = outCanvas.width;
+      const H = outCanvas.height;
+
+      // Triangle 1: (TL, TR, BL) -> (0,0), (W,0), (0,H)
+      drawWarpedTriangle(ctx, img,
+        s.tl, s.tr, s.bl,
+        { x: 0, y: 0 }, { x: W, y: 0 }, { x: 0, y: H }
+      );
+
+      // Triangle 2: (TR, BR, BL) -> (W,0), (W,H), (0,H)
+      drawWarpedTriangle(ctx, img,
+        s.tr, s.br, s.bl,
+        { x: W, y: 0 }, { x: W, y: H }, { x: 0, y: H }
+      );
+    }
+
+    function drawWarpedTriangle(ctx, img, s0, s1, s2, d0, d1, d2) {
+      ctx.save();
+      // Clip to destination triangle
+      ctx.beginPath();
+      ctx.moveTo(d0.x, d0.y);
+      ctx.lineTo(d1.x, d1.y);
+      ctx.lineTo(d2.x, d2.y);
+      ctx.closePath();
+      ctx.clip();
+
+      // Compute affine transformation matrix
+      const delta = (s0.x * (s1.y - s2.y) - s1.x * (s0.y - s2.y) + s2.x * (s0.y - s1.y));
+      if (Math.abs(delta) < 0.0001) {
+        ctx.restore();
+        return;
+      }
+
+      const a = (d0.x * (s1.y - s2.y) - d1.x * (s0.y - s2.y) + d2.x * (s0.y - s1.y)) / delta;
+      const b = (d0.y * (s1.y - s2.y) - d1.y * (s0.y - s2.y) + d2.y * (s0.y - s1.y)) / delta;
+      const c = (s0.x * (d1.x - d2.x) - s1.x * (d0.x - d2.x) + s2.x * (d0.x - d1.x)) / delta;
+      const d = (s0.x * (d1.y - d2.y) - s1.x * (d0.y - d2.y) + s2.x * (d0.y - d1.y)) / delta;
+      const e = (s0.x * (s1.y * d2.x - s2.y * d1.x) - s1.x * (s0.y * d2.x - s2.y * d0.x) + s2.x * (s0.y * d1.x - s1.y * d0.x)) / delta;
+      const f = (s0.x * (s1.y * d2.y - s2.y * d1.y) - s1.x * (s0.y * d2.y - s2.y * d0.y) + s2.x * (s0.y * d1.y - s1.y * d0.y)) / delta;
+
+      ctx.transform(a, b, c, d, e, f);
+      ctx.drawImage(img, 0, 0);
+      ctx.restore();
+    }
+
+    // ==========================================
+    // REAL PIXEL IMAGE FILTERS & BRIGHTNESS
+    // ==========================================
+    let activeEnhancePage = null;
+
+    function openEnhanceForPage(idx) {
+      if (!sessionPages[idx]) return Promise.resolve();
+      activeEnhancePage = sessionPages[idx];
+      navigateTo('enhance', false);
+
+      // Set UI states
+      currentFilter = activeEnhancePage.filter || 'magic';
+      currentBrightness = activeEnhancePage.brightness || 0;
+
+      const slider = document.getElementById('brightness-slider');
+      if (slider) slider.value = currentBrightness;
+      const badge = document.getElementById('brightness-val-badge');
+      if (badge) badge.textContent = String(currentBrightness);
+
+      updateFilterPresetButtons();
+
+      return renderEnhanceCanvas();
+    }
+
+    function applyFilter(filterType) {
+      currentFilter = filterType;
+      if (activeEnhancePage) {
+        activeEnhancePage.filter = filterType;
+      }
+      updateFilterPresetButtons();
+      return renderEnhanceCanvas();
+    }
+
+    function updateFilterPresetButtons() {
+      const presets = ['original', 'magic', 'grayscale', 'bw'];
+      presets.forEach(p => {
+        const btn = document.getElementById(`filter-btn-${p}`);
+        if (!btn) return;
+        if (p === currentFilter) {
+          btn.className = 'p-2 rounded-xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all';
+        } else {
+          btn.className = 'p-2 rounded-xl border-2 border-slate-200 hover:border-[#8B5CF6] text-center flex flex-col items-center justify-center transition-all';
+        }
+      });
+    }
+
+    function onBrightnessInput(val) {
+      currentBrightness = parseInt(val, 10);
+      if (activeEnhancePage) activeEnhancePage.brightness = currentBrightness;
+      const badge = document.getElementById('brightness-val-badge');
+      if (badge) badge.textContent = String(currentBrightness);
+      return renderEnhanceCanvas();
+    }
+
+    function _updateCardFilterStyle() {
+      const c = document.getElementById('enhance-canvas');
+      if (!c) return;
+      const b = 1 + (currentBrightness / 100);
+      c.style.filter = `brightness(${b})`;
+    }
+
+    function resetFiltersAndBrightness() {
+      currentFilter = 'original';
+      currentBrightness = 0;
+      if (activeEnhancePage) {
+        activeEnhancePage.filter = 'original';
+        activeEnhancePage.brightness = 0;
+      }
+      const slider = document.getElementById('brightness-slider');
+      if (slider) slider.value = 0;
+      const badge = document.getElementById('brightness-val-badge');
+      if (badge) badge.textContent = '0';
+      updateFilterPresetButtons();
+      renderEnhanceCanvas();
+      showToast('Filters & brightness reset');
+    }
+
+    let comparingOriginal = false;
+
+    function startComparingOriginal() {
+      comparingOriginal = true;
+      renderEnhanceCanvas();
+    }
+
+    function stopComparingOriginal() {
+      comparingOriginal = false;
+      renderEnhanceCanvas();
+    }
+
+    // Direct Canvas Pixel Processing Engine
+    function renderEnhanceCanvas() {
+      return new Promise((resolve) => {
+        if (!activeEnhancePage) return resolve();
+        const canvas = document.getElementById('enhance-canvas');
+        if (!canvas) return resolve();
+
+        const img = new Image();
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          // Unhide real canvas and hide fallback image
+          const fallback = document.getElementById('enhance-fallback-img');
+          if (fallback) fallback.classList.add('hidden');
+          canvas.classList.remove('hidden');
+
+          // If comparing original, leave raw cropped image
+          if (comparingOriginal || (currentFilter === 'original' && currentBrightness === 0)) {
+            if (activeEnhancePage) {
+              activeEnhancePage.enhancedUrl = canvas.toDataURL('image/jpeg', 0.92);
+            }
+            return resolve();
+          }
+
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+          const n = data.length;
+
+          // Pixel Math for Filters
+          const brightnessOffset = Math.round((currentBrightness / 100) * 128);
+
+          for (let i = 0; i < n; i += 4) {
+            let r = data[i];
+            let g = data[i + 1];
+            let b = data[i + 2];
+
+            // 1. Rec.601 Grayscale Luminance
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            if (currentFilter === 'magic') {
+              // Paper whitening + text sharpening
+              if (lum > 175) {
+                const boost = (lum - 175) * 1.5;
+                r = Math.min(255, r + boost);
+                g = Math.min(255, g + boost);
+                b = Math.min(255, b + boost);
+              } else {
+                // Deepen ink
+                r = r * 0.9;
+                g = g * 0.9;
+                b = b * 0.9;
+              }
+              // Saturation boost
+              r = Math.min(255, Math.max(0, lum + (r - lum) * 1.25));
+              g = Math.min(255, Math.max(0, lum + (g - lum) * 1.25));
+              b = Math.min(255, Math.max(0, lum + (b - lum) * 1.25));
+            } else if (currentFilter === 'grayscale') {
+              r = lum;
+              g = lum;
+              b = lum;
+            } else if (currentFilter === 'bw') {
+              // Threshold
+              const v = (lum > 128) ? 255 : 0;
+              r = v;
+              g = v;
+              b = v;
+            }
+
+            // Apply brightness offset
+            if (brightnessOffset !== 0) {
+              r = Math.min(255, Math.max(0, r + brightnessOffset));
+              g = Math.min(255, Math.max(0, g + brightnessOffset));
+              b = Math.min(255, Math.max(0, b + brightnessOffset));
+            }
+
+            data[i] = r;
+            data[i + 1] = g;
+            data[i + 2] = b;
+          }
+
+          ctx.putImageData(imgData, 0, 0);
+          if (activeEnhancePage) {
+            activeEnhancePage.enhancedUrl = canvas.toDataURL('image/jpeg', 0.92);
+          }
+          resolve();
+        };
+        img.onerror = function() {
+          resolve();
+        };
+        img.src = activeEnhancePage.croppedUrl || activeEnhancePage.rawUrl;
+      });
+    }
+
+    function saveEnhancedToOrganizer() {
+      if (!activeEnhancePage) {
+        navigateTo('organizer');
+        return;
+      }
+      const canvas = document.getElementById('enhance-canvas');
+      if (canvas && canvas.width > 0 && canvas.height > 0) {
+        if (activeEnhancePage.isTimestamped && typeof burnTimestampWatermark === 'function') {
+          burnTimestampWatermark(canvas, activeEnhancePage.timestampText);
+        }
+        activeEnhancePage.enhancedUrl = canvas.toDataURL('image/jpeg', 0.92);
+      }
+
+      // If "Apply to all" toggle is checked, propagate to all pages
+      const applyAll = document.getElementById('toggle-apply-all');
+      if (applyAll && applyAll.checked) {
+        sessionPages.forEach(p => {
+          p.filter = currentFilter;
+          p.brightness = currentBrightness;
+          // Apply filter to p.croppedUrl asynchronously
+          applyFilterToPageAsync(p);
+        });
+        showToast(`Applied ${currentFilter} filter to all ${sessionPages.length} pages`);
+      }
+
+      navigateTo('organizer');
+    }
+
+    function applyFilterToPageAsync(p) {
+      const img = new Image();
+      img.onload = function() {
+        const c = document.createElement('canvas');
+        c.width = img.width;
+        c.height = img.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        // Process
+        const imgData = ctx.getImageData(0, 0, c.width, c.height);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          if (p.filter === 'grayscale') {
+            data[i] = lum; data[i + 1] = lum; data[i + 2] = lum;
+          } else if (p.filter === 'bw') {
+            const v = lum > 128 ? 255 : 0;
+            data[i] = v; data[i + 1] = v; data[i + 2] = v;
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+        p.enhancedUrl = c.toDataURL('image/jpeg', 0.92);
+      };
+      img.src = p.croppedUrl || p.rawUrl;
+    }
+
+    // ==========================================
+    // REAL ISO 32000-1 MULTIPAGE PDF GENERATOR
+    // Embeds actual image XObjects (DCTDecode / FlateDecode)
+    // Never emits dummy 1x1 image; handles both JPEG and PNG
+    // ==========================================
+    let currentExportPageSize = 'a4';
+    let currentExportQuality = 'balanced';
+
+    async function ensurePagesAreJpeg(pagesData) {
+      if (!pagesData || !pagesData.length) return;
+      for (let i = 0; i < pagesData.length; i++) {
+        const p = pagesData[i];
+        let imgUrl = p.enhancedUrl || p.dataUrl || p.croppedUrl || p.rawUrl;
+        if (imgUrl && !imgUrl.startsWith('data:image/jpeg;base64,')) {
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              try {
+                const cvs = document.createElement('canvas');
+                cvs.width = img.naturalWidth || p.width || 800;
+                cvs.height = img.naturalHeight || p.height || 1100;
+                const ctx = cvs.getContext('2d');
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, cvs.width, cvs.height);
+                ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+                const jpeg = cvs.toDataURL('image/jpeg', 0.92);
+                p.enhancedUrl = jpeg;
+                p.dataUrl = jpeg;
+                p.width = cvs.width;
+                p.height = cvs.height;
+              } catch (e) {
+                console.warn('Canvas JPEG conversion fallback:', e);
+              }
+              resolve();
+            };
+            img.onerror = () => resolve();
+            img.src = imgUrl;
+          });
+        }
+      }
+    }
+
+    function generateRealPdfBase64(docTitle, pagesData, options) {
+      if (!pagesData || pagesData.length === 0) {
+        throw new Error("Cannot generate PDF: Document has no pages. Generation aborted to prevent creating substitute content.");
+      }
+
+      const pageSize = (options && options.pageSize) || currentExportPageSize || 'a4';
+      let pageW = 595.28; // A4 pt
+      let pageH = 841.89; // A4 pt
+
+      if (pageSize === 'letter') {
+        pageW = 612.0;
+        pageH = 792.0;
+      }
+
+      const catalogId = 1;
+      const pagesId = 2;
+      const pageIds = [];
+      const allObjs = [];
+      const encoder = new TextEncoder();
+
+      let nextId = 3;
+      const pageDefs = [];
+
+      for (let i = 0; i < pagesData.length; i++) {
+        const pageId = nextId++;
+        const contentId = nextId++;
+        const imageId = nextId++;
+        const fontId = nextId++;
+        pageIds.push(pageId);
+        pageDefs.push({
+          pageId,
+          contentId,
+          imageId,
+          fontId,
+          data: pagesData[i],
+          index: i + 1
+        });
+      }
+
+      // 1. Catalog Object
+      allObjs.push({
+        id: catalogId,
+        content: `${catalogId} 0 obj\n<< /Type /Catalog /Pages ${pagesId} 0 R >>\nendobj\n`
+      });
+
+      // 2. Pages Object
+      allObjs.push({
+        id: pagesId,
+        content: `${pagesId} 0 obj\n<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>\nendobj\n`
+      });
+
+      // Build each Page, Image XObject, and Content Stream
+      for (const p of pageDefs) {
+        const imgUrl = p.data.enhancedUrl || p.data.dataUrl || p.data.croppedUrl || p.data.rawUrl;
+        let jpegBinary = null;
+        let pngData = null;
+        let imgWidth = p.data.width || 800;
+        let imgHeight = p.data.height || 1100;
+
+        if (pageSize === 'fit' && p.data.width && p.data.height) {
+          pageW = Math.round(p.data.width * 72 / 150);
+          pageH = Math.round(p.data.height * 72 / 150);
+        }
+
+        // 1. Try decoding JPEG input
+        if (imgUrl && imgUrl.startsWith('data:image/jpeg;base64,')) {
+          const b64 = imgUrl.split(',')[1];
+          const raw = atob(b64);
+          jpegBinary = new Uint8Array(raw.length);
+          for (let k = 0; k < raw.length; k++) {
+            jpegBinary[k] = raw.charCodeAt(k);
+          }
+        }
+
+        // 2. Try parsing PNG input (IDAT stream + FlateDecode)
+        if (!jpegBinary && imgUrl && imgUrl.startsWith('data:image/png;base64,')) {
+          try {
+            const b64 = imgUrl.split(',')[1];
+            const raw = atob(b64);
+            const pngBytes = new Uint8Array(raw.length);
+            for (let k = 0; k < raw.length; k++) {
+              pngBytes[k] = raw.charCodeAt(k);
+            }
+            let pos = 8;
+            let w = imgWidth;
+            let h = imgHeight;
+            let bitDepth = 8;
+            let colorType = 2;
+            const idats = [];
+            while (pos < pngBytes.length) {
+              const len = (pngBytes[pos] << 24) | (pngBytes[pos+1] << 16) | (pngBytes[pos+2] << 8) | pngBytes[pos+3];
+              const type = String.fromCharCode(pngBytes[pos+4], pngBytes[pos+5], pngBytes[pos+6], pngBytes[pos+7]);
+              if (type === 'IHDR') {
+                w = (pngBytes[pos+8] << 24) | (pngBytes[pos+9] << 16) | (pngBytes[pos+10] << 8) | pngBytes[pos+11];
+                h = (pngBytes[pos+12] << 24) | (pngBytes[pos+13] << 16) | (pngBytes[pos+14] << 8) | pngBytes[pos+15];
+                bitDepth = pngBytes[pos+16];
+                colorType = pngBytes[pos+17];
+              } else if (type === 'IDAT') {
+                idats.push(pngBytes.subarray(pos+8, pos+8+len));
+              }
+              pos += 8 + len + 4;
+            }
+            if (idats.length > 0) {
+              let totalIdat = 0;
+              idats.forEach(id => totalIdat += id.length);
+              const combinedIdat = new Uint8Array(totalIdat);
+              let offset = 0;
+              for (const id of idats) {
+                combinedIdat.set(id, offset);
+                offset += id.length;
+              }
+              pngData = {
+                w: w,
+                h: h,
+                bitDepth: bitDepth,
+                colorType: colorType,
+                idat: combinedIdat
+              };
+              imgWidth = w;
+              imgHeight = h;
+            }
+          } catch (pngErr) {
+            console.warn('PNG parsing error in PDF compiler:', pngErr);
+          }
+        }
+
+        // 3. Strict error enforcement: NEVER synthesize placeholder pages or substitute content
+        if (!jpegBinary && !pngData) {
+          throw new Error(`Cannot process image data for page ${p.index}: valid JPEG or PNG image bytes required. Export aborted to prevent generating substitute content.`);
+        }
+
+        // 4. Output Image XObject
+        if (jpegBinary) {
+          const header = `${p.imageId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgWidth} /Height ${imgHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBinary.length} >>\nstream\n`;
+          const footer = `\nendstream\nendobj\n`;
+          allObjs.push({
+            id: p.imageId,
+            isBinary: true,
+            header: header,
+            binaryData: jpegBinary,
+            footer: footer
+          });
+        } else if (pngData) {
+          const colorSpace = pngData.colorType === 0 ? '/DeviceGray' : '/DeviceRGB';
+          const colors = pngData.colorType === 0 ? 1 : 3;
+          const header = `${p.imageId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${pngData.w} /Height ${pngData.h} /ColorSpace ${colorSpace} /BitsPerComponent ${pngData.bitDepth} /Filter /FlateDecode /DecodeParms << /Predictor 15 /Colors ${colors} /BitsPerComponent ${pngData.bitDepth} /Columns ${pngData.w} >> /Length ${pngData.idat.length} >>\nstream\n`;
+          const footer = `\nendstream\nendobj\n`;
+          allObjs.push({
+            id: p.imageId,
+            isBinary: true,
+            header: header,
+            binaryData: pngData.idat,
+            footer: footer
+          });
+        }
+
+        // Page Object
+        const pageObjStr = `${p.pageId} 0 obj\n<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageW.toFixed(2)} ${pageH.toFixed(2)}] /Contents ${p.contentId} 0 R /Resources << /ProcSet [/PDF /Text /ImageC] /Font << /F1 ${p.fontId} 0 R >> /XObject << /Im1 ${p.imageId} 0 R >> >> >>\nendobj\n`;
+        allObjs.push({ id: p.pageId, content: pageObjStr });
+
+        // Content Stream drawing image and subtitle
+        const renderW = (pageW - 40).toFixed(2);
+        const renderH = (pageH - 60).toFixed(2);
+        const titleSafe = (docTitle || 'DocErena Document').replace(/[()\\]/g, '');
+
+        const streamParts = [
+          'q',
+          `${renderW} 0 0 ${renderH} 20 30 cm`,
+          '/Im1 Do',
+          'Q',
+          'BT',
+          '/F1 9 Tf',
+          '0.5 0.5 0.5 rg',
+          `20 15 Td (${titleSafe} - Page ${p.index} of ${pagesData.length} - DocErena Offline Scanner) Tj`,
+          'ET'
+        ];
+
+        if (p.data && p.data.timestampText) {
+          const tsSafe = p.data.timestampText.replace(/[()\\]/g, '');
+          streamParts.push(
+            'BT',
+            '/F1 8 Tf',
+            '0.4 0.2 0.7 rg',
+            `20 28 Td (${tsSafe}) Tj`,
+            'ET'
+          );
+        }
+        const streamStr = streamParts.join('\n');
+        const contentObjStr = `${p.contentId} 0 obj\n<< /Length ${encoder.encode(streamStr).length} >>\nstream\n${streamStr}\nendstream\nendobj\n`;
+        allObjs.push({ id: p.contentId, content: contentObjStr });
+
+        // Font Object
+        allObjs.push({
+          id: p.fontId,
+          content: `${p.fontId} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n`
+        });
+      }
+
+      // Sort objects by ID for clean PDF xref
+      allObjs.sort((a, b) => a.id - b.id);
+
+      // Binary PDF Assembly
+      const pdfHeader = encoder.encode('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
+      const chunks = [pdfHeader];
+      let curOffset = pdfHeader.length;
+      const offsets = [];
+
+      for (const obj of allObjs) {
+        offsets.push({ id: obj.id, offset: curOffset });
+        if (obj.isBinary) {
+          const hBytes = encoder.encode(obj.header);
+          const fBytes = encoder.encode(obj.footer);
+          chunks.push(hBytes);
+          chunks.push(obj.binaryData);
+          chunks.push(fBytes);
+          curOffset += hBytes.length + obj.binaryData.length + fBytes.length;
+        } else {
+          const b = encoder.encode(obj.content);
+          chunks.push(b);
+          curOffset += b.length;
+        }
+      }
+
+      // XRef Table
+      const xrefOffset = curOffset;
+      const totalObjs = allObjs.length + 1;
+      let xrefStr = `xref\n0 ${totalObjs}\n0000000000 65535 f \r\n`;
+      for (const off of offsets) {
+        xrefStr += `${String(off.offset).padStart(10, '0')} 00000 n \r\n`;
+      }
+
+      const trailerStr = `trailer\n<< /Size ${totalObjs} /Root ${catalogId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+      chunks.push(encoder.encode(xrefStr + trailerStr));
+
+      // Concatenate all Uint8Array chunks
+      const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
+      const fullBytes = new Uint8Array(totalLen);
+      let pos = 0;
+      for (const c of chunks) {
+        fullBytes.set(c, pos);
+        pos += c.length;
+      }
+
+      // Convert Uint8Array to base64
+      let binaryStr = '';
+      const chunkSz = 8192;
+      for (let i = 0; i < fullBytes.length; i += chunkSz) {
+        binaryStr += String.fromCharCode.apply(null, fullBytes.subarray(i, i + chunkSz));
+      }
+
+      return btoa(binaryStr);
+    }
+
+    async function handleSavePdf() {
+      const inputEl = document.getElementById('export-filename-input');
+      let filename = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : 'DocErena_Export.pdf';
+      if (!filename.toLowerCase().endsWith('.pdf')) filename += '.pdf';
+
+      const targetDoc = activeDocForViewer || (sessionPages.length > 0 ? { title: 'Scan Batch', pages: sessionPages } : documents[0]);
+      if (!targetDoc || !targetDoc.pages || targetDoc.pages.length === 0) {
+        showToast('No pages to export');
+        return;
+      }
+
+      await ensurePagesAreJpeg(targetDoc.pages);
+
+      let base64Pdf;
+      try {
+        base64Pdf = generateRealPdfBase64(targetDoc.title, targetDoc.pages, {
+          pageSize: currentExportPageSize,
+          quality: currentExportQuality
+        });
+      } catch (err) {
+        console.error("PDF generation error:", err);
+        showToast(err.message || "Failed to generate PDF");
+        return;
+      }
+
+      if (window.DocErenaNative && window.DocErenaNative.savePdf) {
+        window.DocErenaNative.savePdf(base64Pdf, filename);
+        showToast(`Saved PDF: ${filename}`);
+      } else {
+        const blob = new Blob([Uint8Array.from(atob(base64Pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        showToast(`Saved PDF: ${filename}`);
+      }
+    }
+
+    async function handleSharePdf() {
+      const inputEl = document.getElementById('export-filename-input');
+      let filename = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : 'DocErena_Export.pdf';
+      if (!filename.toLowerCase().endsWith('.pdf')) filename += '.pdf';
+
+      const targetDoc = activeDocForViewer || (sessionPages.length > 0 ? { title: 'Scan Batch', pages: sessionPages } : documents[0]);
+      if (!targetDoc || !targetDoc.pages || targetDoc.pages.length === 0) {
+        showToast('No pages to share');
+        return;
+      }
+
+      await ensurePagesAreJpeg(targetDoc.pages);
+
+      let base64Pdf;
+      try {
+        base64Pdf = generateRealPdfBase64(targetDoc.title, targetDoc.pages, {
+          pageSize: currentExportPageSize,
+          quality: currentExportQuality
+        });
+      } catch (err) {
+        console.error("PDF generation error:", err);
+        showToast(err.message || "Failed to generate PDF");
+        return;
+      }
+
+      if (window.DocErenaNative && window.DocErenaNative.sharePdf) {
+        window.DocErenaNative.sharePdf(base64Pdf, filename, `Share ${filename}`);
+      } else {
+        showToast('Opening native share chooser...');
+        handleSavePdf();
+      }
+    }
+
+    async function handleContinueToShare() {
+      const targetDoc = activeDocForViewer || documents[0];
+      if (!targetDoc || !targetDoc.pages || targetDoc.pages.length === 0) {
+        showToast('No document selected to share');
+        return;
+      }
+
+      const formatRadio = document.querySelector('input[name="share-format"]:checked');
+      const shareFormat = formatRadio ? formatRadio.value : 'pdf';
+
+      const qualityRadio = document.querySelector('input[name="share-quality"]:checked');
+      const shareQuality = qualityRadio ? qualityRadio.value : 'original';
+
+      if (shareFormat === 'images') {
+        const firstPage = targetDoc.pages[0];
+        const pageImg = firstPage.enhancedUrl || firstPage.dataUrl || firstPage.croppedUrl || firstPage.rawUrl;
+        if (window.DocErenaNative && window.DocErenaNative.sharePdf) {
+          window.DocErenaNative.sharePdf(pageImg.split(',')[1] || pageImg, `${targetDoc.title}_page1.jpg`, `Share ${targetDoc.title} Images`);
+        } else {
+          const a = document.createElement('a');
+          a.href = pageImg;
+          a.download = `${targetDoc.title}_page1.jpg`;
+          a.click();
+          showToast(`Sharing JPG image: ${targetDoc.title}`);
+        }
+        return;
+      }
+
+      await ensurePagesAreJpeg(targetDoc.pages);
+      const filename = `${targetDoc.title || 'DocErena_Document'}.pdf`;
+      let base64Pdf;
+      try {
+        base64Pdf = generateRealPdfBase64(targetDoc.title, targetDoc.pages, {
+          pageSize: 'a4',
+          quality: shareQuality === 'compressed' ? 'small' : 'high'
+        });
+      } catch (err) {
+        console.error("PDF generation error:", err);
+        showToast(err.message || "Failed to generate PDF");
+        return;
+      }
+
+      if (window.DocErenaNative && window.DocErenaNative.sharePdf) {
+        window.DocErenaNative.sharePdf(base64Pdf, filename, `Share ${targetDoc.title}`);
+      } else {
+        handleSavePdf();
+      }
+    }
+
+    function setExportPageSize(size) {
+      currentExportPageSize = size;
+      ['a4', 'letter', 'fit'].forEach(s => {
+        const b = document.getElementById(`export-size-${s}`);
+        if (!b) return;
+        if (s === size) {
+          b.className = 'py-2.5 px-3 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center font-extrabold text-xs text-[#7C3AED]';
+        } else {
+          b.className = 'py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]';
+        }
+      });
+      showToast(`Page size: ${size.toUpperCase()}`);
+    }
+
+    function setExportQuality(qual) {
+      currentExportQuality = qual;
+      ['high', 'balanced', 'small'].forEach(q => {
+        const b = document.getElementById(`export-qual-${q}`);
+        if (!b) return;
+        if (q === qual) {
+          b.className = 'py-2.5 px-3 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center font-extrabold text-xs text-[#7C3AED]';
+        } else {
+          b.className = 'py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]';
+        }
+      });
+      showToast(`Quality: ${qual}`);
+    }

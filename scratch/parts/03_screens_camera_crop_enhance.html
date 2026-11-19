@@ -1,0 +1,600 @@
+<!-- ========================================== -->
+<!-- SCREEN 05: CAMERA SCANNER (05_Scan_Camera)  -->
+<!-- ========================================== -->
+<div id="screen-camera" class="hidden flex-1 flex flex-col bg-black text-white relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Realistic Camera Shutter Flash Animation Overlay -->
+  <div id="camera-flash-overlay" class="hidden absolute inset-0 bg-white pointer-events-none z-50 transition-opacity duration-200"></div>
+
+  <!-- Hidden Gallery File Picker -->
+  <input type="file" id="camera-file-input" accept="image/*" multiple class="hidden" onchange="handleGalleryFilePicked(event)">
+
+  <!-- Top Camera Controls Bar (Dark, high-DPI accessible 44px+ touch targets) -->
+  <div class="px-5 pt-4 pb-3 flex items-center justify-between shrink-0 z-30 bg-black/70 backdrop-blur-md border-b border-white/5">
+    <!-- Close Button (✕, 44x44px touch target, prominent) -->
+    <button onclick="leaveCameraScanner()" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white/95 hover:bg-white/10 active:scale-95 transition-all" title="Close camera" aria-label="Close camera">
+      <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Title 'Scan document' (prominent text, clean font) -->
+    <span class="font-bold text-lg sm:text-xl tracking-tight text-white select-none px-2 truncate">Scan document</span>
+
+    <!-- Right Top Actions: Flash Toggle & Overflow Menu -->
+    <div class="flex items-center space-x-1.5 shrink-0">
+      <!-- Flash Toggle Button (Strike-through lightning icon ⃠⚡ reflecting state: off, on, auto) -->
+      <button onclick="cycleFlash()" id="camera-flash-btn" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all relative" title="Flash mode" aria-label="Flash mode">
+        <!-- Off state icon: Strike-through lightning bolt matching reference image -->
+        <svg id="camera-flash-icon-off" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8"/>
+          <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2.2"/>
+        </svg>
+        <!-- On state icon (torch active) -->
+        <svg id="camera-flash-icon-on" class="hidden w-6 h-6 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <!-- Auto state icon -->
+        <svg id="camera-flash-icon-auto" class="hidden w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+          <circle cx="18" cy="18" r="4.5" fill="#A855F7"/>
+          <text x="18" y="20.5" font-size="6.5" font-family="sans-serif" font-weight="900" text-anchor="middle" fill="#FFFFFF">A</text>
+        </svg>
+        <!-- Compatibility indicators for core camera script -->
+        <div id="camera-flash-indicator" class="hidden"></div>
+        <span id="camera-flash-label" class="hidden">Off</span>
+      </button>
+
+      <!-- Overflow Menu Button (Three vertical dots ⋮) -->
+      <button onclick="toggleCameraOverflowMenu(event)" id="camera-overflow-btn" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all" title="More options" aria-label="More options">
+        <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5" r="2"/>
+          <circle cx="12" cy="12" r="2"/>
+          <circle cx="12" cy="19" r="2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Overflow Menu Popup (⋮): Settings, Grid toggle, Sound toggle, Document size guide -->
+  <div id="camera-overflow-menu" class="hidden absolute top-16 right-4 w-64 rounded-2xl bg-[#16131F]/95 backdrop-blur-2xl border border-white/15 shadow-2xl p-2 z-50 text-white select-none">
+    <!-- Camera Settings -->
+    <button onclick="openAppSettings(); toggleCameraOverflowMenu();" class="w-full px-3.5 py-3 rounded-xl flex items-center space-x-3 hover:bg-white/10 text-left transition-colors">
+      <div class="w-9 h-9 rounded-xl bg-[#A855F7]/20 text-[#C084FC] flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-sm font-bold text-white">Camera settings</div>
+        <div class="text-[11px] text-white/60">System permissions & quality</div>
+      </div>
+    </button>
+
+    <!-- Grid Toggle -->
+    <button onclick="toggleCameraGrid();" class="w-full px-3.5 py-3 rounded-xl flex items-center space-x-3 hover:bg-white/10 text-left transition-colors">
+      <div class="w-9 h-9 rounded-xl bg-[#A855F7]/20 text-[#C084FC] flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-sm font-bold text-white">Grid toggle</div>
+        <div id="grid-status-label" class="text-[11px] text-white/60">Off</div>
+      </div>
+    </button>
+
+    <!-- Sound Toggle -->
+    <button onclick="toggleCameraSound();" class="w-full px-3.5 py-3 rounded-xl flex items-center space-x-3 hover:bg-white/10 text-left transition-colors">
+      <div class="w-9 h-9 rounded-xl bg-[#A855F7]/20 text-[#C084FC] flex items-center justify-center shrink-0">
+        <svg id="sound-icon-svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-sm font-bold text-white">Sound toggle</div>
+        <div id="sound-status-label" class="text-[11px] text-white/60">On</div>
+      </div>
+    </button>
+
+    <!-- Document Size Guide -->
+    <button onclick="toggleDocumentSizeGuide();" class="w-full px-3.5 py-3 rounded-xl flex items-center space-x-3 hover:bg-white/10 text-left transition-colors">
+      <div class="w-9 h-9 rounded-xl bg-[#A855F7]/20 text-[#C084FC] flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-sm font-bold text-white">Document size guide</div>
+        <div id="doc-size-status-label" class="text-[11px] text-white/60">Auto (Standard A4)</div>
+      </div>
+    </button>
+
+    <!-- Switch Camera Lens in menu -->
+    <button onclick="switchCameraFacing(); toggleCameraOverflowMenu();" class="w-full px-3.5 py-3 rounded-xl flex items-center space-x-3 hover:bg-white/10 text-left transition-colors border-t border-white/10 mt-1 pt-2.5">
+      <div class="w-9 h-9 rounded-xl bg-[#A855F7]/20 text-[#C084FC] flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 1.93.684 3.702 1.824 5.09L4 17h5v-5L7.382 13.618C6.518 12.57 6 11.344 6 10c0-3.314 2.686-6 6-6s6 2.686 6 6c0 1.344-.518 2.57-1.382 3.618L15 12v5h5l-1.824-1.91C19.316 13.702 20 11.93 20 10z"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-sm font-bold text-white">Switch camera lens</div>
+        <div class="text-[11px] text-white/60">Front / Rear camera</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Main Viewfinder Area (Full-bleed dark styling) -->
+  <div class="flex-1 relative overflow-hidden flex items-center justify-center bg-[#09070E] w-full">
+    <!-- Camera Loading State Indicator -->
+    <div id="camera-loading-indicator" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/85 z-25 space-y-3">
+      <div class="w-12 h-12 border-4 border-[#A855F7] border-t-transparent rounded-full animate-spin"></div>
+      <span class="text-sm font-bold text-white tracking-wide">Starting camera...</span>
+    </div>
+
+    <!-- 3x3 Grid Overlay (Rule of Thirds Guide, toggled via overflow menu) -->
+    <div id="camera-grid-overlay" class="hidden absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 border border-white/10 z-10 opacity-70">
+      <div class="border-r border-b border-white/15"></div>
+      <div class="border-r border-b border-white/15"></div>
+      <div class="border-b border-white/15"></div>
+      <div class="border-r border-b border-white/15"></div>
+      <div class="border-r border-b border-white/15"></div>
+      <div class="border-b border-white/15"></div>
+      <div class="border-r border-white/15"></div>
+      <div class="border-r border-white/15"></div>
+      <div></div>
+    </div>
+
+    <!-- Live Camera Video Element -->
+    <video id="camera-video" class="hidden w-full h-full object-cover" autoplay playsinline muted></video>
+
+    <!-- Camera Inactive View / Permission Prompt -->
+    <div id="camera-inactive-view" class="flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-4 z-10">
+      <div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 shadow-2xl">
+        <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+      </div>
+      <p class="text-sm font-medium text-slate-300 max-w-[260px] leading-relaxed">Camera inactive or permission required.<br>Tap Settings or Import below.</p>
+      <div class="flex items-center space-x-3 pt-1">
+        <button onclick="triggerNativeCamera()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs tracking-wide active:scale-95 transition-all">
+          Camera App
+        </button>
+        <button onclick="triggerGalleryImport()" class="px-4 py-2.5 rounded-xl bg-[#A855F7] hover:bg-[#9333EA] text-white font-bold text-xs tracking-wide active:scale-95 transition-all shadow-md">
+          Import Photo
+        </button>
+      </div>
+    </div>
+
+    <!-- Viewfinder Document Frame with 4 Purple Corner Brackets & Glowing Accents -->
+    <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6 z-15">
+      <div id="camera-doc-frame" class="w-[85%] max-w-[340px] aspect-[1/1.42] max-h-[62vh] relative flex items-center justify-center transition-all duration-300">
+        <!-- 4 Purple Corner Bracket Accents (rounded corners, #A855F7 border-4 with glowing accent) -->
+        <div class="absolute -top-1 -left-1 w-12 h-12 border-t-[4px] border-l-[4px] border-[#A855F7] rounded-tl-2xl shadow-[0_0_12px_rgba(168,85,247,0.75)]"></div>
+        <div class="absolute -top-1 -right-1 w-12 h-12 border-t-[4px] border-r-[4px] border-[#A855F7] rounded-tr-2xl shadow-[0_0_12px_rgba(168,85,247,0.75)]"></div>
+        <div class="absolute -bottom-1 -left-1 w-12 h-12 border-b-[4px] border-l-[4px] border-[#A855F7] rounded-bl-2xl shadow-[0_0_12px_rgba(168,85,247,0.75)]"></div>
+        <div class="absolute -bottom-1 -right-1 w-12 h-12 border-b-[4px] border-r-[4px] border-[#A855F7] rounded-br-2xl shadow-[0_0_12px_rgba(168,85,247,0.75)]"></div>
+
+        <!-- Real-time Scan Laser Line -->
+        <div id="camera-scan-laser" class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C084FC] to-transparent animate-pulse shadow-[0_0_10px_#A855F7]"></div>
+      </div>
+
+      <!-- Guidance Pill: Centered below the frame -->
+      <div class="mt-4 pointer-events-none z-20">
+        <div class="px-5 py-2 rounded-full bg-black/65 backdrop-blur-md border border-white/15 text-white/95 text-xs sm:text-sm font-medium tracking-wide shadow-xl flex items-center space-x-2">
+          <span>Align document within frame</span>
+        </div>
+      </div>
+
+      <!-- Live Timestamp Preview Overlay Element -->
+      <div id="camera-timestamp-preview" class="hidden mt-2 pointer-events-none z-20">
+        <div class="px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#A855F7]/60 text-white font-mono text-xs shadow-xl flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+          <span class="text-[#C084FC] font-semibold text-[11px]">DocErena Verified &bull;</span>
+          <span id="camera-timestamp-clock" class="text-white font-mono text-xs font-semibold">2026-11-19 12:00:00 UTC</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Honest Camera Error / Permission Banner -->
+    <div id="camera-error-banner" class="hidden absolute top-4 left-4 right-4 p-3.5 bg-amber-950/90 border border-amber-500/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-amber-200 z-35 shadow-xl backdrop-blur-md">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div class="text-xs">
+          <div class="font-bold text-white">Camera Unavailable or Permission Denied</div>
+          <div class="text-[11px] text-amber-300 font-medium">Please grant camera access or tap Import below to scan photos.</div>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 self-end sm:self-auto shrink-0">
+        <button onclick="triggerNativeCamera()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs active:scale-95 transition-all">
+          Camera App
+        </button>
+        <button onclick="openAppSettings()" class="px-3 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/40 text-amber-200 font-bold text-xs active:scale-95 transition-all">
+          Settings
+        </button>
+        <button onclick="triggerGalleryImport()" class="px-3 py-1.5 rounded-xl bg-[#A855F7] hover:bg-[#9333EA] text-white font-bold text-xs active:scale-95 transition-all shadow-sm">
+          Import
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden compatibility buttons -->
+    <button onclick="autoCropSnap()" class="hidden">autoCropSnap()</button>
+    <button onclick="toggleMultiPageMode()" class="hidden">toggleMultiPageMode()</button>
+    <button onclick="switchCameraFacing()" id="camera-switch-btn" class="hidden">switchCameraFacing()</button>
+    <button onclick="openCameraAllFeatures()" id="camera-all-features-top-btn" class="hidden">openCameraAllFeatures()</button>
+    <button onclick="importSampleContractAndInvoice()" id="btn-import-sample-docs" class="hidden">importSampleContractAndInvoice()</button>
+  </div>
+
+  <!-- Horizontal Mode Selector: 'ID Card' | 'Single' | 'Batch' | 'Book' -->
+  <div class="w-full pt-3 pb-2 px-6 flex items-center justify-around bg-black text-white shrink-0 z-20 border-t border-white/5">
+    <!-- ID Card -->
+    <button onclick="setCameraScanMode('id')" id="mode-id-btn" class="flex flex-col items-center py-1 px-3 group transition-all" aria-label="ID Card mode">
+      <span id="mode-id-text" class="text-sm sm:text-base font-semibold text-white/70 group-hover:text-white transition-colors">ID Card</span>
+      <div id="mode-id-indicator" class="w-8 h-1 bg-transparent rounded-full mt-1.5 transition-all"></div>
+    </button>
+
+    <!-- Single (Active by default with purple text #C084FC and purple underline tab) -->
+    <button onclick="setCameraScanMode('single')" id="mode-single-btn" class="flex flex-col items-center py-1 px-3 group transition-all" aria-label="Single mode">
+      <span id="mode-single-text" class="text-sm sm:text-base font-bold text-[#C084FC] transition-colors">Single</span>
+      <div id="mode-single-indicator" class="w-8 h-1 bg-[#C084FC] rounded-full mt-1.5 shadow-[0_0_8px_#A855F7] transition-all"></div>
+    </button>
+
+    <!-- Batch -->
+    <button onclick="setCameraScanMode('batch')" id="mode-batch-btn" class="flex flex-col items-center py-1 px-3 group transition-all" aria-label="Batch mode">
+      <span id="mode-batch-text" class="text-sm sm:text-base font-semibold text-white/70 group-hover:text-white transition-colors">Batch</span>
+      <div id="mode-batch-indicator" class="w-8 h-1 bg-transparent rounded-full mt-1.5 transition-all"></div>
+    </button>
+
+    <!-- Book -->
+    <button onclick="setCameraScanMode('book')" id="mode-book-btn" class="flex flex-col items-center py-1 px-3 group transition-all" aria-label="Book mode">
+      <span id="mode-book-text" class="text-sm sm:text-base font-semibold text-white/70 group-hover:text-white transition-colors">Book</span>
+      <div id="mode-book-indicator" class="w-8 h-1 bg-transparent rounded-full mt-1.5 transition-all"></div>
+    </button>
+
+    <!-- Timestamp -->
+    <button onclick="setCameraScanMode('timestamp')" id="mode-timestamp-btn" class="flex flex-col items-center py-1 px-3 group transition-all" aria-label="Timestamp mode">
+      <span id="mode-timestamp-text" class="text-sm sm:text-base font-semibold text-white/70 group-hover:text-white transition-colors">Timestamp</span>
+      <div id="mode-timestamp-indicator" class="w-8 h-1 bg-transparent rounded-full mt-1.5 transition-all"></div>
+    </button>
+
+    <!-- Compatibility alias for legacy scripts -->
+    <span id="mode-doc-btn" class="hidden"></span>
+  </div>
+
+  <!-- Bottom Control Deck (Dark bottom area with safe area padding for Android gesture nav bar) -->
+  <div class="w-full pt-3 pb-5 px-6 bg-black flex flex-col shrink-0 z-20">
+    <div class="w-full flex items-center justify-between">
+      <!-- Left: 'All features' (3x3 grid of 9 rounded dots, large icon and clear label) -->
+      <button onclick="openCameraAllFeatures()" id="camera-all-features-btn" class="flex flex-col items-center justify-center space-y-1.5 text-white/90 hover:text-white active:scale-95 transition-all min-w-[70px]" title="All features" aria-label="All features">
+        <div class="w-11 h-11 flex items-center justify-center">
+          <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="5" r="2"/>
+            <circle cx="12" cy="5" r="2"/>
+            <circle cx="19" cy="5" r="2"/>
+            <circle cx="5" cy="12" r="2"/>
+            <circle cx="12" cy="12" r="2"/>
+            <circle cx="19" cy="12" r="2"/>
+            <circle cx="5" cy="19" r="2"/>
+            <circle cx="12" cy="19" r="2"/>
+            <circle cx="19" cy="19" r="2"/>
+          </svg>
+        </div>
+        <span class="text-xs font-semibold text-white/90 tracking-tight">All features</span>
+      </button>
+
+      <!-- Center: Large Shutter Button (white circular button with a thick glowing purple ring) -->
+      <button onclick="captureCurrentPage()" id="camera-shutter-btn" class="w-20 h-20 min-w-[80px] min-h-[80px] rounded-full border-[3.5px] border-[#A855F7] shadow-[0_0_22px_rgba(168,85,247,0.65)] p-1.5 flex items-center justify-center active:scale-90 transition-all bg-black" title="Capture photo" aria-label="Capture photo">
+        <div class="w-full h-full rounded-full bg-white active:bg-slate-200 transition-colors shadow-inner"></div>
+      </button>
+
+      <!-- Right-middle: 'Import images' (photo/gallery icon, clear label, triggers file chooser) -->
+      <button onclick="triggerGalleryImport()" id="camera-import-btn" class="flex flex-col items-center justify-center space-y-1 text-white/90 hover:text-white active:scale-95 transition-all min-w-[70px]" title="Import images" aria-label="Import images">
+        <div class="w-11 h-11 flex items-center justify-center">
+          <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="4"/>
+            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+            <path d="m21 15-5-5L5 21"/>
+          </svg>
+        </div>
+        <span class="text-xs font-semibold text-white/90 tracking-tight text-center leading-tight">Import<br>images</span>
+      </button>
+
+      <!-- Far right: Captured-page review thumbnail preview card with rounded corners and purple badge -->
+      <div id="camera-batch-preview-container" class="batch-thumbs-rail flex items-center justify-center min-w-[70px]">
+        <button onclick="navigateTo('organizer')" id="camera-review-btn" class="relative w-14 h-14 min-w-[56px] min-h-[56px] rounded-2xl bg-white/10 border border-white/20 hover:border-[#A855F7] flex items-center justify-center p-1 active:scale-95 transition-all shadow-md" title="Review captured pages" aria-label="Review captured pages">
+          <div class="relative w-full h-full rounded-xl bg-white/5 overflow-hidden flex items-center justify-center">
+            <img id="camera-review-thumb-img" src="sample_thumb_proposal.png" alt="Preview" class="w-full h-full object-cover rounded-lg">
+          </div>
+          <!-- Purple circular badge showing exact count of captured pages -->
+          <span id="camera-batch-badge" class="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-[#8B5CF6] text-white font-bold text-xs flex items-center justify-center shadow-lg ring-2 ring-black">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Safe Area Padding & Android Gesture Navigation Bar Indicator -->
+    <div class="w-32 h-1 bg-white/40 rounded-full mx-auto mt-4 mb-1"></div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCREEN 06: ADJUST EDGES (06_Adjust_Edges)   -->
+<!-- ========================================== -->
+<div id="screen-crop" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Bar: Back, Brand Lockup, Reset (Enlarged 48px touch targets & logo) -->
+  <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('camera')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] active:scale-95 transition-all shadow-xs" title="Back" aria-label="Back">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="flex items-center space-x-2.5">
+      <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center border border-[#DDD6FE] shadow-xs overflow-hidden">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain p-0.5">
+      </div>
+      <span class="font-black text-lg text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <button onclick="resetCropFullFrame()" class="min-w-[48px] min-h-[48px] flex items-center justify-center text-base font-extrabold text-[#1E1B18] hover:text-[#7C3AED] active:scale-95 px-3 py-1.5 transition-colors">Reset</button>
+  </div>
+
+  <!-- Header -->
+  <div class="px-5 pt-1 pb-2 shrink-0">
+    <h2 class="text-3xl font-black text-[#1E1B18] tracking-tight">Adjust edges</h2>
+    <p class="text-base font-semibold text-[#64748B] mt-0.5">Drag the corners to fit the page.</p>
+  </div>
+
+  <!-- Interactive Canvas & Draggable Corners Area -->
+  <div class="flex-1 px-4 py-2 relative flex items-center justify-center overflow-hidden">
+    <div id="crop-canvas-wrapper" class="relative max-w-full max-h-full rounded-2xl overflow-hidden shadow-lg border border-slate-200/80 bg-slate-900 flex items-center justify-center">
+      <img id="crop-fallback-img" src="crop_desk_document.png" alt="Crop Background" class="max-w-full max-h-full object-contain">
+      <canvas id="crop-canvas" class="hidden max-w-full max-h-full object-contain"></canvas>
+
+      <!-- SVG Polygon Boundary Overlay -->
+      <svg id="crop-svg-overlay" class="absolute inset-0 w-full h-full pointer-events-none">
+        <polygon id="crop-polygon" points="40,40 260,35 275,340 35,345" fill="rgba(139, 92, 246, 0.2)" stroke="#8B5CF6" stroke-width="2.5" />
+      </svg>
+
+      <!-- 4 Draggable Pin Handles (enlarged 32px targets for high-DPI screens) -->
+      <div id="pin-tl" class="handleDrag absolute w-8 h-8 rounded-full bg-white border-[3.5px] border-[#8B5CF6] shadow-xl -translate-x-1/2 -translate-y-1/2 cursor-move flex items-center justify-center touch-none">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]"></div>
+      </div>
+      <div id="pin-tr" class="handleDrag absolute w-8 h-8 rounded-full bg-white border-[3.5px] border-[#8B5CF6] shadow-xl -translate-x-1/2 -translate-y-1/2 cursor-move flex items-center justify-center touch-none">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]"></div>
+      </div>
+      <div id="pin-br" class="handleDrag absolute w-8 h-8 rounded-full bg-white border-[3.5px] border-[#8B5CF6] shadow-xl -translate-x-1/2 -translate-y-1/2 cursor-move flex items-center justify-center touch-none">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]"></div>
+      </div>
+      <div id="pin-bl" class="handleDrag absolute w-8 h-8 rounded-full bg-white border-[3.5px] border-[#8B5CF6] shadow-xl -translate-x-1/2 -translate-y-1/2 cursor-move flex items-center justify-center touch-none">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Action Dock (Rotate, Retake, Apply crop - 52px high targets) -->
+  <div class="px-5 pt-3 pb-6 flex items-center justify-between space-x-3 shrink-0">
+    <!-- Rotate Button (Yellow Pill) -->
+    <button onclick="rotateCropPage()" class="flex-1 min-h-[52px] py-3.5 px-3 rounded-2xl bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#1E1B18] font-black text-sm flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition-all">
+      <svg class="w-5 h-5 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      <span>Rotate</span>
+    </button>
+
+    <!-- Retake Button (Pale Blue Pill) -->
+    <button onclick="retakePage()" class="flex-1 min-h-[52px] py-3.5 px-3 rounded-2xl bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#1E1B18] font-black text-sm flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition-all">
+      <svg class="w-5 h-5 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Retake</span>
+    </button>
+
+    <!-- Apply Crop Button (Black Pill) -->
+    <button onclick="applyCropAndProceed()" class="flex-1 min-h-[52px] py-3.5 px-4 rounded-2xl bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all flex items-center justify-center">
+      Apply crop
+    </button>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCREEN 07: ENHANCE SCAN (07_Enhance_Scan)   -->
+<!-- ========================================== -->
+<div id="screen-enhance" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Bar: Back, Title -->
+  <div class="px-5 pt-3 pb-2 flex items-center space-x-3 shrink-0">
+    <button onclick="navigateTo('crop')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] active:scale-95 transition-all shadow-xs" title="Back" aria-label="Back">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <h2 class="text-2xl sm:text-3xl font-black text-[#1E1B18] tracking-tight">Enhance scan</h2>
+  </div>
+
+  <!-- Document Preview Area -->
+  <div class="flex-1 px-5 py-2 relative flex items-center justify-center overflow-hidden">
+    <div class="relative max-w-full max-h-full rounded-2xl overflow-hidden shadow-md border border-slate-200/80 bg-white flex items-center justify-center p-2">
+      <img id="enhance-fallback-img" src="sample_document_page1.png" alt="Enhanced Page" class="max-w-full max-h-full object-contain">
+      <canvas id="enhance-canvas" class="hidden max-w-full max-h-full object-contain"></canvas>
+
+      <!-- Hold to Compare Button -->
+      <button onmousedown="startComparingOriginal()" onmouseup="stopComparingOriginal()" ontouchstart="startComparingOriginal()" ontouchend="stopComparingOriginal()" class="absolute bottom-3 right-3 px-3.5 py-2 rounded-full bg-black/65 backdrop-blur-md text-white text-xs font-bold shadow-lg flex items-center space-x-1.5 active:scale-95 transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+        <span>Hold to compare</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Controls Section -->
+  <div class="px-5 pt-3 pb-5 bg-white border-t border-slate-200/80 space-y-3.5 shrink-0">
+    <!-- 4 Presets Row: Original, Color, Gray, B&W -->
+    <div class="grid grid-cols-4 gap-3">
+      <!-- Preset 1: Original (Selected Purple) -->
+      <button onclick="applyFilter('original')" id="filter-btn-original" class="p-2.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs">
+        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
+          <img src="sample_thumb_proposal.png" alt="Original" class="w-full h-full object-cover">
+        </div>
+        <span class="text-xs font-black text-[#1E1B18]">Original</span>
+      </button>
+
+      <!-- Preset 2: Color (Pale Yellow) -->
+      <button onclick="applyFilter('magic')" id="filter-btn-magic" class="p-2.5 rounded-2xl border-2 border-transparent bg-[#FEF3C7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
+        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
+          <img src="sample_thumb_proposal.png" alt="Color" class="w-full h-full object-cover">
+        </div>
+        <span class="text-xs font-black text-[#1E1B18]">Color</span>
+      </button>
+
+      <!-- Preset 3: Gray (Pale Blue) -->
+      <button onclick="applyFilter('grayscale')" id="filter-btn-grayscale" class="p-2.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
+        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs grayscale">
+          <img src="sample_thumb_proposal.png" alt="Gray" class="w-full h-full object-cover">
+        </div>
+        <span class="text-xs font-black text-[#1E1B18]">Gray</span>
+      </button>
+
+      <!-- Preset 4: B&W -->
+      <button onclick="applyFilter('bw')" id="filter-btn-bw" class="p-2.5 rounded-2xl border-2 border-transparent bg-slate-100 hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
+        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs contrast-200 grayscale">
+          <img src="sample_thumb_proposal.png" alt="B&W" class="w-full h-full object-cover">
+        </div>
+        <span class="text-xs font-black text-[#1E1B18]">B&amp;W</span>
+      </button>
+    </div>
+
+    <!-- Brightness Slider Row -->
+    <div class="flex items-center space-x-3 pt-1">
+      <span class="text-base font-black text-[#1E1B18] w-24">Brightness</span>
+      <input id="brightness-slider" type="range" min="-100" max="100" value="0" oninput="onBrightnessInput(this.value); _updateCardFilterStyle();" class="flex-1 h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#7C3AED]">
+      <span id="brightness-val-badge" class="w-7 text-base font-black text-[#1E1B18] text-right">0</span>
+    </div>
+
+    <!-- Apply to All Toggle Row -->
+    <div class="flex items-center justify-between pt-1">
+      <span class="text-base font-black text-[#1E1B18]">Apply to all</span>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="toggle-apply-all" class="sr-only peer">
+        <div class="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7C3AED]"></div>
+      </label>
+    </div>
+
+    <!-- Bottom Action Dock (Reset & Apply - 52px high targets) -->
+    <div class="flex items-center space-x-3 pt-2">
+      <!-- Reset Button (Yellow Pill) -->
+      <button onclick="resetFiltersAndBrightness()" class="flex-1 min-h-[52px] py-3.5 px-4 rounded-2xl bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#1E1B18] font-black text-sm flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition-all">
+        <svg class="w-5 h-5 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <span>Reset</span>
+      </button>
+
+      <!-- Apply Button (Black Pill) -->
+      <button onclick="saveEnhancedToOrganizer()" class="flex-1 min-h-[52px] py-3.5 px-6 rounded-2xl bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all flex items-center justify-center">
+        Apply
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- CAMERA INTERFACE UI CONTROLLER JAVASCRIPT  -->
+<!-- ========================================== -->
+<script>
+  // Camera Overflow Menu Toggle
+  function toggleCameraOverflowMenu(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const menu = document.getElementById('camera-overflow-menu');
+    if (menu) menu.classList.toggle('hidden');
+  }
+
+  // Dismiss Camera Overflow Menu on outside click
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('camera-overflow-menu');
+    const btn = document.getElementById('camera-overflow-btn');
+    if (menu && !menu.classList.contains('hidden') && (!btn || !btn.contains(e.target)) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // Toggle Camera Viewfinder 3x3 Grid
+  function toggleCameraGrid() {
+    const grid = document.getElementById('camera-grid-overlay');
+    const lbl = document.getElementById('grid-status-label');
+    if (grid) {
+      grid.classList.toggle('hidden');
+      const isVisible = !grid.classList.contains('hidden');
+      if (lbl) lbl.textContent = isVisible ? 'On' : 'Off';
+      if (typeof showToast === 'function') showToast(isVisible ? 'Grid guide enabled' : 'Grid guide hidden');
+    }
+  }
+
+  // Toggle Shutter Sound
+  function toggleCameraSound() {
+    window.cameraSoundEnabled = !(window.cameraSoundEnabled !== false);
+    const lbl = document.getElementById('sound-status-label');
+    if (lbl) lbl.textContent = window.cameraSoundEnabled ? 'On' : 'Off';
+    if (typeof showToast === 'function') showToast(window.cameraSoundEnabled ? 'Shutter sound enabled' : 'Shutter sound muted');
+  }
+
+  // Toggle Document Aspect Ratio Guide
+  let _currentDocSizeIndex = 0;
+  const _cameraDocSizes = ['Auto (Standard A4)', 'US Letter', 'ID Card (85x54mm)', 'Full Viewfinder'];
+  function toggleDocumentSizeGuide() {
+    _currentDocSizeIndex = (_currentDocSizeIndex + 1) % _cameraDocSizes.length;
+    const size = _cameraDocSizes[_currentDocSizeIndex];
+    const lbl = document.getElementById('doc-size-status-label');
+    if (lbl) lbl.textContent = size;
+    const frame = document.getElementById('camera-doc-frame');
+    if (frame) {
+      if (size.startsWith('ID Card')) {
+        frame.style.aspectRatio = '1.58 / 1';
+        frame.style.maxHeight = '44vh';
+        frame.style.width = '88%';
+      } else if (size.startsWith('US Letter')) {
+        frame.style.aspectRatio = '8.5 / 11';
+        frame.style.maxHeight = '60vh';
+        frame.style.width = '84%';
+      } else if (size.startsWith('Full')) {
+        frame.style.aspectRatio = 'auto';
+        frame.style.maxHeight = '72vh';
+        frame.style.width = '94%';
+      } else {
+        // Standard A4 default
+        frame.style.aspectRatio = '1 / 1.42';
+        frame.style.maxHeight = '62vh';
+        frame.style.width = '85%';
+      }
+    }
+    if (typeof showToast === 'function') showToast(`Guide: ${size}`);
+  }
+
+  // Horizontal Mode Selector Handler
+  function setCameraScanMode(mode) {
+    const modes = ['id', 'single', 'batch', 'book', 'timestamp'];
+    modes.forEach(m => {
+      const txt = document.getElementById(`mode-${m}-text`);
+      const ind = document.getElementById(`mode-${m}-indicator`);
+      if (m === mode) {
+        if (txt) txt.className = 'text-sm sm:text-base font-bold text-[#C084FC] transition-colors';
+        if (ind) ind.className = 'w-8 h-1 bg-[#C084FC] rounded-full mt-1.5 shadow-[0_0_8px_#A855F7] transition-all';
+      } else {
+        if (txt) txt.className = 'text-sm sm:text-base font-semibold text-white/70 group-hover:text-white transition-colors';
+        if (ind) ind.className = 'w-8 h-1 bg-transparent rounded-full mt-1.5 transition-all';
+      }
+    });
+
+    if (typeof selectScanMode === 'function') {
+      selectScanMode(mode);
+    }
+  }
+
+  // Flash UI State Visual Sync (Off ⃠⚡, On ⚡, Auto ⚡A)
+  function updateCameraFlashUI(mode) {
+    const iconOff = document.getElementById('camera-flash-icon-off');
+    const iconOn = document.getElementById('camera-flash-icon-on');
+    const iconAuto = document.getElementById('camera-flash-icon-auto');
+    if (!iconOff || !iconOn || !iconAuto) return;
+
+    iconOff.classList.add('hidden');
+    iconOn.classList.add('hidden');
+    iconAuto.classList.add('hidden');
+
+    if (mode === 'Torch' || mode === 'On') {
+      iconOn.classList.remove('hidden');
+    } else if (mode === 'Auto') {
+      iconAuto.classList.remove('hidden');
+    } else {
+      iconOff.classList.remove('hidden');
+    }
+  }
+
+  // Wrap cycleFlash to keep flash icon in sync
+  window.addEventListener('DOMContentLoaded', function() {
+    if (typeof cycleFlash === 'function') {
+      const origCycle = window.cycleFlash;
+      window.cycleFlash = function() {
+        origCycle();
+        const lbl = document.getElementById('camera-flash-label');
+        if (lbl) updateCameraFlashUI(lbl.textContent);
+      };
+    }
+  });
+</script>

@@ -1,0 +1,359 @@
+    <!-- ========================================== -->
+    <!-- SCREEN 25: SPLIT PDF (25_Split_PDF.png)    -->
+    <!-- ========================================== -->
+    <div id="screen-split-pdf" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Brand Row -->
+      <div class="px-5 pt-4 pb-2 flex items-center space-x-2 shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#1E1B18]">
+          <svg class="w-4 h-4 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        </div>
+        <span class="font-extrabold text-lg text-[#1E1B18] tracking-tight">DocErena</span>
+      </div>
+
+      <!-- Title & Back Row -->
+      <div class="px-5 pt-1 pb-1 flex items-center space-x-3.5 shrink-0">
+        <button onclick="navigateTo('pdf-tools')" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-[#E0F2FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#BAE6FD] transition-colors shadow-xs" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h1 class="text-2xl font-black text-[#1E1B18] tracking-tight">Split PDF</h1>
+      </div>
+      <p class="px-5 pb-2 text-xs font-semibold text-[#64748B]">Extract a range of pages into one PDF</p>
+
+      <!-- Main Form & Inputs -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto space-y-4">
+        <!-- Selected Source File Card -->
+        <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div class="flex items-center space-x-3.5 overflow-hidden">
+            <div class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="overflow-hidden">
+              <h4 id="split-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Project Proposal.pdf</h4>
+              <p id="split-doc-pages" class="text-xs font-semibold text-[#64748B]">6 pages</p>
+            </div>
+          </div>
+          <button onclick="openSplitDocPicker()" class="px-3.5 py-1.5 rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#D97706] font-extrabold text-xs shrink-0 shadow-xs active:scale-95 transition-all" title="Change" aria-label="Change">
+            Change
+          </button>
+        </div>
+
+        <!-- Choose Pages Section (From / To) -->
+        <div class="space-y-2">
+          <label class="block text-xs font-extrabold text-[#1E1B18]">Choose pages</label>
+          <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="flex-1 space-y-1">
+              <span class="text-[11px] font-bold text-[#64748B]">From page</span>
+              <input type="number" id="split-from-input" value="1" min="1" oninput="updateSplitRangeBanner()" class="w-full p-2.5 rounded-xl border border-slate-200 font-extrabold text-base text-center text-[#1E1B18] outline-none focus:border-[#8B5CF6]">
+            </div>
+            <span class="text-slate-400 font-bold pt-4">to</span>
+            <div class="flex-1 space-y-1">
+              <span class="text-[11px] font-bold text-[#64748B]">To page</span>
+              <input type="number" id="split-to-input" value="3" min="1" oninput="updateSplitRangeBanner()" class="w-full p-2.5 rounded-xl border border-slate-200 font-extrabold text-base text-center text-[#1E1B18] outline-none focus:border-[#8B5CF6]">
+            </div>
+          </div>
+        </div>
+
+        <!-- Range Info Banner (Pale Blue Card) -->
+        <div class="p-3.5 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-xl bg-white/80 text-[#0284C7] flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          </div>
+          <span id="split-range-banner" class="font-extrabold text-xs text-[#0369A1]">Pages 1–3 of 6 selected for extraction</span>
+        </div>
+
+        <!-- Output Filename Section -->
+        <div class="space-y-1.5">
+          <label for="split-output-filename" class="block text-xs font-extrabold text-[#1E1B18]">Output filename</label>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs flex items-center space-x-2 focus-within:border-[#8B5CF6]">
+            <input type="text" id="split-output-filename" value="Project Proposal - pages 1-3.pdf" class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+          </div>
+        </div>
+
+        <!-- Extract Pages Action Button -->
+        <div class="pt-4 pb-4">
+          <button onclick="executeSplitPdf()" class="w-full min-h-[50px] py-3.5 px-6 rounded-2xl bg-[#1E1B18] hover:bg-black text-white font-extrabold text-base shadow-md active:scale-[0.98] transition-all flex items-center justify-center" title="Extract pages" aria-label="Extract pages">
+            <span>Extract pages</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 26: COMPRESS PDF (26_Compress_PDF)  -->
+    <!-- ========================================== -->
+    <div id="screen-compress-pdf" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Brand Row -->
+      <div class="px-5 pt-4 pb-2 flex items-center space-x-2 shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#1E1B18]">
+          <svg class="w-4 h-4 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        </div>
+        <span class="font-extrabold text-lg text-[#1E1B18] tracking-tight">DocErena</span>
+      </div>
+
+      <!-- Title & Back Row -->
+      <div class="px-5 pt-1 pb-3 flex items-center space-x-3.5 shrink-0">
+        <button onclick="navigateTo('pdf-tools')" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-[#E0F2FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#BAE6FD] transition-colors shadow-xs" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h1 class="text-2xl font-black text-[#1E1B18] tracking-tight">Compress PDF</h1>
+      </div>
+
+      <!-- Main Form & Quality Options -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto space-y-4">
+        <!-- Selected Source File Card -->
+        <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div class="flex items-center space-x-3.5 overflow-hidden">
+            <div class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="overflow-hidden">
+              <h4 id="compress-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Project Proposal.pdf</h4>
+              <p id="compress-doc-size" class="text-xs font-semibold text-[#64748B]">PDF • 4.8 MB</p>
+            </div>
+          </div>
+          <button onclick="openCompressDocPicker()" class="px-3.5 py-1.5 rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#D97706] font-extrabold text-xs shrink-0 shadow-xs active:scale-95 transition-all" title="Change" aria-label="Change">
+            Change
+          </button>
+        </div>
+
+        <!-- Choose Quality Section -->
+        <div class="space-y-2">
+          <label class="block text-xs font-extrabold text-[#1E1B18]">Choose quality</label>
+          <div class="space-y-2.5">
+            <!-- Card 1: High Quality -->
+            <label id="compress-card-high" onclick="selectCompressQuality('high')" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shadow-xs">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                </div>
+                <div>
+                  <span class="block font-extrabold text-xs text-[#1E1B18]">High quality</span>
+                  <span class="text-[11px] text-[#64748B]">Keeps more detail, larger file.</span>
+                </div>
+              </div>
+              <input type="radio" id="compress-quality-high" name="compress-quality" value="high" class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+            </label>
+
+            <!-- Card 2: Balanced (Selected) -->
+            <label id="compress-card-balanced" onclick="selectCompressQuality('balanced')" class="p-3.5 rounded-2xl bg-[#EDE9FE]/50 border-2 border-[#8B5CF6] shadow-xs flex items-center justify-between cursor-pointer transition-all">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shadow-xs">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+                </div>
+                <div>
+                  <span class="block font-extrabold text-xs text-[#1E1B18]">Balanced</span>
+                  <span class="text-[11px] text-[#64748B]">A good mix of quality and size.</span>
+                </div>
+              </div>
+              <input type="radio" id="compress-quality-balanced" name="compress-quality" value="balanced" checked class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+            </label>
+
+            <!-- Card 3: Smaller File -->
+            <label id="compress-card-small" onclick="selectCompressQuality('small')" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shadow-xs">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                </div>
+                <div>
+                  <span class="block font-extrabold text-xs text-[#1E1B18]">Smaller file</span>
+                  <span class="text-[11px] text-[#64748B]">More compression, lower quality.</span>
+                </div>
+              </div>
+              <input type="radio" id="compress-quality-small" name="compress-quality" value="small" class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+            </label>
+          </div>
+        </div>
+
+        <!-- Truthful Disclaimer Note -->
+        <div class="flex items-center space-x-2 text-slate-500 py-1">
+          <svg class="w-4 h-4 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span class="text-xs text-slate-600 font-medium">Results depend on your document.</span>
+        </div>
+
+        <!-- Filename Input -->
+        <div class="space-y-1.5">
+          <label for="compress-output-filename" class="block text-xs font-extrabold text-[#1E1B18]">Filename</label>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs flex items-center space-x-2 focus-within:border-[#8B5CF6]">
+            <input type="text" id="compress-output-filename" value="Project Proposal - compressed.pdf" class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+          </div>
+        </div>
+
+        <!-- Compress Action Button -->
+        <div class="pt-10 pb-4">
+          <button onclick="executeCompressPdf()" class="w-full min-h-[50px] py-3.5 px-6 rounded-2xl bg-[#1E1B18] hover:bg-black text-white font-extrabold text-base shadow-md active:scale-[0.98] transition-all flex items-center justify-center" title="Compress PDF" aria-label="Compress PDF">
+            <span>Compress PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+<!-- ========================================== -->
+    <!-- SCREEN: SETTINGS (Settings Route)          -->
+    <!-- ========================================== -->
+    <div id="screen-settings" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top">
+      <!-- Top Brand Header -->
+      <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+        <button onclick="navigateTo('home')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+            <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+
+      <!-- Title -->
+      <div class="px-5 pt-3 pb-3 shrink-0">
+        <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Settings</h1>
+      </div>
+
+      <!-- Settings List (Matching Screen 33: 33_Settings.png) -->
+      <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-20">
+        <!-- Offline Privacy Guarantee Badge -->
+        <div class="p-3.5 rounded-2xl bg-[#EDE9FE]/50 border border-[#DDD6FE] flex items-center justify-between shadow-xs">
+          <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5 text-[#059669]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            <span class="font-black text-xs text-[#1E1B18]">Zero Telemetry Guarantee</span>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#D97706] font-extrabold text-[10px]">100% Offline</span>
+        </div>
+        <!-- 1. Scanning Defaults -->
+        <button onclick="openScanningDefaultsModal()" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">Scanning defaults</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">Default scan mode, quality and image processing.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- 2. PDF Defaults -->
+        <button onclick="openPdfDefaultsModal()" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><text x="7" y="17" font-size="6" font-weight="bold" fill="currentColor">PDF</text></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">PDF defaults</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">Default compression, quality and file naming.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- 3. Storage and Backups -->
+        <button onclick="navigateTo('backup-restore')" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">Storage and backups</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">Manage local storage, cloud sync and backups.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- 4. Privacy -->
+        <button onclick="openPrivacyModal()" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2"/></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">Privacy</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">App lock, data handling and permission settings.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- 5. Recently Deleted -->
+        <button onclick="navigateTo('trash')" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">Recently deleted</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">View and restore recently deleted files.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- 6. About -->
+        <button onclick="openAboutModal()" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">About</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">App version, terms and privacy policy.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- 7. Replay Welcome & Onboarding -->
+        <button onclick="replayOnboardingFlow()" id="btn-replay-onboarding" class="w-full p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-slate-300 active:scale-95 transition-all text-left">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-[#1E1B18]">Welcome &amp; Tutorial</h4>
+              <p class="text-xs font-semibold text-[#64748B] mt-0.5">Replay the introductory welcome screens.</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- Storage & Theme Details (Persistent hidden/collapsible for metrics) -->
+        <div class="hidden">
+          <span id="settings-docs-count">0</span>
+          <span id="settings-pages-count">0</span>
+          <span id="settings-cache-size">0 KB</span>
+        </div>
+      </div>
+
+      <!-- App Bottom Navigation Bar (Settings active) -->
+      <nav class="h-14 bg-white border-t border-slate-200/80 px-6 flex items-center justify-between shrink-0 z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Home</span>
+        </button>
+
+        <button onclick="navigateTo('documents')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Documents</span>
+        </button>
+
+        <button onclick="navigateTo('pdf-tools')" class="flex flex-col items-center space-y-0.5 text-[#64748B] hover:text-[#1E1B18]">
+          <div class="px-3.5 py-0.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          </div>
+          <span class="text-[10px] font-semibold">Tools</span>
+        </button>
+
+        <button onclick="navigateTo('settings')" class="flex flex-col items-center space-y-0.5">
+          <div class="px-3.5 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED]">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <span class="text-[10px] font-extrabold text-[#7C3AED]">Settings</span>
+        </button>
+      </nav>
+    </div>

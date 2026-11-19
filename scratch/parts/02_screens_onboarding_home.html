@@ -1,0 +1,462 @@
+<!-- ========================================== -->
+<!-- SCREEN 01: WELCOME SCREEN (01_Welcome.png)  -->
+<!-- ========================================== -->
+<div id="screen-splash" class="flex-1 flex flex-col justify-between px-6 py-6 bg-[#FCFAFD] select-none safe-top safe-bottom overflow-y-auto">
+  <!-- Top Left Brand Lockup: Prominent, Big & Bold -->
+  <div class="pt-2 flex items-center justify-start shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-md border border-[#DDD6FE]/80 p-2 overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-2xl sm:text-3xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+  </div>
+
+  <!-- Center Content: Big Headline, Rich Illustration -->
+  <div class="flex flex-col items-center text-center px-2 my-auto py-4 space-y-3">
+    <h1 class="text-[32px] sm:text-[36px] font-black text-[#1E1B18] tracking-tight leading-[1.18] text-center">
+      Your documents,<br>all in one place.
+    </h1>
+    <p class="text-base sm:text-lg font-semibold text-[#64748B] max-w-[320px] leading-snug">
+      Scan, edit and organize your documents in one place.
+    </p>
+
+    <!-- Prominent Artwork Illustration -->
+    <div class="w-full max-w-[310px] sm:max-w-[340px] flex items-center justify-center pt-2 pb-1">
+      <img src="welcome_illustration.png" alt="Documents Illustration" class="w-full max-h-[250px] sm:max-h-[290px] object-contain drop-shadow-md">
+    </div>
+  </div>
+
+  <!-- Bottom CTAs: Large, Bold, Easy-to-tap Buttons -->
+  <div class="w-full max-w-sm mx-auto flex flex-col items-center space-y-3 pb-3 shrink-0">
+    <button onclick="navigateTo('onboarding')" class="w-full h-15 min-h-[58px] py-4 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-lg shadow-xl shadow-black/15 active:scale-[0.98] transition-all flex items-center justify-center tracking-wide">
+      Let's get started
+    </button>
+    <button onclick="finishOnboardingAndGoHome()" class="w-full h-12 py-3 px-6 text-base font-extrabold text-[#1E1B18] hover:text-[#7C3AED] transition-colors flex items-center justify-center">
+      Continue as guest
+    </button>
+    <div class="flex items-center justify-center space-x-2 text-xs font-semibold text-[#64748B] pt-1">
+      <svg class="w-5 h-5 text-[#7C3AED] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span class="text-xs font-medium">Your files stay on your device until you choose to share.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCREEN 02: ONBOARDING STEP 1 - SCAN        -->
+<!-- (02_Onboarding_Scan.png)                   -->
+<!-- ========================================== -->
+<div id="screen-onboarding" class="hidden flex-1 flex flex-col justify-between px-6 py-6 bg-[#FCFAFD] select-none safe-top safe-bottom overflow-y-auto">
+  <!-- Top Bar: Back, Brand, Skip -->
+  <div class="flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('splash')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+        <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-lg text-[#1E1B18]">DocErena</span>
+    </div>
+    <button onclick="navigateTo('home')" class="min-w-[48px] min-h-[48px] flex items-center justify-center text-base font-bold text-[#1E1B18] hover:text-[#7C3AED] px-2 py-1">Skip</button>
+  </div>
+
+  <!-- Step Indicator & Progress Bars -->
+  <div class="flex flex-col items-center mt-2 shrink-0">
+    <span class="px-4 py-1 rounded-full bg-[#EDE9FE] text-[#7C3AED] font-black text-xs mb-2">1 of 2</span>
+    <div class="w-28 h-2 flex items-center space-x-2">
+      <div class="w-14 h-full bg-[#8B5CF6] rounded-full"></div>
+      <div class="w-14 h-full bg-[#EDE9FE] rounded-full"></div>
+    </div>
+  </div>
+
+  <!-- Center Content -->
+  <div class="flex flex-col items-center text-center px-4 my-auto py-3 space-y-2">
+    <h2 class="text-[30px] sm:text-[34px] font-black text-[#1E1B18] tracking-tight leading-tight">Scan in seconds</h2>
+    <p class="text-base font-semibold text-[#64748B] max-w-xs leading-snug">Do More with your scans — turn paper documents into clear digital files.</p>
+
+    <!-- Official Illustration -->
+    <div class="w-full max-w-[300px] flex items-center justify-center py-2">
+      <img src="onboarding_scan_illustration.png" alt="Scan in seconds" class="w-full max-h-[250px] object-contain drop-shadow-md">
+    </div>
+  </div>
+
+  <!-- Bottom CTAs -->
+  <div class="w-full max-w-sm mx-auto flex flex-col items-center space-y-3 pb-3 shrink-0">
+    <button onclick="navigateTo('onboarding-edit')" class="w-full h-15 min-h-[58px] py-4 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-lg shadow-xl shadow-black/15 active:scale-[0.98] transition-all flex items-center justify-center tracking-wide">
+      Next
+    </button>
+    <button onclick="navigateTo('home')" class="w-full h-12 py-3 px-6 text-base font-extrabold text-[#1E1B18] hover:text-[#7C3AED] transition-colors flex items-center justify-center">
+      Continue as guest
+    </button>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCREEN 03: ONBOARDING STEP 2 - ORGANIZE    -->
+<!-- (03_Onboarding_Edit_and_Organize.png)      -->
+<!-- ========================================== -->
+<div id="screen-onboarding-edit" class="hidden flex-1 flex flex-col justify-between px-6 py-6 bg-[#FCFAFD] select-none safe-top safe-bottom overflow-y-auto">
+  <!-- Top Bar: Back, Brand, Skip -->
+  <div class="flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('onboarding')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+        <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-lg text-[#1E1B18]">DocErena</span>
+    </div>
+    <button onclick="finishOnboardingAndGoHome()" class="min-w-[48px] min-h-[48px] flex items-center justify-center text-base font-bold text-[#1E1B18] hover:text-[#7C3AED] px-2 py-1">Skip</button>
+  </div>
+
+  <!-- Step Indicator & Progress Bars -->
+  <div class="flex flex-col items-center mt-2 shrink-0">
+    <span class="px-4 py-1 rounded-full bg-[#EDE9FE] text-[#7C3AED] font-black text-xs mb-2">2 of 2</span>
+    <div class="w-28 h-2 flex items-center space-x-2">
+      <div class="w-14 h-full bg-[#8B5CF6] rounded-full"></div>
+      <div class="w-14 h-full bg-[#8B5CF6] rounded-full"></div>
+    </div>
+  </div>
+
+  <!-- Center Content -->
+  <div class="flex flex-col items-center text-center px-4 my-auto py-3 space-y-2">
+    <h2 class="text-[30px] sm:text-[34px] font-black text-[#1E1B18] tracking-tight leading-tight">Edit and organize</h2>
+    <p class="text-base font-semibold text-[#64748B] max-w-xs leading-snug">Keep your documents ready whenever you need them.</p>
+
+    <!-- Official Illustration -->
+    <div class="w-full max-w-[300px] flex items-center justify-center py-2">
+      <img src="onboarding_edit_illustration.png" alt="Edit and organize" class="w-full max-h-[250px] object-contain drop-shadow-md">
+    </div>
+  </div>
+
+  <!-- Bottom CTAs -->
+  <div class="w-full max-w-sm mx-auto flex flex-col items-center space-y-3 pb-3 shrink-0">
+    <button onclick="finishOnboardingAndGoHome()" class="w-full h-15 min-h-[58px] py-4 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-lg shadow-xl shadow-black/15 active:scale-[0.98] transition-all flex items-center justify-center tracking-wide">
+      Go to home
+    </button>
+    <button onclick="finishOnboardingAndGoHome()" class="w-full h-12 py-3 px-6 text-base font-extrabold text-[#1E1B18] hover:text-[#7C3AED] transition-colors flex items-center justify-center">
+      Continue as guest
+    </button>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCREEN 04: HOME SCREEN (Target Design Match) -->
+<!-- ========================================== -->
+<div id="screen-home" class="hidden flex-1 flex flex-col overflow-hidden relative bg-[#FCFAFD] text-[#1E1B18] select-none safe-top">
+  <!-- Subtle Organic Pastel Background Shapes -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+    <!-- Top-Right Warm Peach / Apricot Ambient Glow -->
+    <div class="absolute -top-12 -right-12 w-72 h-72 rounded-full bg-gradient-to-br from-[#FED7AA]/40 via-[#FEF08A]/25 to-transparent blur-2xl"></div>
+    <!-- Top-Left Soft Lavender Glow -->
+    <div class="absolute -top-16 left-2 w-60 h-60 rounded-full bg-[#EDE9FE]/40 blur-2xl"></div>
+    <!-- Bottom-Left Organic Curves -->
+    <svg class="absolute -bottom-8 -left-8 w-56 h-56 text-[#EDE9FE]/90" viewBox="0 0 200 200" fill="none">
+      <path d="M-20 220 C30 140, 110 160, 150 220 L-20 220 Z" fill="#EDE9FE" opacity="0.9"/>
+      <path d="M40 220 C80 170, 140 180, 175 220 L40 220 Z" fill="#FEF3C7" opacity="0.75"/>
+    </svg>
+  </div>
+
+  <!-- Top App Header: DocErena Brand Logo + Notification Bell & Profile Avatar -->
+  <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0 relative z-10">
+    <!-- Left: Folded purple paper icon + bold "DocErena" brand text -->
+    <div class="flex items-center space-x-2.5">
+      <div class="w-9 h-9 flex items-center justify-center shrink-0">
+        <!-- Folded purple origami paper icon with golden fold corner matching target reference -->
+        <svg class="w-8 h-8" viewBox="0 0 36 36" fill="none">
+          <!-- Left vertical lavender fold -->
+          <path d="M7 10C7 6.68629 9.68629 4 13 4H15V32H13C9.68629 32 7 29.3137 7 26V10Z" fill="#A78BFA"/>
+          <!-- Right top rich purple flap -->
+          <path d="M16 4H23C26.3137 4 29 6.68629 29 10V18C25 18 19 19.5 16 20.5V4Z" fill="#7C3AED"/>
+          <!-- Right bottom pastel yellow fold -->
+          <path d="M16 22C19.5 21 25.5 19.5 29 19.5V26C29 29.3137 26.3137 32 23 32H16V22Z" fill="#FDE047"/>
+        </svg>
+      </div>
+      <span class="font-black text-2xl text-[#111827] tracking-tight">DocErena</span>
+    </div>
+
+    <!-- Right Controls: Notification Bell + Settings / Profile Avatar -->
+    <div class="flex items-center space-x-2">
+      <!-- Notification Bell with unread dot -->
+      <button onclick="openNotificationsScreen()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-[#374151] hover:text-[#111827] hover:bg-[#EDE9FE]/50 relative transition-colors" title="Notifications" aria-label="Notifications">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+        <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-[#8B5CF6] rounded-full ring-2 ring-[#FCFAFD]"></span>
+      </button>
+
+      <!-- Profile Avatar button (accessible via settings gear and user profile) -->
+      <button onclick="navigateTo('settings'); if (typeof openSettingsModal==='function') openSettingsModal();" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shrink-0 hover:bg-[#DDD6FE] transition-colors" title="Settings" aria-label="Settings">
+        <svg class="w-5 h-5 text-[#6D28D9]" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="7.5" r="3.5"/>
+          <path d="M4 19.5c0-3.5 3.5-5.5 8-5.5s8 2 8 5.5"/>
+        </svg>
+        <span class="sr-only">Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Bar: Pill Input -->
+  <div class="px-5 mt-2 mb-3 relative z-10 shrink-0">
+    <div onclick="navigateTo('search')" class="cursor-pointer bg-white/95 backdrop-blur-sm rounded-full border border-[#DDD6FE]/80 px-4 py-3 flex items-center space-x-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:border-[#8B5CF6] transition-all">
+      <svg class="w-5 h-5 text-[#64748B] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+      </svg>
+      <span class="text-sm font-medium text-[#64748B] select-none">Search documents, tools, or files</span>
+    </div>
+    <!-- Token: Search documents -->
+    <input type="text" id="home-search-input" class="hidden" placeholder="Search documents" oninput="executeSearch(this.value)">
+  </div>
+
+  <!-- Scrollable Home Content: 8 Quick Actions + Recent Documents -->
+  <div class="flex-1 overflow-y-auto px-5 pb-24 relative z-10 space-y-3">
+    <!-- 8 Quick-Action Grid Tiles (2 rows x 4 columns) -->
+    <div class="grid grid-cols-4 gap-x-2 gap-y-3.5 pt-1">
+      <!-- Tile 1: Scan -->
+      <button onclick="startScanning('single')" class="flex flex-col items-center group focus:outline-none" title="Scan">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#F3E8FF] group-hover:bg-[#EDE9FE] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8V5a1 1 0 0 1 1-1h3"/>
+            <path d="M16 4h3a1 1 0 0 1 1 1v3"/>
+            <path d="M20 16v3a1 1 0 0 1-1 1h-3"/>
+            <path d="M8 20H5a1 1 0 0 1-1-1v-3"/>
+            <line x1="8" y1="12" x2="16" y2="12" stroke-width="2.8"/>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">Scan</span>
+      </button>
+
+      <!-- Tile 2: PDF Tools -->
+      <button onclick="navigateTo('pdf-tools'); if (typeof openPdfToolsModal==='function') openPdfToolsModal();" class="flex flex-col items-center group focus:outline-none" title="PDF Tools">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#FEF9C3] group-hover:bg-[#FEF08A] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#EF4444]" viewBox="0 0 24 24" fill="none">
+            <path d="M6 3H14L19 8V20C19 21.1 18.1 22 17 22H6C4.9 22 4 21.1 4 20V5C4 3.9 4.9 3 6 3Z" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 3V8H19" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="11.5" y="16.5" font-size="6.5" font-weight="900" fill="#EF4444" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">PDF</text>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">PDF Tools</span>
+      </button>
+
+      <!-- Tile 3: Import Images -->
+      <button onclick="triggerGalleryImport()" class="flex flex-col items-center group focus:outline-none" title="Import Images">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#E0F2FE] group-hover:bg-[#BAE6FD] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#0284C7]" viewBox="0 0 24 24" fill="none">
+            <rect width="18" height="15" x="3" y="4.5" rx="3.5" stroke="#0284C7" stroke-width="2.2"/>
+            <circle cx="8" cy="9.5" r="1.6" fill="#0284C7"/>
+            <path d="M5.5 17.5 L10.5 12 L13.5 15.5 L15.5 13.5 L18.5 17.5 Z" fill="#0284C7"/>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">Import Images</span>
+      </button>
+
+      <!-- Tile 4: Import Files -->
+      <button onclick="triggerSystemFileImport()" class="flex flex-col items-center group focus:outline-none" title="Import Files">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#EDE9FE] group-hover:bg-[#DDD6FE] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#8B5CF6]" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 7.5 C3.5 6.4 4.4 5.5 5.5 5.5 H9.5 L11.5 7.5 H18.5 C19.6 7.5 20.5 8.4 20.5 9.5 V17.5 C20.5 18.6 19.6 19.5 18.5 19.5 H5.5 C4.4 19.5 3.5 18.6 3.5 17.5 Z"/>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">Import Files</span>
+      </button>
+
+      <!-- Tile 5: ID Cards -->
+      <button onclick="navigateTo('scan-id-card')" class="flex flex-col items-center group focus:outline-none" title="ID Cards">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#E0F2FE] group-hover:bg-[#BAE6FD] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#0284C7]" viewBox="0 0 24 24" fill="none">
+            <rect width="18" height="14" x="3" y="5" rx="3" stroke="#0284C7" stroke-width="2.2"/>
+            <circle cx="8" cy="9.5" r="1.8" fill="#0284C7"/>
+            <path d="M5.5 14.5 C5.5 13 6.6 12.2 8 12.2 C9.4 12.2 10.5 13 10.5 14.5 Z" fill="#0284C7"/>
+            <line x1="12.5" y1="9" x2="17.5" y2="9" stroke="#0284C7" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12.5" y1="12" x2="17.5" y2="12" stroke="#0284C7" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12.5" y1="15" x2="15.5" y2="15" stroke="#0284C7" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">ID Cards</span>
+      </button>
+
+      <!-- Tile 6: Extract Text -->
+      <button onclick="navigateTo('extract-text-ocr')" class="flex flex-col items-center group focus:outline-none" title="Extract Text">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#F3E8FF] group-hover:bg-[#EDE9FE] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#7C3AED]" viewBox="0 0 24 24" fill="none">
+            <path d="M4 8V5a1 1 0 0 1 1-1h3" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M16 4h3a1 1 0 0 1 1 1v3" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M20 16v3a1 1 0 0 1-1 1h-3" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M8 20H5a1 1 0 0 1-1-1v-3" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round"/>
+            <text x="12" y="16" font-size="12" font-weight="900" font-family="Georgia, 'Times New Roman', serif" fill="#7C3AED" text-anchor="middle">T</text>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">Extract Text</span>
+      </button>
+
+      <!-- Tile 7: Sign -->
+      <button onclick="navigateTo('create-signature'); if (typeof openSignatureDemo==='function') openSignatureDemo();" class="flex flex-col items-center group focus:outline-none" title="Sign">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#FEF9C3] group-hover:bg-[#FEF08A] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#D97706]" viewBox="0 0 24 24" fill="none">
+            <path d="M4 16 C6 14 7.5 9 9 9 C10.2 9 10.5 12 8.5 14.5 C7.5 15.7 8.5 16.5 10 15 C11 14 11.5 13.5 12.5 13.5" stroke="#D97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 13 L17.5 9.5 C18 9 19 9 19.5 9.5 C20 10 20 11 19.5 11.5 L16 15 Z" fill="#D97706"/>
+            <circle cx="18.5" cy="10.5" r="0.7" fill="#FEF9C3"/>
+            <line x1="9" y1="18.5" x2="16" y2="18.5" stroke="#D97706" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">Sign</span>
+      </button>
+
+      <!-- Tile 8: All Tools -->
+      <button onclick="navigateTo('pdf-tools'); if (typeof openPdfToolsModal==='function') openPdfToolsModal();" class="flex flex-col items-center group focus:outline-none" title="All Tools">
+        <div class="w-[68px] h-[68px] sm:w-[74px] sm:h-[74px] rounded-[22px] bg-[#E0F2FE] group-hover:bg-[#BAE6FD] flex items-center justify-center shadow-xs transition-all active:scale-95">
+          <svg class="w-7 h-7 text-[#0284C7]" viewBox="0 0 24 24" fill="none">
+            <rect width="6" height="6" x="3.5" y="3.5" rx="2" stroke="#0284C7" stroke-width="2.2"/>
+            <rect width="6" height="6" x="14.5" y="3.5" rx="2" stroke="#0284C7" stroke-width="2.2"/>
+            <rect width="6" height="6" x="14.5" y="14.5" rx="2" stroke="#0284C7" stroke-width="2.2"/>
+            <rect width="6" height="6" x="3.5" y="14.5" rx="2" stroke="#0284C7" stroke-width="2.2"/>
+          </svg>
+        </div>
+        <span class="text-[12px] font-bold text-[#111827] mt-1.5 text-center leading-tight">All Tools</span>
+      </button>
+    </div>
+
+    <!-- Section Header: Recent documents & View all > -->
+    <div class="pt-4 flex items-center justify-between">
+      <div>
+        <h3 class="font-black text-xl text-[#111827] tracking-tight">Recent documents</h3>
+        <span class="sr-only">Your documents</span>
+      </div>
+      <button onclick="navigateTo('documents'); if (typeof selectDocumentsTab==='function') selectDocumentsTab();" class="text-sm font-bold text-[#7C3AED] hover:text-[#6D28D9] flex items-center space-x-1" title="View all">
+        <span>View all</span>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div id="recent-docs-empty" class="py-8 flex flex-col items-center text-center">
+      <div class="w-28 h-28 flex items-center justify-center mb-2">
+        <img src="home_empty_illustration.png" alt="No documents yet" class="w-full h-full object-contain">
+      </div>
+      <h4 class="font-black text-base text-[#111827]">No documents yet</h4>
+      <p class="text-xs font-semibold text-[#64748B] mt-1">Your scans will appear here.</p>
+      <button onclick="startScanning('single')" class="mt-4 px-6 py-2.5 rounded-full bg-[#111827] hover:bg-black text-white font-extrabold text-xs shadow-md active:scale-95 transition-all">
+        Scan a document
+      </button>
+    </div>
+
+    <!-- Populated Documents List (Dynamic cards matching exact UI) -->
+    <div id="recent-docs-list" class="space-y-3 pb-6 hidden">
+      <!-- Populated dynamically via renderDocumentList() -->
+    </div>
+
+    <!-- Legacy / Test-Suite Compatibility Aliases -->
+    <div id="home-empty-state" class="hidden"></div>
+    <div id="document-grid" class="hidden"></div>
+  </div>
+
+  <!-- Floating Action Button (FAB): Rich Purple Circle with Camera in Reticle Viewfinder -->
+  <button onclick="startScanning('single')" class="absolute bottom-20 right-5 w-14 h-14 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white flex items-center justify-center shadow-[0_8px_24px_rgba(124,58,237,0.45)] active:scale-95 transition-all z-30 focus:outline-none" title="Scan Document" aria-label="Scan Document">
+    <svg class="w-7 h-7 text-white" viewBox="0 0 28 28" fill="none">
+      <!-- 4 Corner reticles -->
+      <path d="M4 9V6C4 4.89543 4.89543 4 6 4H9" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M19 4H22C23.1046 4 24 4.89543 24 6V9" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M24 19V22C24 23.1046 23.1046 24 22 24H19" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M9 24H6C4.89543 24 4 23.1046 4 22V19" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- Filled camera with center circle cutout -->
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M10.5 8.5L11.5 7H16.5L17.5 8.5H19.5C20.6046 8.5 21.5 9.39543 21.5 10.5V17.5C21.5 18.6046 20.6046 19.5 19.5 19.5H8.5C7.39543 19.5 6.5 18.6046 6.5 17.5V10.5C6.5 9.39543 7.39543 8.5 8.5 8.5H10.5ZM14 16.5C15.3807 16.5 16.5 15.3807 16.5 14C16.5 12.6193 15.3807 11.5 14 11.5C12.6193 11.5 11.5 12.6193 11.5 14C11.5 15.3807 12.6193 16.5 14 16.5Z" fill="white"/>
+    </svg>
+  </button>
+
+  <!-- 4-Tab Bottom Navigation Bar (Home active) -->
+  <nav class="h-16 bg-white rounded-t-3xl border-t border-slate-100 shadow-[0_-2px_12px_rgba(0,0,0,0.03)] px-6 flex items-center justify-between shrink-0 z-20 safe-bottom">
+    <!-- Tab 1: Home (active: rounded pill background enclosing icon AND label) -->
+    <button onclick="navigateTo('home')" class="flex items-center justify-center">
+      <div class="px-4 py-1.5 rounded-2xl bg-[#EDE9FE] flex flex-col items-center">
+        <svg class="w-5 h-5 text-[#7C3AED] fill-current" viewBox="0 0 24 24">
+          <path d="M12 3L2 12h3v8a1 1 0 001 1h5v-6h2v6h5a1 1 0 001-1v-8h3L12 3z"/>
+        </svg>
+        <span class="text-[10px] font-black text-[#7C3AED] mt-0.5">Home</span>
+      </div>
+    </button>
+
+    <!-- Tab 2: Documents -->
+    <button onclick="navigateTo('documents'); if (typeof selectDocumentsTab==='function') selectDocumentsTab();" class="flex flex-col items-center space-y-0.5 text-[#374151] hover:text-[#111827] transition-colors">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <span class="text-[10px] font-bold">Documents</span>
+    </button>
+
+    <!-- Tab 3: Tools -->
+    <button onclick="navigateTo('pdf-tools'); if (typeof openPdfToolsModal==='function') openPdfToolsModal();" class="flex flex-col items-center space-y-0.5 text-[#374151] hover:text-[#111827] transition-colors">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="6" height="6" x="3.5" y="3.5" rx="1.5"/>
+        <rect width="6" height="6" x="14.5" y="3.5" rx="1.5"/>
+        <rect width="6" height="6" x="14.5" y="14.5" rx="1.5"/>
+        <rect width="6" height="6" x="3.5" y="14.5" rx="1.5"/>
+      </svg>
+      <span class="text-[10px] font-bold">Tools</span>
+    </button>
+
+    <!-- Tab 4: Settings -->
+    <button onclick="navigateTo('settings'); if (typeof openSettingsModal==='function') openSettingsModal();" class="flex flex-col items-center space-y-0.5 text-[#374151] hover:text-[#111827] transition-colors">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span class="text-[10px] font-bold">Settings</span>
+    </button>
+  </nav>
+</div>
+
+
+<!-- ========================================== -->
+<!-- SCREEN: NOTIFICATIONS (screen-notifications) -->
+<!-- ========================================== -->
+<div id="screen-notifications" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Bar: Back, Title, Clear All -->
+  <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0 bg-white border-b border-slate-200/80 z-20">
+    <button onclick="navigateTo('home')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="text-center px-2 flex-1">
+      <h3 class="font-extrabold text-lg text-[#1E1B18]">Notifications</h3>
+    </div>
+    <button onclick="clearNotifications()" class="text-xs font-bold text-[#7C3AED] hover:text-[#6D28D9] px-2 py-1.5 rounded-lg transition-colors" title="Clear all">
+      Clear all
+    </button>
+  </div>
+
+  <!-- Notification Permission Banner (if not granted) -->
+  <div id="notif-permission-banner" class="hidden mx-5 mt-3 p-3.5 rounded-2xl bg-[#EDE9FE]/70 border border-[#DDD6FE] flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-[#1E1B18]">Enable Alerts</p>
+        <p class="text-[11px] text-[#64748B]">Get scan and export updates</p>
+      </div>
+    </div>
+    <button onclick="requestAppNotificationPermission()" class="px-3 py-1.5 rounded-full bg-[#7C3AED] text-white text-xs font-extrabold shadow-xs active:scale-95 transition-all">
+      Allow
+    </button>
+  </div>
+
+  <!-- Notifications List & Empty State -->
+  <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+    <!-- Populated by JavaScript -->
+    <div id="notifications-list" class="space-y-3"></div>
+
+    <div id="notifications-empty" class="hidden py-16 flex flex-col items-center text-center">
+      <div class="w-20 h-20 rounded-full bg-[#EDE9FE] flex items-center justify-center mb-3">
+        <svg class="w-9 h-9 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </div>
+      <h4 class="font-extrabold text-base text-[#111827]">No notifications</h4>
+      <p class="text-xs font-medium text-[#64748B] mt-1 max-w-[240px]">You're all caught up with your documents and alerts.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace "com.digitalerena.docerena"
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.digitalerena.docerena"
+        minSdk 24
+        targetSdk 36
+        versionCode 5
+        versionName "5.0.0-phonetest"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('docerena.jks')
+            storePassword 'docerena'
+            keyAlias 'docerena'
+            keyPassword 'docerena'
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // 100% offline purity: zero cloud dependencies required.
+}

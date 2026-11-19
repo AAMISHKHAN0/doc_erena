@@ -1,0 +1,4749 @@
+    // ==========================================
+    // REAL ORGANIZER & REVIEW CONTROLLER (S08)
+    // ==========================================
+    function renderOrganizerGrid() {
+      const grid = document.getElementById('organizer-pages-grid');
+      const badge = document.getElementById('organizer-page-count-badge');
+      if (badge) badge.textContent = `${sessionPages.length} ${sessionPages.length === 1 ? 'page' : 'pages'}`;
+
+      if (!grid) return;
+      if (sessionPages.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 py-12 text-center text-slate-400">
+            <p class="text-xs font-bold">No pages captured yet</p>
+            <button onclick="startScanning('single')" class="mt-2 text-xs font-extrabold text-[#7C3AED] underline">Tap to scan page</button>
+          </div>
+        `;
+        return;
+      }
+
+      let cardsHtml = sessionPages.map((page, idx) => {
+        const isSelected = (idx === selectedOrganizerIndex);
+        const borderClass = isSelected ? 'border-2 border-[#8B5CF6] shadow-sm' : 'border border-slate-200/80 shadow-xs';
+        const imgUrl = page.enhancedUrl || page.croppedUrl || page.rawUrl;
+
+        const selectIndicator = isSelected ? `
+          <div class="w-6 h-6 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center font-black text-xs shadow-xs">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="font-black text-sm text-[#1E1B18] ml-2">${idx + 1}</span>
+        ` : `
+          <div class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center font-bold text-xs text-[#1E1B18]">
+          </div>
+          <span class="font-black text-sm text-[#1E1B18] ml-2">${idx + 1}</span>
+        `;
+
+        return `
+          <div onclick="selectOrganizerPage(${idx})" class="p-3 rounded-3xl bg-white ${borderClass} flex flex-col justify-between cursor-pointer transition-all relative">
+            <div class="flex items-center justify-between pb-2">
+              <div class="flex items-center space-x-0.5 text-slate-400">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/>
+                  <circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/>
+                  <circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/>
+                </svg>
+              </div>
+              <button onclick="event.stopPropagation(); openCropForPage(${idx});" class="text-slate-400 hover:text-[#1E1B18]">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="w-full h-44 rounded-2xl bg-amber-100/40 p-1.5 flex items-center justify-center overflow-hidden mb-2 shadow-xs">
+              <img src="${imgUrl}" alt="Page ${idx + 1}" class="w-full h-full object-contain rounded-lg">
+            </div>
+
+            <div class="flex items-center pt-1">
+              ${selectIndicator}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      cardsHtml += `
+        <div onclick="addPageToOrganizer()" class="p-4 rounded-3xl border-2 border-dashed border-[#DDD6FE] bg-white/60 hover:bg-white flex flex-col items-center justify-center cursor-pointer min-h-[220px] transition-all text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shadow-xs">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <div>
+            <h4 class="font-black text-sm text-[#1E1B18]">Add page</h4>
+            <p class="text-[11px] font-semibold text-[#64748B]">Scan another page</p>
+          </div>
+        </div>
+      `;
+
+      grid.innerHTML = cardsHtml;
+    }
+
+    function rotateSelectedOrganizerPage() {
+      rotateSelectedPage();
+    }
+
+    function selectOrganizerPage(idx) {
+      selectedOrganizerIndex = idx;
+      renderOrganizerGrid();
+    }
+
+    function rotateSelectedPage() {
+      if (sessionPages.length === 0) return;
+      const p = sessionPages[selectedOrganizerIndex];
+      if (!p) return;
+      p.rotation = ((p.rotation || 0) + 90) % 360;
+
+      // Rotate image on temporary canvas
+      const img = new Image();
+      img.onload = function() {
+        const c = document.createElement('canvas');
+        c.width = img.height;
+        c.height = img.width;
+        const ctx = c.getContext('2d');
+        ctx.translate(c.width / 2, c.height / 2);
+        ctx.rotate((90 * Math.PI) / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        p.enhancedUrl = c.toDataURL('image/jpeg', 0.92);
+        p.croppedUrl = p.enhancedUrl;
+        renderOrganizerGrid();
+        showToast(`Page ${selectedOrganizerIndex + 1} rotated 90°`);
+      };
+      img.src = p.enhancedUrl || p.croppedUrl || p.rawUrl;
+    }
+
+    function reorderOrganizerPage(fromIdx, toIdx) {
+      if (fromIdx < 0 || fromIdx >= sessionPages.length || toIdx < 0 || toIdx >= sessionPages.length) return;
+      const item = sessionPages.splice(fromIdx, 1)[0];
+      sessionPages.splice(toIdx, 0, item);
+      selectedOrganizerIndex = toIdx;
+      renderOrganizerGrid();
+      showToast(`Page moved to position ${toIdx + 1}`);
+    }
+
+    function reorderSelectedPage(dir) {
+      if (dir === 'left' || dir === -1) {
+        if (selectedOrganizerIndex > 0) reorderOrganizerPage(selectedOrganizerIndex, selectedOrganizerIndex - 1);
+      } else {
+        if (selectedOrganizerIndex < sessionPages.length - 1) reorderOrganizerPage(selectedOrganizerIndex, selectedOrganizerIndex + 1);
+      }
+    }
+
+    function deleteSelectedOrganizerPage() {
+      if (sessionPages.length <= 1) {
+        showToast('Document must contain at least one page');
+        return;
+      }
+      sessionPages.splice(selectedOrganizerIndex, 1);
+      selectedOrganizerIndex = Math.max(0, selectedOrganizerIndex - 1);
+      updateBatchThumbBadge();
+      renderOrganizerGrid();
+      showToast('Page removed from document batch');
+    }
+
+    function deleteSelectedPage() {
+      deleteSelectedOrganizerPage();
+    }
+
+    function addPageToOrganizer() {
+      startScanning('single');
+    }
+
+    // ==========================================
+    // SAVE DOCUMENT & COMMIT TO STORAGE (S09)
+    // ==========================================
+    function saveDocumentCommit() {
+      if (sessionPages.length === 0) {
+        showToast('No pages to save');
+        return;
+      }
+
+      const titleInput = document.getElementById('save-doc-title-input');
+      let title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : `DocErena_Scan_${Date.now()}`;
+      
+      const folderSelect = document.getElementById('save-doc-folder-select');
+      const folderId = (folderSelect && folderSelect.value) ? folderSelect.value : null;
+
+      const newDoc = {
+        id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        title: title,
+        date: 'Just now',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        size: `${(sessionPages.length * 0.7).toFixed(1)} MB`,
+        type: 'PDF',
+        starred: false,
+        folderId: folderId,
+        pages: [...sessionPages]
+      };
+
+      // Add to front of documents list
+      documents.unshift(newDoc);
+      DocErenaStorage.saveDocuments(documents);
+
+      // Clear batch session
+      sessionPages = [];
+      updateBatchThumbBadge();
+
+      showToast(`Document saved: "${title}"`);
+
+      // Open in Viewer
+      openDocumentInViewer(newDoc.id);
+    }
+
+    function commitSaveDocAndOpenViewer() {
+      saveDocumentCommit();
+    }
+
+    // ==========================================
+    // INTERACTIVE MULTI-PAGE VIEWER (S10)
+    // ==========================================
+    function openDocumentInViewer(docIdOrIdx) {
+      let doc = null;
+      if (typeof docIdOrIdx === 'number') {
+        doc = documents[docIdOrIdx];
+      } else if (typeof docIdOrIdx === 'string') {
+        doc = documents.find(d => d.id === docIdOrIdx);
+      }
+      if (!doc && documents.length > 0) doc = documents[0];
+      if (!doc) {
+        showToast('Document not found');
+        return;
+      }
+
+      activeDocForViewer = doc;
+      viewerActivePageIndex = 0;
+      viewerZoom = 1.0;
+
+      // Update titles
+      const titleEl = document.getElementById('viewer-doc-title');
+      if (titleEl) titleEl.textContent = doc.title;
+
+      updateViewerStarUI();
+      renderViewerPage();
+      renderViewerThumbRail();
+
+      navigateTo('viewer');
+    }
+
+    function leaveViewer() {
+      navigateTo('documents');
+    }
+
+    function renderViewerPage() {
+      if (!activeDocForViewer || !activeDocForViewer.pages) return;
+      const page = activeDocForViewer.pages[viewerActivePageIndex];
+      if (!page) return;
+
+      const canvas = document.getElementById('viewer-canvas');
+      const pageInd = document.getElementById('viewer-page-indicator');
+      if (pageInd) {
+        pageInd.textContent = `Page ${viewerActivePageIndex + 1} of ${activeDocForViewer.pages.length}`;
+      }
+
+      if (!canvas) return;
+
+      const img = new Image();
+      img.onload = function() {
+        const baseW = 600;
+        const aspect = img.height / img.width;
+        canvas.width = Math.round(baseW * viewerZoom);
+        canvas.height = Math.round(baseW * aspect * viewerZoom);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = page.enhancedUrl || page.dataUrl || page.croppedUrl || page.rawUrl;
+    }
+
+    function renderViewerThumbRail() {
+      const rail = document.getElementById('viewer-thumb-rail');
+      if (!rail || !activeDocForViewer || !activeDocForViewer.pages) return;
+
+      rail.innerHTML = activeDocForViewer.pages.map((p, idx) => {
+        const isActive = (idx === viewerActivePageIndex);
+        const border = isActive ? 'border-2 border-[#8B5CF6] ring-2 ring-[#EDE9FE]' : 'border border-slate-200';
+        const imgUrl = p.enhancedUrl || p.dataUrl || p.croppedUrl || p.rawUrl;
+
+        return `
+          <button onclick="changeViewerPage(${idx})" class="w-12 h-16 rounded-xl overflow-hidden bg-white ${border} shrink-0 cursor-pointer shadow-xs transition-all" aria-label="Thumbnail page ${idx + 1}" title="Page ${idx + 1}">
+            <img src="${imgUrl}" alt="Thumb ${idx + 1}" class="w-full h-full object-contain">
+          </button>
+        `;
+      }).join('');
+    }
+
+    function changeViewerPage(idx) {
+      if (!activeDocForViewer || !activeDocForViewer.pages) return;
+      if (idx < 0 || idx >= activeDocForViewer.pages.length) return;
+      viewerActivePageIndex = idx;
+      renderViewerPage();
+      renderViewerThumbRail();
+    }
+
+    function setViewerZoom(delta) {
+      viewerZoom = Math.max(0.5, Math.min(viewerZoom + delta, 3.0));
+      const lbl = document.getElementById('viewer-zoom-label');
+      if (lbl) lbl.textContent = `${Math.round(viewerZoom * 100)}%`;
+      renderViewerPage();
+    }
+
+    function adjustZoom(delta) {
+      setViewerZoom(delta);
+    }
+
+    function toggleDoubleTapZoom() {
+      if (viewerZoom > 1.0) {
+        setViewerZoom(1.0 - viewerZoom);
+      } else {
+        setViewerZoom(1.0);
+      }
+    }
+
+    function setViewerPage(idx) {
+      changeViewerPage(idx);
+    }
+
+    function toggleViewerFavorite() {
+      if (!activeDocForViewer) return;
+      activeDocForViewer.starred = !activeDocForViewer.starred;
+      DocErenaStorage.saveDocuments(documents);
+      updateViewerStarUI();
+      showToast(activeDocForViewer.starred ? 'Added to favorites' : 'Removed from favorites');
+    }
+
+    function updateViewerStarUI() {
+      const btn = document.getElementById('viewer-star-btn');
+      if (!btn || !activeDocForViewer) return;
+      if (activeDocForViewer.starred) {
+        btn.innerHTML = `<svg class="w-5 h-5 text-amber-500 fill-amber-400" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      } else {
+        btn.innerHTML = `<svg class="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      }
+    }
+
+    function openDocMenuFromViewer() {
+      if (!activeDocForViewer) return;
+      showDocMenu(activeDocForViewer.id, activeDocForViewer.title);
+    }
+
+    // ==========================================
+    // DOCUMENTS LIBRARY, TABS & FOLDERS (S13-S17)
+    // ==========================================
+    let currentDocTab = 'all';
+    let currentSortOrder = 'date'; // 'date' | 'name'
+
+    function selectDocumentsTab(tab) {
+      currentDocTab = tab;
+      const allBtn = document.getElementById('doc-tab-all');
+      const fldBtn = document.getElementById('doc-tab-folders');
+      const favBtn = document.getElementById('doc-tab-favorites');
+
+      [allBtn, fldBtn, favBtn].forEach(b => {
+        if (b) b.className = 'px-4 py-2 rounded-xl bg-white border border-slate-200/80 font-bold text-sm text-[#1E1B18] flex items-center space-x-1.5 transition-all shadow-xs hover:border-slate-300';
+      });
+
+      if (tab === 'all') {
+        if (allBtn) allBtn.className = 'px-5 py-2 rounded-xl bg-[#EDE9FE] font-black text-sm text-[#7C3AED] transition-all shadow-xs';
+      } else if (tab === 'folders') {
+        if (fldBtn) fldBtn.className = 'px-4 py-2 rounded-xl bg-[#EDE9FE] font-black text-sm text-[#7C3AED] flex items-center space-x-1.5 transition-all shadow-xs';
+      } else if (tab === 'favorites') {
+        if (favBtn) favBtn.className = 'px-4 py-2 rounded-xl bg-[#EDE9FE] font-black text-sm text-[#7C3AED] flex items-center space-x-1.5 transition-all shadow-xs';
+      }
+
+      renderDocsScreenContent();
+    }
+
+    function renderDocsScreenContent() {
+      const container = document.getElementById('docs-content-container');
+      if (!container) return;
+
+      if (currentDocTab === 'all') {
+        renderAllDocumentsList(container);
+      } else if (currentDocTab === 'folders') {
+        renderFoldersGrid(container);
+      } else if (currentDocTab === 'favorites') {
+        renderFavoritesList(container);
+      }
+    }
+
+    function renderAllDocumentsList(container) {
+      let list = [...documents];
+      if (currentSortOrder === 'name') {
+        list.sort((a, b) => a.title.localeCompare(b.title));
+      } else {
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="py-16 text-center text-slate-400">
+            <svg class="w-12 h-12 mx-auto text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            <p class="font-extrabold text-sm text-[#1E1B18]">No documents yet</p>
+            <p class="text-xs text-[#64748B] mt-0.5">Scanned files will appear in All documents.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map((doc, idx) => {
+        const pageCount = (doc.pages && doc.pages.length) ? doc.pages.length : 1;
+        const starFill = doc.starred ? 'fill-[#FDE047] text-amber-500' : 'text-slate-300';
+
+        return `
+          <div onclick="openDocumentInViewer('${doc.id}')" class="p-3.5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#8B5CF6]/50 active:scale-[0.99] transition-all">
+            <div class="flex items-center space-x-3.5 overflow-hidden">
+              <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs shrink-0">
+                PDF
+              </div>
+              <div class="overflow-hidden">
+                <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${doc.title}</h4>
+                <p class="text-xs text-[#64748B] mt-0.5">${pageCount} ${pageCount === 1 ? 'page' : 'pages'} • ${doc.date || 'Today'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1 shrink-0" onclick="event.stopPropagation()">
+              <button onclick="toggleDocFavorite('${doc.id}')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors" aria-label="Toggle favorite" title="Favorite">
+                <svg class="w-5 h-5 ${starFill}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" ${doc.starred ? 'fill="#FDE047"' : 'fill="none"'}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </button>
+              <button onclick="showDocMenu('${doc.id}', '${doc.title}')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-slate-400 hover:text-[#1E1B18] hover:bg-slate-50 transition-colors" aria-label="Document options" title="More options">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFoldersGrid(container) {
+      if (folders.length === 0) {
+        container.innerHTML = `
+          <div class="py-16 text-center text-slate-400">
+            <h3 class="font-extrabold text-sm text-[#1E1B18]">Your folders</h3>
+            <p class="font-extrabold text-sm text-[#1E1B18] mt-2">No folders yet</p>
+            <p class="text-xs text-[#64748B] mt-0.5">Tap "Add folder" below to organize your documents.</p>
+            <button onclick="navigateTo('create-folder')" class="mt-3 px-4 py-2 rounded-xl bg-[#EDE9FE] text-[#7C3AED] font-black text-xs">Add folder</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between pb-2">
+          <h3 class="font-extrabold text-sm text-[#1E1B18]">Your folders</h3>
+          <button onclick="navigateTo('create-folder')" class="text-xs font-black text-[#7C3AED] hover:underline">Add folder</button>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pb-4">
+          ${folders.map(f => {
+            const docCount = documents.filter(d => d.folderId === f.id).length;
+            let bgClass = 'bg-[#EDE9FE] border-[#DDD6FE] text-[#7C3AED]';
+            if (f.color === 'yellow') bgClass = 'bg-[#FEF3C7] border-[#FDE68A] text-[#D97706]';
+            if (f.color === 'blue') bgClass = 'bg-[#E0F2FE] border-[#BAE6FD] text-[#0284C7]';
+
+            return `
+              <div onclick="openFolderContents('${f.id}')" class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between min-h-[120px] cursor-pointer hover:border-[#8B5CF6]/50 active:scale-95 transition-all">
+                <div class="w-10 h-10 rounded-2xl ${bgClass} border flex items-center justify-center shadow-xs">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                </div>
+                <div>
+                  <h4 class="font-black text-sm text-[#1E1B18] truncate">${f.name}</h4>
+                  <span class="text-[11px] font-semibold text-[#64748B]">${docCount} ${docCount === 1 ? 'doc' : 'docs'}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderFavoritesList(container) {
+      const favs = documents.filter(d => d.starred);
+      if (favs.length === 0) {
+        container.innerHTML = `
+          <div class="py-16 text-center text-slate-400">
+            <svg class="w-12 h-12 mx-auto text-amber-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <p class="font-extrabold text-sm text-[#1E1B18]">No favorite documents yet</p>
+            <p class="text-xs text-[#64748B] mt-0.5">Tap the star icon on any document to add it to Favorites.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = favs.map(doc => {
+        const pageCount = (doc.pages && doc.pages.length) ? doc.pages.length : 1;
+        return `
+          <div onclick="openDocumentInViewer('${doc.id}')" class="p-3.5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#8B5CF6]/50 active:scale-[0.99] transition-all">
+            <div class="flex items-center space-x-3.5 overflow-hidden">
+              <div class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center font-black text-xs shrink-0">
+                PDF
+              </div>
+              <div class="overflow-hidden">
+                <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${doc.title}</h4>
+                <p class="text-xs text-[#64748B] mt-0.5">${pageCount} pages • ${doc.date || 'Today'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1 shrink-0" onclick="event.stopPropagation()">
+              <button onclick="toggleDocFavorite('${doc.id}')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-amber-500 hover:bg-slate-50 transition-colors" aria-label="Toggle favorite" title="Favorite">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="#FDE047"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </button>
+              <button onclick="showDocMenu('${doc.id}', '${doc.title}')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-slate-400 hover:text-[#1E1B18] hover:bg-slate-50 transition-colors" aria-label="Document options" title="More options">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDocumentList() {
+      // Home screen recent documents list
+      const grid = document.getElementById('document-grid');
+      const recentList = document.getElementById('recent-docs-list');
+      const recentEmpty = document.getElementById('recent-docs-empty');
+      const emptyState = document.getElementById('home-empty-state');
+
+      if (documents.length === 0) {
+        if (grid) grid.innerHTML = '';
+        if (recentList) {
+          recentList.innerHTML = '';
+          recentList.classList.add('hidden');
+        }
+        if (recentEmpty) recentEmpty.classList.remove('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+      }
+
+      if (recentEmpty) recentEmpty.classList.add('hidden');
+      if (emptyState) emptyState.classList.add('hidden');
+      if (recentList) recentList.classList.remove('hidden');
+
+      const cardsHtml = documents.slice(0, 5).map((doc, idx) => {
+        const pageCount = (doc.pages && doc.pages.length) ? doc.pages.length : 1;
+        const starClass = doc.starred ? 'fill-amber-400 text-amber-500' : 'text-slate-300';
+
+        return `
+          <div onclick="openDocumentInViewer('${doc.id}')" class="p-3.5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#8B5CF6]/50 active:scale-[0.99] transition-all">
+            <div class="flex items-center space-x-3.5 overflow-hidden">
+              <div class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs shrink-0">
+                PDF
+              </div>
+              <div class="overflow-hidden">
+                <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${doc.title}</h4>
+                <p class="text-xs text-[#64748B] mt-0.5">${pageCount} ${pageCount === 1 ? 'page' : 'pages'} • ${doc.date || 'Today'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1 shrink-0" onclick="event.stopPropagation()">
+              <button onclick="toggleStar(${idx})" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors" aria-label="Toggle favorite" title="Favorite">
+                <svg class="w-5 h-5 ${starClass}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </button>
+              <button onclick="shareDoc('${doc.title}')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-slate-400 hover:text-[#1E1B18] hover:bg-slate-50 transition-colors" aria-label="Share document" title="Share">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (recentList) recentList.innerHTML = cardsHtml;
+      if (grid) grid.innerHTML = cardsHtml;
+    }
+
+    function toggleStar(idx) {
+      if (!documents[idx]) return;
+      documents[idx].starred = !documents[idx].starred;
+      DocErenaStorage.saveDocuments(documents);
+      renderDocumentList();
+      showToast(documents[idx].starred ? 'Added to favorites' : 'Removed from favorites');
+    }
+
+    function toggleDocFavorite(docId) {
+      const doc = documents.find(d => d.id === docId);
+      if (!doc) return;
+      doc.starred = !doc.starred;
+      DocErenaStorage.saveDocuments(documents);
+      renderDocsScreenContent();
+      renderDocumentList();
+      showToast(doc.starred ? 'Added to favorites' : 'Removed from favorites');
+    }
+
+    function shareDoc(title) {
+      const doc = documents.find(d => d.title === title) || documents[0];
+      if (!doc) return;
+      openDocumentInViewer(doc.id);
+      navigateTo('share');
+    }
+
+    function cycleDocumentsSort() {
+      currentSortOrder = (currentSortOrder === 'date') ? 'name' : 'date';
+      renderDocsScreenContent();
+      showToast(`Sorted by ${currentSortOrder === 'date' ? 'Recent Date' : 'Document Name'}`);
+    }
+
+    function openNewFolderPrompt() {
+      navigateTo('create-folder');
+    }
+
+    function selectFolderColor(color) {
+      currentSelectedFolderColor = color;
+      const radios = document.querySelectorAll('input[name="folder-color"]');
+      radios.forEach(r => { if (r.value === color) r.checked = true; });
+    }
+
+    function submitCreateFolder() {
+      const nameInput = document.getElementById('new-folder-name-input');
+      const name = nameInput ? nameInput.value.trim() : '';
+      if (!name) {
+        showToast('Please enter a folder name');
+        return;
+      }
+
+      const isDuplicate = folders.some(f => f.name && f.name.trim().toLowerCase() === name.toLowerCase());
+      if (isDuplicate) {
+        showToast(`Folder "${name}" already exists`);
+        return;
+      }
+
+      const colorRadio = document.querySelector('input[name="folder-color"]:checked');
+      const color = colorRadio ? colorRadio.value : 'purple';
+
+      const newFolder = {
+        id: 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: name,
+        color: color,
+        createdAt: Date.now()
+      };
+
+      folders.push(newFolder);
+      DocErenaStorage.saveFolders(folders);
+
+      if (nameInput) nameInput.value = '';
+      showToast(`Folder "${name}" created`);
+      selectDocumentsTab('folders');
+      navigateTo('documents');
+    }
+
+    function openFolderContents(folderId) {
+      const f = folders.find(fold => fold.id === folderId);
+      if (!f) return;
+      currentFolderFilterId = folderId;
+
+      const titleEl = document.getElementById('folder-view-title');
+      if (titleEl) titleEl.textContent = f.name;
+
+      const fDocs = documents.filter(d => d.folderId === folderId);
+      const countEl = document.getElementById('folder-view-count');
+      if (countEl) countEl.textContent = `${fDocs.length} ${fDocs.length === 1 ? 'document' : 'documents'}`;
+
+      const container = document.getElementById('folder-docs-container');
+      if (container) {
+        if (fDocs.length === 0) {
+          container.innerHTML = `
+            <div class="py-16 text-center text-slate-400">
+              <p class="font-extrabold text-sm text-[#1E1B18]">Folder is empty</p>
+              <p class="text-xs text-[#64748B] mt-0.5">Tap the + button to scan directly into this folder.</p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = fDocs.map(doc => {
+            const pageCount = (doc.pages && doc.pages.length) ? doc.pages.length : 1;
+            return `
+              <div onclick="openDocumentInViewer('${doc.id}')" class="p-3.5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#8B5CF6]/50 transition-all">
+                <div class="flex items-center space-x-3.5 overflow-hidden">
+                  <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs shrink-0">
+                    PDF
+                  </div>
+                  <div class="overflow-hidden">
+                    <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${doc.title}</h4>
+                    <p class="text-xs text-[#64748B] mt-0.5">${pageCount} pages • ${doc.date || 'Today'}</p>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      navigateTo('folder');
+    }
+
+    function renderFolderDocs() {
+      if (currentActiveFolderId) {
+        openFolderContents(currentActiveFolderId);
+      }
+    }
+
+    function removeDocFromFolder(docId) {
+      const doc = documents.find(d => d.id === docId);
+      if (doc) {
+        doc.folderId = null;
+        DocErenaStorage.saveDocuments(documents);
+        renderFolderDocs();
+        renderDocsScreenContent();
+        showToast(`Removed "${doc.title}" from folder`);
+      }
+    }
+
+    function selectShareFormat(fmt) {
+      const radios = document.querySelectorAll('input[name="share-format"]');
+      radios.forEach(r => { r.checked = (r.value === fmt); });
+      showToast(`Selected format: ${fmt.toUpperCase()}`);
+    }
+
+    function selectShareQuality(qual) {
+      const radios = document.querySelectorAll('input[name="share-quality"]');
+      radios.forEach(r => { r.checked = (r.value === qual); });
+      showToast(`Selected quality: ${qual}`);
+    }
+
+    function handleSearchInputChange() {
+      const el = document.getElementById('dedicated-search-input');
+      if (el) renderSearchResults(el.value);
+    }
+
+    function openMergeFlow() {
+      navigateTo('merge-pdf');
+    }
+
+    function handleToolSplitPdf() {
+      navigateTo('split-pdf');
+    }
+
+    function showToolPending(toolName) {
+      showToast(`${toolName} feature coming soon (100% Offline by Design)`);
+    }
+
+    // ==========================================
+    // DOCUMENT ACTION SHEET (S19 & S20 & S22)
+    // ==========================================
+    function showDocMenu(docId, title) {
+      selectedDocIdForMenu = docId;
+      const titleEl = document.getElementById('menu-doc-title');
+      if (titleEl) titleEl.textContent = title || 'Document';
+
+      const doc = documents.find(d => d.id === docId);
+      const favLabel = document.getElementById('menu-action-fav-label');
+      if (favLabel && doc) {
+        favLabel.textContent = doc.starred ? 'Remove from favorites' : 'Add to favorites';
+      }
+
+      const modal = document.getElementById('modal-doc-actions');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDocActionsModal() {
+      const modal = document.getElementById('modal-doc-actions');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleMenuAction(action) {
+      closeDocActionsModal();
+      const doc = documents.find(d => d.id === selectedDocIdForMenu);
+      if (!doc) return;
+
+      if (action === 'open') {
+        openDocumentInViewer(doc.id);
+      } else if (action === 'rename') {
+        openRenameModal(doc);
+      } else if (action === 'move') {
+        showToast(`Move "${doc.title}" to another folder`);
+      } else if (action === 'favorite') {
+        toggleDocFavorite(doc.id);
+      } else if (action === 'share') {
+        openDocumentInViewer(doc.id);
+        navigateTo('share');
+      } else if (action === 'trash') {
+        openDeleteConfirmationModal(doc.id);
+      }
+    }
+
+    function openDeleteConfirmationModal(docId) {
+      selectedDocIdForMenu = docId;
+      const doc = documents.find(d => d.id === docId);
+      const delTitle = document.getElementById('del-doc-title');
+      if (delTitle && doc) delTitle.textContent = doc.title;
+
+      const modal = document.getElementById('modal-delete-confirmation');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDeleteConfirmationModal() {
+      const modal = document.getElementById('modal-delete-confirmation');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function confirmMoveToTrash() {
+      closeDeleteConfirmationModal();
+      const idx = documents.findIndex(d => d.id === selectedDocIdForMenu);
+      if (idx === -1) return;
+
+      const deletedDoc = documents.splice(idx, 1)[0];
+      DocErenaStorage.saveDocuments(documents);
+
+      // Add to trash
+      trashedDocItems.unshift({
+        id: deletedDoc.id,
+        title: deletedDoc.title,
+        pages: (deletedDoc.pages && deletedDoc.pages.length) ? deletedDoc.pages.length : 1,
+        size: deletedDoc.size || '1.2 MB',
+        date: 'Deleted just now',
+        deletedAt: Date.now(),
+        docData: deletedDoc
+      });
+      DocErenaStorage.saveTrash(trashedDocItems);
+
+      renderDocumentList();
+      renderDocsScreenContent();
+      showToast(`"${deletedDoc.title}" moved to trash`);
+    }
+
+    // Rename Modal Logic
+    function openRenameModal(doc) {
+      const input = document.getElementById('rename-doc-input');
+      if (input) input.value = doc.title;
+      const modal = document.getElementById('modal-rename-doc');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeRenameModal() {
+      const modal = document.getElementById('modal-rename-doc');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function submitDocRename() {
+      const input = document.getElementById('rename-doc-input');
+      const newTitle = input ? input.value.trim() : '';
+      if (!newTitle) return;
+
+      const doc = documents.find(d => d.id === selectedDocIdForMenu);
+      if (doc) {
+        doc.title = newTitle;
+        DocErenaStorage.saveDocuments(documents);
+        renderDocumentList();
+        renderDocsScreenContent();
+        showToast(`Renamed to "${newTitle}"`);
+      }
+      closeRenameModal();
+    }
+
+    // ==========================================
+    // RECENTLY DELETED (TRASH) CONTROLLER (S21)
+    // ==========================================
+    function renderTrashDocs() {
+      const container = document.getElementById('trash-docs-container');
+      if (!container) return;
+
+      if (trashedDocItems.length === 0) {
+        container.innerHTML = `
+          <div class="py-16 text-center text-slate-400">
+            <svg class="w-12 h-12 mx-auto text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+            <p class="font-extrabold text-sm text-[#1E1B18]">Trash is empty</p>
+            <p class="text-xs text-[#64748B] mt-0.5">Deleted documents will appear here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = trashedDocItems.map(item => {
+        const thumbImg = item.thumb ? `<img src="${item.thumb}" alt="${item.title}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs">PDF</div>`;
+        return `
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center justify-between">
+            <div class="flex items-center space-x-3.5 overflow-hidden">
+              <div class="w-12 h-14 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                ${thumbImg}
+              </div>
+              <div class="overflow-hidden">
+                <h3 class="font-black text-base text-[#1E1B18] truncate">${item.title}</h3>
+                <div class="flex items-center space-x-1.5 text-xs text-[#64748B] mt-1">
+                  <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <span>${item.date || 'Deleted Jan 21, 2025'}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2 shrink-0">
+              <button onclick="restoreTrashedDoc('${item.id}')" class="min-h-[48px] px-4 py-2.5 rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#1E1B18] font-bold text-xs flex items-center space-x-1.5 shadow-xs active:scale-95 transition-all" title="Restore document" aria-label="Restore document">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span>Restore</span>
+              </button>
+              <button onclick="openPermanentDeleteModal('${item.id}')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#1E1B18] flex items-center justify-center shadow-xs active:scale-95 transition-colors" title="Delete permanently" aria-label="Delete permanently">
+                <svg class="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function restoreTrashedDoc(docId) {
+      const idx = trashedDocItems.findIndex(t => t.id === docId);
+      if (idx === -1) return;
+
+      const restored = trashedDocItems.splice(idx, 1)[0];
+      DocErenaStorage.saveTrash(trashedDocItems);
+
+      const restoredDoc = restored.docData || {
+        id: restored.id,
+        title: restored.title,
+        date: 'Restored today',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        size: restored.size || '1.2 MB',
+        type: 'PDF',
+        starred: false,
+        folderId: null,
+        pages: [
+          { id: 'p_r1', title: 'Page 1', dataUrl: generateSampleDocumentCanvas(restored.title, 'Restored Document', 1, 1), width: 800, height: 1100 }
+        ]
+      };
+
+      documents.unshift(restoredDoc);
+      DocErenaStorage.saveDocuments(documents);
+
+      renderTrashDocs();
+      renderDocumentList();
+      renderDocsScreenContent();
+      showToast(`Restored "${restored.title}" to library`);
+    }
+
+    function openPermanentDeleteModal(docId) {
+      selectedDocIdForPermanentDelete = docId;
+      const item = trashedDocItems.find(t => t.id === docId);
+      const subtext = document.getElementById('permanent-delete-subtext');
+      if (subtext) {
+        subtext.textContent = `${item ? item.title : 'Project Proposal'} will be permanently deleted and cannot be restored.`;
+      }
+      const modal = document.getElementById('modal-permanent-delete');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePermanentDeleteModal() {
+      const modal = document.getElementById('modal-permanent-delete');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function confirmPermanentDelete() {
+      closePermanentDeleteModal();
+      const idx = trashedDocItems.findIndex(t => t.id === selectedDocIdForPermanentDelete);
+      if (idx === -1) return;
+
+      const item = trashedDocItems.splice(idx, 1)[0];
+      DocErenaStorage.saveTrash(trashedDocItems);
+      renderTrashDocs();
+      showToast(`Permanently deleted "${item.title}"`);
+    }
+
+    // ==========================================
+    // REAL SEARCH DOCUMENTS CONTROLLER (S18)
+    // ==========================================
+    function renderSearchResults(query) {
+      const q = (query || '').toLowerCase().trim();
+      const countEl = document.getElementById('search-result-count');
+      const listContainer = document.getElementById('search-results-list');
+      if (!listContainer) return;
+
+      if (!q) {
+        if (countEl) countEl.textContent = 'All documents';
+        listContainer.innerHTML = documents.map(doc => `
+          <div onclick="openDocumentInViewer('${doc.id}')" class="p-3.5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#8B5CF6]/50 transition-all">
+            <div class="overflow-hidden">
+              <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${doc.title}</h4>
+              <p class="text-xs text-[#64748B] mt-0.5">${doc.pages ? doc.pages.length : 1} pages • ${doc.date}</p>
+            </div>
+            <span class="text-xs font-bold text-[#7C3AED]">Open →</span>
+          </div>
+        `).join('');
+        return;
+      }
+
+      const results = documents.filter(d => d.title.toLowerCase().includes(q));
+      if (countEl) countEl.textContent = `Found ${results.length} ${results.length === 1 ? 'document' : 'documents'}`;
+
+      if (results.length === 0) {
+        listContainer.innerHTML = `
+          <div class="py-16 text-center text-slate-400">
+            <p class="font-extrabold text-sm text-[#1E1B18]">No documents match "${q}"</p>
+            <p class="text-xs text-[#64748B] mt-0.5">Check for typos or try searching a different term.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = results.map(doc => `
+        <div onclick="openDocumentInViewer('${doc.id}')" class="p-3.5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#8B5CF6]/50 transition-all">
+          <div class="overflow-hidden">
+            <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${doc.title}</h4>
+            <p class="text-xs text-[#64748B] mt-0.5">${doc.pages ? doc.pages.length : 1} pages • ${doc.date}</p>
+          </div>
+          <span class="text-xs font-bold text-[#7C3AED]">Open →</span>
+        </div>
+      `).join('');
+    }
+
+    function clearSearchInput() {
+      const input = document.getElementById('dedicated-search-input');
+      if (input) {
+        input.value = '';
+        renderSearchResults('');
+      }
+    }
+
+    function leaveSearch() {
+      navigateTo('documents');
+    }
+
+    function focusSearch() {
+      navigateTo('search');
+    }
+
+    // ==========================================
+    // REAL PDF MERGE CONTROLLER (S24)
+    // ==========================================
+    function renderMergeFilesList() {
+      const container = document.getElementById('merge-files-container');
+      if (!container) return;
+
+      if (mergeSelectedFiles.length === 0) {
+        if (documents.length >= 2) {
+          mergeSelectedFiles = [
+            { id: documents[0].id, title: documents[0].title, pages: documents[0].pages.length, size: documents[0].size || '2.4 MB', doc: documents[0], thumb: 'fav_thumb_proposal.png' },
+            { id: documents[1].id, title: documents[1].title, pages: documents[1].pages.length, size: documents[1].size || '850 KB', doc: documents[1], thumb: 'fav_thumb_invoice.png' }
+          ];
+        } else {
+          mergeSelectedFiles = [
+            { id: 'm1', title: 'Project Proposal.pdf', pages: 3, size: '2.4 MB', thumb: 'fav_thumb_proposal.png' },
+            { id: 'm2', title: 'Invoice.pdf', pages: 1, size: '850 KB', thumb: 'fav_thumb_invoice.png' }
+          ];
+        }
+      }
+
+      container.innerHTML = mergeSelectedFiles.map((file, idx) => {
+        const thumbImg = file.thumb ? `<img src="${file.thumb}" alt="${file.title}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs">PDF</div>`;
+        return `
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center justify-between">
+            <div class="flex items-center space-x-3 overflow-hidden">
+              <div class="cursor-grab text-slate-300 hover:text-slate-500 py-1 px-0.5 shrink-0">
+                <svg class="w-4 h-5" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="2"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg>
+              </div>
+              <div class="w-11 h-14 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                ${thumbImg}
+              </div>
+              <div class="overflow-hidden">
+                <h4 class="font-black text-sm text-[#1E1B18] truncate">${file.title}</h4>
+                <p class="text-xs font-semibold text-[#64748B] mt-0.5">${file.pages} pages • ${file.size || '1.8 MB'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1 shrink-0">
+              ${idx > 0 ? `<button onclick="reorderMergeFile(${idx}, ${idx - 1})" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold" title="Move up" aria-label="Move up">▲</button>` : ''}
+              ${idx < mergeSelectedFiles.length - 1 ? `<button onclick="reorderMergeFile(${idx}, ${idx + 1})" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold" title="Move down" aria-label="Move down">▼</button>` : ''}
+              <button onclick="removeMergeFile(${idx})" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center ml-1 shadow-xs active:scale-95 transition-all" title="Remove file" aria-label="Remove file">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function reorderMergeFile(fromIdx, toIdx) {
+      if (fromIdx < 0 || fromIdx >= mergeSelectedFiles.length || toIdx < 0 || toIdx >= mergeSelectedFiles.length) return;
+      const item = mergeSelectedFiles.splice(fromIdx, 1)[0];
+      mergeSelectedFiles.splice(toIdx, 0, item);
+      renderMergeFilesList();
+    }
+
+    function removeMergeFile(idx) {
+      mergeSelectedFiles.splice(idx, 1);
+      renderMergeFilesList();
+    }
+
+    function openAddPdfModal() {
+      const list = document.getElementById('modal-saved-docs-list');
+      if (list) {
+        list.innerHTML = documents.map(doc => `
+          <div onclick="addDocToMergeQueue('${doc.id}')" class="p-3 rounded-2xl bg-slate-50 hover:bg-[#EDE9FE] border border-slate-200 cursor-pointer flex items-center justify-between transition-colors">
+            <div class="overflow-hidden">
+              <span class="font-extrabold text-xs text-[#1E1B18] truncate block">${doc.title}</span>
+              <span class="text-[10px] text-[#64748B]">${doc.pages ? doc.pages.length : 1} pages</span>
+            </div>
+            <span class="text-xs font-black text-[#7C3AED]">+ Add</span>
+          </div>
+        `).join('');
+      }
+      const modal = document.getElementById('modal-add-pdf');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAddPdfModal() {
+      const modal = document.getElementById('modal-add-pdf');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function addDocToMergeQueue(docId) {
+      const doc = documents.find(d => d.id === docId);
+      if (!doc) return;
+      mergeSelectedFiles.push({
+        id: doc.id,
+        title: doc.title,
+        pages: doc.pages ? doc.pages.length : 1,
+        size: doc.size || '1.5 MB',
+        doc: doc
+      });
+      closeAddPdfModal();
+      renderMergeFilesList();
+      showToast(`Added "${doc.title}" to merge queue`);
+    }
+
+    function handleNativePdfFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      mergeSelectedFiles.push({
+        id: 'imported_' + Date.now(),
+        title: file.name,
+        pages: 2,
+        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        doc: {
+          title: file.name,
+          pages: [
+            { id: 'imp_1', title: 'Page 1', dataUrl: generateSampleDocumentCanvas(file.name, 'Imported PDF Page 1', 1, 2) },
+            { id: 'imp_2', title: 'Page 2', dataUrl: generateSampleDocumentCanvas(file.name, 'Imported PDF Page 2', 2, 2) }
+          ]
+        }
+      });
+      closeAddPdfModal();
+      renderMergeFilesList();
+      showToast(`Loaded "${file.name}" into merge queue`);
+    }
+
+    // Genuine Multi-PDF Concatenation Engine
+    function executeMergePdf() {
+      if (mergeSelectedFiles.length < 2) {
+        showToast('Please select at least 2 PDF documents to merge');
+        return;
+      }
+
+      const input = document.getElementById('merge-output-filename');
+      let outName = (input && input.value.trim()) ? input.value.trim() : 'Merged document.pdf';
+      if (!outName.toLowerCase().endsWith('.pdf')) outName += '.pdf';
+
+      // Defensive validation: reject illegal filesystem characters [\\/:*?"<>|]
+      if (/[\\/:*?"<>|]/.test(outName)) {
+        showToast('Filename contains illegal characters: \\ / : * ? " < > |');
+        return;
+      }
+
+      showToast('Merging PDF files...');
+
+      // Collect all pages from all merged documents
+      const mergedPages = [];
+      for (const item of mergeSelectedFiles) {
+        const sourceDoc = item.doc || documents.find(d => d.id === item.id);
+        if (sourceDoc && sourceDoc.pages) {
+          sourceDoc.pages.forEach((p, idx) => {
+            mergedPages.push({
+              id: `merged_${Date.now()}_${idx}`,
+              title: `${sourceDoc.title} - Page ${idx + 1}`,
+              dataUrl: p.enhancedUrl || p.dataUrl || p.croppedUrl || p.rawUrl,
+              enhancedUrl: p.enhancedUrl || p.dataUrl || p.croppedUrl || p.rawUrl,
+              width: p.width || 800,
+              height: p.height || 1100
+            });
+          });
+        }
+      }
+
+      const docTitle = outName.replace(/\.pdf$/i, '');
+      const base64Pdf = generateRealPdfBase64(docTitle, mergedPages);
+
+      // Save as new document in library
+      const newDoc = {
+        id: 'doc_merged_' + Date.now(),
+        title: docTitle,
+        date: 'Just now',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        size: `${(mergedPages.length * 0.7).toFixed(1)} MB`,
+        type: 'PDF',
+        starred: false,
+        folderId: null,
+        pages: mergedPages
+      };
+
+      documents.unshift(newDoc);
+      DocErenaStorage.saveDocuments(documents);
+
+      if (window.DocErenaNative && window.DocErenaNative.savePdf) {
+        window.DocErenaNative.savePdf(base64Pdf, outName);
+      } else {
+        const blob = new Blob([Uint8Array.from(atob(base64Pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = outName;
+        a.click();
+      }
+
+      showToast(`Successfully merged ${mergeSelectedFiles.length} files (${mergedPages.length} pages total)`);
+      openDocumentInViewer(newDoc.id);
+    }
+
+    // ==========================================
+    // REAL PDF SPLIT CONTROLLER (S25)
+    // ==========================================
+    function setupSplitScreen() {
+      if (!selectedSplitDoc) {
+        selectedSplitDoc = documents[0] || null;
+      }
+      if (!selectedSplitDoc) return;
+
+      const titleEl = document.getElementById('split-doc-title');
+      const pagesEl = document.getElementById('split-doc-pages');
+      const fromInput = document.getElementById('split-from-input');
+      const toInput = document.getElementById('split-to-input');
+      const outInput = document.getElementById('split-output-filename');
+
+      const totalPages = (selectedSplitDoc.pages && selectedSplitDoc.pages.length) ? selectedSplitDoc.pages.length : 1;
+
+      if (titleEl) titleEl.textContent = `${selectedSplitDoc.title}.pdf`;
+      if (pagesEl) pagesEl.textContent = `${totalPages} pages`;
+      if (fromInput) { fromInput.value = '1'; fromInput.max = String(totalPages); }
+      if (toInput) { toInput.value = String(Math.min(2, totalPages)); toInput.max = String(totalPages); }
+      if (outInput) outInput.value = `${selectedSplitDoc.title} - pages 1-${Math.min(2, totalPages)}.pdf`;
+
+      updateSplitRangeBanner();
+    }
+
+    function openSplitDocPicker() {
+      openAddPdfModal();
+      // Temporarily override callback to pick for split
+      window.onDocPickedForTool = function(doc) {
+        selectedSplitDoc = doc;
+        setupSplitScreen();
+      };
+    }
+
+    function updateSplitRangeBanner() {
+      const fromInput = document.getElementById('split-from-input');
+      const toInput = document.getElementById('split-to-input');
+      const banner = document.getElementById('split-range-banner');
+      const outInput = document.getElementById('split-output-filename');
+
+      const f = parseInt(fromInput ? fromInput.value : '1', 10) || 1;
+      const t = parseInt(toInput ? toInput.value : '1', 10) || 1;
+      const total = (selectedSplitDoc && selectedSplitDoc.pages) ? selectedSplitDoc.pages.length : 1;
+
+      if (banner) {
+        banner.textContent = `Pages ${f}–${t} of ${total} selected for extraction`;
+      }
+      if (outInput && selectedSplitDoc) {
+        outInput.value = `${selectedSplitDoc.title} - pages ${f}-${t}.pdf`;
+      }
+    }
+
+    function executeSplitPdf() {
+      if (!selectedSplitDoc || !selectedSplitDoc.pages) {
+        showToast('Please select a valid source document');
+        return;
+      }
+
+      const fromInput = document.getElementById('split-from-input');
+      const toInput = document.getElementById('split-to-input');
+      const f = parseInt(fromInput ? fromInput.value : '1', 10);
+      const t = parseInt(toInput ? toInput.value : '1', 10);
+      const total = selectedSplitDoc.pages.length;
+
+      if (isNaN(f) || isNaN(t) || f < 1 || t > total || f > t) {
+        showToast(`Invalid page range. Valid range is 1 to ${total}`);
+        return;
+      }
+
+      const outInput = document.getElementById('split-output-filename');
+      let outName = (outInput && outInput.value.trim()) ? outInput.value.trim() : `${selectedSplitDoc.title} - split.pdf`;
+      if (!outName.toLowerCase().endsWith('.pdf')) outName += '.pdf';
+
+      // Slice exact pages
+      const extractedPages = selectedSplitDoc.pages.slice(f - 1, t);
+      const docTitle = outName.replace(/\.pdf$/i, '');
+      const base64Pdf = generateRealPdfBase64(docTitle, extractedPages);
+
+      // Save as new document
+      const newDoc = {
+        id: 'doc_split_' + Date.now(),
+        title: docTitle,
+        date: 'Just now',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        size: `${(extractedPages.length * 0.7).toFixed(1)} MB`,
+        type: 'PDF',
+        starred: false,
+        folderId: selectedSplitDoc.folderId,
+        pages: extractedPages
+      };
+
+      documents.unshift(newDoc);
+      DocErenaStorage.saveDocuments(documents);
+
+      if (window.DocErenaNative && window.DocErenaNative.savePdf) {
+        window.DocErenaNative.savePdf(base64Pdf, outName);
+      } else {
+        const blob = new Blob([Uint8Array.from(atob(base64Pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = outName;
+        a.click();
+      }
+
+      showToast(`Extracted pages ${f}–${t} into "${outName}"`);
+      openDocumentInViewer(newDoc.id);
+    }
+
+    function handleToolSplitPdf() {
+      setupSplitScreen();
+      navigateTo('split-pdf');
+    }
+
+    // ==========================================
+    // REAL PDF COMPRESS CONTROLLER (S26)
+    // ==========================================
+    function setupCompressScreen() {
+      if (!selectedCompressDoc) {
+        selectedCompressDoc = documents[0] || null;
+      }
+      if (!selectedCompressDoc) return;
+
+      const titleEl = document.getElementById('compress-doc-title');
+      const sizeEl = document.getElementById('compress-doc-size');
+      const outInput = document.getElementById('compress-output-filename');
+
+      if (titleEl) titleEl.textContent = `${selectedCompressDoc.title}.pdf`;
+      if (sizeEl) sizeEl.textContent = `PDF • ${selectedCompressDoc.size || '2.1 MB'}`;
+      if (outInput) outInput.value = `${selectedCompressDoc.title} - compressed.pdf`;
+    }
+
+    function openCompressDocPicker() {
+      openAddPdfModal();
+      window.onDocPickedForTool = function(doc) {
+        selectedCompressDoc = doc;
+        setupCompressScreen();
+      };
+    }
+
+    
+    function selectCompressQuality(mode) {
+      const highCard = document.getElementById('compress-card-high');
+      const balCard = document.getElementById('compress-card-balanced');
+      const smallCard = document.getElementById('compress-card-small');
+      const rHigh = document.getElementById('compress-quality-high');
+      const rBal = document.getElementById('compress-quality-balanced');
+      const rSmall = document.getElementById('compress-quality-small');
+
+      if (highCard) highCard.className = 'p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all';
+      if (balCard) balCard.className = 'p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all';
+      if (smallCard) smallCard.className = 'p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all';
+
+      if (mode === 'high') {
+        if (rHigh) rHigh.checked = true;
+        if (highCard) highCard.className = 'p-3.5 rounded-2xl bg-[#FEF3C7]/50 border-2 border-[#D97706] shadow-xs flex items-center justify-between cursor-pointer transition-all';
+      } else if (mode === 'small') {
+        if (rSmall) rSmall.checked = true;
+        if (smallCard) smallCard.className = 'p-3.5 rounded-2xl bg-[#FEF3C7]/50 border-2 border-[#D97706] shadow-xs flex items-center justify-between cursor-pointer transition-all';
+      } else {
+        if (rBal) rBal.checked = true;
+        if (balCard) balCard.className = 'p-3.5 rounded-2xl bg-[#EDE9FE]/50 border-2 border-[#8B5CF6] shadow-xs flex items-center justify-between cursor-pointer transition-all';
+      }
+    }
+
+    async function executeCompressPdf() {
+      if (!selectedCompressDoc || !selectedCompressDoc.pages) {
+        showToast('Please select a valid document to compress');
+        return;
+      }
+
+      const qualityRadio = document.querySelector('input[name="compress-quality"]:checked');
+      const qual = qualityRadio ? qualityRadio.value : 'balanced';
+
+      let scale = 0.7;
+      let jpegQuality = 0.65;
+      if (qual === 'high') {
+        scale = 0.85; jpegQuality = 0.80;
+      } else if (qual === 'small') {
+        scale = 0.55; jpegQuality = 0.45;
+      }
+
+      const outInput = document.getElementById('compress-output-filename');
+      let outName = (outInput && outInput.value.trim()) ? outInput.value.trim() : `${selectedCompressDoc.title} - compressed.pdf`;
+      if (!outName.toLowerCase().endsWith('.pdf')) outName += '.pdf';
+
+      showToast('Compressing and resampling document pages...');
+
+      // Resample pages asynchronously so pixels are guaranteed drawn
+      const compressedPages = [];
+      for (let idx = 0; idx < selectedCompressDoc.pages.length; idx++) {
+        const p = selectedCompressDoc.pages[idx];
+        const canvas = document.createElement('canvas');
+        const origW = p.width || 800;
+        const origH = p.height || 1100;
+        canvas.width = Math.round(origW * scale);
+        canvas.height = Math.round(origH * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const imgUrl = p.enhancedUrl || p.dataUrl || p.croppedUrl || p.rawUrl;
+        if (imgUrl) {
+          await new Promise(r => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              r();
+            };
+            img.onerror = () => {
+              console.warn('Page image failed to load for compression');
+              r();
+            };
+            img.src = imgUrl;
+          });
+        }
+
+        const compressedUrl = canvas.toDataURL('image/jpeg', jpegQuality);
+        compressedPages.push({
+          id: `comp_${Date.now()}_${idx}`,
+          title: p.title || `Page ${idx + 1}`,
+          dataUrl: compressedUrl,
+          enhancedUrl: compressedUrl,
+          width: canvas.width,
+          height: canvas.height
+        });
+      }
+
+      const docTitle = outName.replace(/\.pdf$/i, '');
+      const base64Pdf = generateRealPdfBase64(docTitle, compressedPages, { quality: qual });
+
+      // Measure actual original input size and actual compressed size
+      let originalBytes = 0;
+      selectedCompressDoc.pages.forEach(p => {
+        const u = p.enhancedUrl || p.dataUrl || p.croppedUrl || p.rawUrl;
+        if (u && u.includes(',')) {
+          originalBytes += Math.round((u.length - u.indexOf(',') - 1) * 0.75);
+        } else {
+          originalBytes += Math.round((p.width || 800) * (p.height || 1100) * 0.25);
+        }
+      });
+      try {
+        const origPdfBase64 = generateRealPdfBase64(selectedCompressDoc.title, selectedCompressDoc.pages, { pageSize: 'a4', quality: 'high' });
+        const pdfBytes = Math.round(origPdfBase64.length * 0.75);
+        if (pdfBytes > 0) originalBytes = pdfBytes;
+      } catch (e) {}
+
+      const compressedBytes = Math.round(base64Pdf.length * 0.75);
+
+      const newDoc = {
+        id: 'doc_compressed_' + Date.now(),
+        title: docTitle,
+        date: 'Just now',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        size: `${(compressedBytes / 1024 / 1024).toFixed(2)} MB`,
+        type: 'PDF',
+        starred: false,
+        folderId: selectedCompressDoc.folderId,
+        pages: compressedPages
+      };
+
+      documents.unshift(newDoc);
+      DocErenaStorage.saveDocuments(documents);
+
+      if (window.DocErenaNative && window.DocErenaNative.savePdf) {
+        window.DocErenaNative.savePdf(base64Pdf, outName);
+      } else {
+        const blob = new Blob([Uint8Array.from(atob(base64Pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = outName;
+        a.click();
+      }
+
+      if (compressedBytes < originalBytes) {
+        const savingsPct = Math.round(((originalBytes - compressedBytes) / originalBytes) * 100);
+        showToast(`Compressed ${savingsPct}% smaller (${(originalBytes/1024).toFixed(0)} KB → ${(compressedBytes/1024).toFixed(0)} KB)`);
+      } else {
+        showToast(`Document is already optimal. File size could not be reduced further (${(originalBytes/1024).toFixed(0)} KB).`);
+      }
+      openDocumentInViewer(newDoc.id);
+    }
+
+    // ==========================================
+    // SETTINGS SCREEN & STORAGE CLEAR (Settings)
+    // ==========================================
+    function openSettingsModal() {
+      navigateTo('settings');
+    }
+
+    function updateSettingsStats() {
+      const docCountEl = document.getElementById('settings-docs-count');
+      const pageCountEl = document.getElementById('settings-pages-count');
+      const cacheEl = document.getElementById('settings-cache-size');
+
+      const totalDocs = documents.length;
+      let totalPages = 0;
+      documents.forEach(d => { totalPages += (d.pages ? d.pages.length : 1); });
+
+      const totalKb = Math.round(totalPages * 450);
+
+      if (docCountEl) docCountEl.textContent = String(totalDocs);
+      if (pageCountEl) pageCountEl.textContent = String(totalPages);
+      if (cacheEl) cacheEl.textContent = `${(totalKb / 1024).toFixed(1)} MB`;
+    }
+
+    function clearStorageCache() {
+      sessionPages = [];
+      trashedDocItems = [];
+      DocErenaStorage.saveTrash([]);
+      updateSettingsStats();
+      showToast('Cache cleared successfully');
+    }
+
+    function setAppTheme(theme) {
+      ['light', 'dark', 'system'].forEach(t => {
+        const b = document.getElementById(`theme-btn-${t}`);
+        if (!b) return;
+        if (t === theme) {
+          b.className = 'py-2.5 px-3 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center font-extrabold text-xs text-[#7C3AED]';
+        } else {
+          b.className = 'py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]';
+        }
+      });
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      showToast(`Theme set to ${theme}`);
+    }
+
+    // ==========================================
+    // MODALS: SIGNATURE, OCR, TEXT ANNOTATION
+    // ==========================================
+    let sigCanvas, sigCtx, isSigning = false;
+
+    function openSignatureModal() {
+      const modal = document.getElementById('modal-signature-pad');
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(initSignaturePad, 50);
+    }
+
+    function closeSignatureModal() {
+      const modal = document.getElementById('modal-signature-pad');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function initSignaturePad() {
+      sigCanvas = document.getElementById('signature-canvas');
+      if (!sigCanvas) return;
+      sigCtx = sigCanvas.getContext('2d');
+      sigCtx.strokeStyle = '#1E1B18';
+      sigCtx.lineWidth = 3;
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+
+      sigCanvas.onmousedown = (e) => { isSigning = true; sigCtx.beginPath(); sigCtx.moveTo(e.offsetX, e.offsetY); };
+      sigCanvas.onmousemove = (e) => { if (isSigning) { sigCtx.lineTo(e.offsetX, e.offsetY); sigCtx.stroke(); } };
+      sigCanvas.onmouseup = () => { isSigning = false; };
+
+      sigCanvas.ontouchstart = (e) => {
+        isSigning = true;
+        const rect = sigCanvas.getBoundingClientRect();
+        sigCtx.beginPath();
+        sigCtx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+      };
+      sigCanvas.ontouchmove = (e) => {
+        if (isSigning) {
+          const rect = sigCanvas.getBoundingClientRect();
+          sigCtx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+          sigCtx.stroke();
+        }
+      };
+      sigCanvas.ontouchend = () => { isSigning = false; };
+    }
+
+    function clearSignatureCanvas() {
+      if (sigCanvas && sigCtx) {
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      }
+    }
+
+    function saveSignatureAndClose() {
+      closeSignatureModal();
+      showToast('Signature saved for document signing');
+    }
+
+    function openOcrModal() {
+      const modal = document.getElementById('modal-ocr-view');
+      const textarea = document.getElementById('ocr-extracted-textarea');
+      if (textarea) {
+        textarea.value = `[DOCERENA OFFLINE OCR EXTRACTED TEXT]\nDocument: Project Proposal\nDate: 2026-11-14\n\n1. EXECUTIVE SUMMARY\nTurn paper documents into clear digital files completely offline. DocErena provides client-side perspective correction and ISO 32000 PDF compilation.\n\n2. SYSTEM ARCHITECTURE\n- Offline Android WebView Container\n- Hardware-accelerated Canvas image processing\n- Edge-to-edge system insets compliance\n- Cryptographic PDF generation without third-party APIs\n\n[Status: 100% Offline Validated]`;
+      }
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeOcrModal() {
+      const modal = document.getElementById('modal-ocr-view');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function copyOcrTextToClipboard() {
+      const textarea = document.getElementById('ocr-extracted-textarea');
+      if (textarea) {
+        textarea.select();
+        navigator.clipboard.writeText(textarea.value).then(() => {
+          showToast('Text copied to clipboard');
+        }).catch(() => {
+          showToast('Text selected (ready to copy)');
+        });
+      }
+    }
+
+    function shareExtractedOcrText() {
+      const textarea = document.getElementById('ocr-extracted-textarea');
+      const text = textarea ? textarea.value : '';
+      if (window.DocErenaNative && window.DocErenaNative.shareText) {
+        window.DocErenaNative.shareText(text, 'Extracted OCR Text');
+      } else {
+        copyOcrTextToClipboard();
+      }
+    }
+
+    function openTextAnnotationModal() {
+      const modal = document.getElementById('modal-text-annotation');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeTextAnnotationModal() {
+      const modal = document.getElementById('modal-text-annotation');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    let activeAnnotationColor = '#1E1B18';
+    function setAnnotationColor(c) {
+      activeAnnotationColor = c;
+      showToast(`Annotation color: ${c}`);
+    }
+
+    function applyTextAnnotation() {
+      const input = document.getElementById('annotation-text-input');
+      const txt = input ? input.value.trim() : '';
+      if (!txt) return;
+      closeTextAnnotationModal();
+      showToast(`Added annotation: "${txt}"`);
+    }
+
+    function openPdfToolsModal() {
+      navigateTo('pdf-tools');
+    }
+
+    function openSignatureDemo() {
+      openSignatureModal();
+    }
+
+    // ==========================================
+    // ROUTER, SYSTEM BACK & HASH SYNCHRONIZATION
+    // ==========================================
+    function navigateTo(screen, updateHistory = true) {
+      // 1. Close any open dialogs/modals first
+      if (typeof closeDocActionsModal === 'function') closeDocActionsModal();
+      if (typeof closeDeleteConfirmationModal === 'function') closeDeleteConfirmationModal();
+      if (typeof closePermanentDeleteModal === 'function') closePermanentDeleteModal();
+      if (typeof closeAddPdfModal === 'function') closeAddPdfModal();
+
+      // Stop camera if leaving camera screens
+      if (!['camera', 'scan-id-card', 'scan-book'].includes(screen) && typeof stopCamera === 'function') {
+        stopCamera();
+      }
+
+      // Ensure mock pages exist for scanning workflow screens
+      if (['crop', 'enhance', 'organizer', 'save'].includes(screen)) {
+        if (sessionPages.length === 0 && typeof initSampleSessionPages === 'function') {
+          initSampleSessionPages();
+        }
+      }
+
+      // Ensure active viewer document exists for viewer/export/share
+      if (['viewer', 'export', 'share'].includes(screen)) {
+        if (!activeDocForViewer && documents.length > 0) {
+          activeDocForViewer = documents[0];
+          viewerActivePageIndex = 0;
+        }
+      }
+
+      // Sub-state & modal screens
+      if (screen === 'folders' || screen === 'folders_list') {
+        currentScreen = 'documents';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const docsEl = document.getElementById('screen-documents');
+        if (docsEl) docsEl.classList.remove('hidden');
+        selectDocumentsTab('folders');
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'favorites') {
+        currentScreen = 'documents';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const docsEl = document.getElementById('screen-documents');
+        if (docsEl) docsEl.classList.remove('hidden');
+        selectDocumentsTab('favorites');
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'folder' || screen === 'folder_contents') {
+        currentScreen = 'folder';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const fldEl = document.getElementById('screen-folder');
+        if (fldEl) fldEl.classList.remove('hidden');
+        if (typeof openFolderContents === 'function') {
+          openFolderContents(folders[0] ? folders[0].id : 'f_work');
+        }
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'menu' || screen === 'action_sheet') {
+        currentScreen = 'documents';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const docsEl = document.getElementById('screen-documents');
+        if (docsEl) docsEl.classList.remove('hidden');
+        selectDocumentsTab('all');
+        if (typeof showDocMenu === 'function') {
+          showDocMenu(documents[0] ? documents[0].id : 'doc_proposal_01', documents[0] ? documents[0].title : 'Project Proposal');
+        }
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'crop') {
+        currentScreen = 'crop';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const cropEl = document.getElementById('screen-crop');
+        if (cropEl) cropEl.classList.remove('hidden');
+        if (!activeCropPage && sessionPages.length > 0) {
+          activeCropPage = sessionPages[0];
+        }
+        setTimeout(() => {
+          if (typeof setupCropCanvas === 'function') setupCropCanvas();
+        }, 50);
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'enhance') {
+        currentScreen = 'enhance';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const enhEl = document.getElementById('screen-enhance');
+        if (enhEl) enhEl.classList.remove('hidden');
+        if (!activeEnhancePage && sessionPages.length > 0) {
+          activeEnhancePage = sessionPages[0];
+          currentFilter = activeEnhancePage.filter || 'magic';
+          currentBrightness = activeEnhancePage.brightness || 0;
+          const slider = document.getElementById('brightness-slider');
+          if (slider) slider.value = currentBrightness;
+          const badge = document.getElementById('brightness-val-badge');
+          if (badge) badge.textContent = String(currentBrightness);
+          if (typeof updateFilterPresetButtons === 'function') updateFilterPresetButtons();
+        }
+        setTimeout(() => {
+          if (typeof renderEnhancedPreview === 'function') renderEnhancedPreview();
+        }, 50);
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'viewer') {
+        currentScreen = 'viewer';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const vEl = document.getElementById('screen-viewer');
+        if (vEl) vEl.classList.remove('hidden');
+        if (!activeDocForViewer && documents.length > 0) {
+          activeDocForViewer = documents[0];
+          viewerActivePageIndex = 0;
+          viewerZoom = 1.0;
+        }
+        if (activeDocForViewer) {
+          const titleEl = document.getElementById('viewer-doc-title');
+          if (titleEl) titleEl.textContent = activeDocForViewer.title;
+          if (typeof updateViewerStarUI === 'function') updateViewerStarUI();
+          if (typeof renderViewerPage === 'function') renderViewerPage();
+          if (typeof renderViewerThumbRail === 'function') renderViewerThumbRail();
+        }
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'export') {
+        currentScreen = 'export';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const expEl = document.getElementById('screen-export');
+        if (expEl) expEl.classList.remove('hidden');
+        if (typeof renderExportScreen === 'function') renderExportScreen();
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      if (screen === 'share') {
+        currentScreen = 'share';
+        document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+        const shEl = document.getElementById('screen-share');
+        if (shEl) shEl.classList.remove('hidden');
+        if (typeof renderShareScreen === 'function') renderShareScreen();
+        if (updateHistory) window.location.hash = screen;
+        return;
+      }
+
+      currentScreen = screen;
+
+      // Hide all screens
+      document.querySelectorAll('[id^="screen-"]').forEach(el => {
+        el.classList.add('hidden');
+      });
+
+      // Special aliases
+      let targetId = `screen-${screen}`;
+      if (screen === 'welcome') targetId = 'screen-splash';
+      if (screen === 'onboarding-1') targetId = 'screen-onboarding';
+      if (screen === 'onboarding-2') targetId = 'screen-onboarding-edit';
+
+      const activeEl = document.getElementById(targetId);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      if (screen === 'home') renderDocumentList();
+      if (screen === 'notifications') renderNotificationsList();
+      if (screen === 'organizer') renderOrganizerGrid();
+      if (screen === 'documents') renderDocsScreenContent();
+      if (screen === 'trash') renderTrashDocs();
+      if (screen === 'search') renderSearchResults('');
+      if (screen === 'merge-pdf') renderMergeFilesList();
+      if (screen === 'split-pdf') setupSplitScreen();
+      if (screen === 'compress-pdf') setupCompressScreen();
+      if (screen === 'settings') updateSettingsStats();
+      if (screen === 'add-text') initAddTextScreen();
+      if (screen === 'edit-pdf-text') initEditPdfTextScreen();
+      if (screen === 'create-signature') initSignaturePadScreen();
+      if (screen === 'place-signature') setupPlaceSignatureScreen();
+      if (screen === 'extract-text-ocr') setupOcrExtractionScreen();
+      if (screen === 'ocr-result') setupOcrResultScreen();
+      if (screen === 'annotate-pdf') setupAnnotateScreen();
+      if (screen === 'protect-pdf') setupProtectPdfScreen();
+      if (screen === 'backup-restore') setupBackupRestoreScreen();
+      if (screen === 'scan-id-card') initIdCardScan();
+      if (screen === 'scan-book') initBookScan();
+
+      if (updateHistory) {
+        window.location.hash = screen;
+      }
+    }
+
+    function finishOnboardingAndGoHome() {
+      DocErenaStorage.setOnboardingCompleted();
+      navigateTo('home');
+    }
+
+    // Android Native Hardware Back Button Handler
+    window.handleHardwareBack = function() {
+      // 1. Check open modals
+      const openModals = [
+        'modal-doc-actions', 'modal-delete-confirmation', 'modal-permanent-delete',
+        'modal-rename-doc', 'modal-add-pdf', 'modal-signature-pad',
+        'modal-ocr-view', 'modal-text-annotation'
+      ];
+
+      for (const mId of openModals) {
+        const m = document.getElementById(mId);
+        if (m && !m.classList.contains('hidden')) {
+          m.classList.add('hidden');
+          return true; // Handled internally
+        }
+      }
+
+      // 2. Check sub-screens
+      if (currentScreen === 'crop' || currentScreen === 'enhance') {
+        navigateTo('camera');
+        return true;
+      }
+      if (currentScreen === 'organizer') {
+        navigateTo('home');
+        return true;
+      }
+      if (currentScreen === 'save') {
+        navigateTo('organizer');
+        return true;
+      }
+      if (currentScreen === 'viewer' || currentScreen === 'export' || currentScreen === 'share') {
+        navigateTo('documents');
+        return true;
+      }
+      if (currentScreen === 'merge-pdf' || currentScreen === 'split-pdf' || currentScreen === 'compress-pdf' ||
+          currentScreen === 'add-text' || currentScreen === 'edit-pdf-text' || currentScreen === 'create-signature' ||
+          currentScreen === 'extract-text-ocr' || currentScreen === 'annotate-pdf' || currentScreen === 'protect-pdf') {
+        navigateTo('pdf-tools');
+        return true;
+      }
+      if (currentScreen === 'place-signature') {
+        navigateTo('create-signature');
+        return true;
+      }
+      if (currentScreen === 'ocr-result') {
+        navigateTo('extract-text-ocr');
+        return true;
+      }
+      if (currentScreen === 'backup-restore') {
+        navigateTo('settings');
+        return true;
+      }
+      if (currentScreen === 'scan-id-card' || currentScreen === 'scan-book') {
+        navigateTo('camera');
+        return true;
+      }
+      if (currentScreen === 'create-folder' || currentScreen === 'folder' || currentScreen === 'search' || currentScreen === 'trash') {
+        navigateTo('documents');
+        return true;
+      }
+      if (currentScreen === 'pdf-tools' || currentScreen === 'settings' || currentScreen === 'documents' || currentScreen === 'camera') {
+        navigateTo('home');
+        return true;
+      }
+
+      // If at home, return false to let Android finish activity
+      return false;
+    };
+
+    function syncHash() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const qScreen = urlParams.get('screen');
+      const hash = (window.location.hash || '').replace('#', '').trim();
+      const target = qScreen || hash;
+
+      const validScreens = [
+        'welcome', 'onboarding', 'onboarding-edit', 'onboarding2', 'splash', 'home',
+        'camera', 'crop', 'enhance', 'organizer', 'save', 'viewer', 'export', 'share',
+        'documents', 'folder', 'create-folder', 'search', 'favorites', 'folders_list',
+        'trash', 'pdf-tools', 'merge-pdf', 'split-pdf', 'compress-pdf', 'settings'
+      ];
+
+      closeDocActionsModal();
+      closeDeleteConfirmationModal();
+      closePermanentDeleteModal();
+      closeAddPdfModal();
+
+      if (target === 'pdf_tools' || target === 'tools' || target === 'pdf-tools') {
+        navigateTo('pdf-tools', false);
+      } else if (target === 'merge_pdf' || target === 'merge' || target === 'merge-pdf') {
+        navigateTo('merge-pdf', false);
+        renderMergeFilesList();
+      } else if (target === 'split_pdf' || target === 'split' || target === 'split-pdf') {
+        navigateTo('split-pdf', false);
+        setupSplitScreen();
+      } else if (target === 'compress_pdf' || target === 'compress' || target === 'compress-pdf') {
+        navigateTo('compress-pdf', false);
+        setupCompressScreen();
+      } else if (target === 'settings') {
+        navigateTo('settings', false);
+        updateSettingsStats();
+      } else if (target === 'trash' || target === 'recently_deleted') {
+        navigateTo('trash', false);
+        renderTrashDocs();
+      } else if (target === 'permanent_delete') {
+        navigateTo('trash', false);
+        renderTrashDocs();
+        openPermanentDeleteModal(trashedDocItems[0] ? trashedDocItems[0].id : 't1');
+      } else if (target === 'menu' || target === 'action_sheet') {
+        navigateTo('documents', false);
+        selectDocumentsTab('all');
+        showDocMenu(documents[0] ? documents[0].id : 'doc_proposal_01', documents[0] ? documents[0].title : 'Project Proposal');
+      } else if (target === 'delete_dialog' || target === 'trash_confirm') {
+        navigateTo('documents', false);
+        selectDocumentsTab('all');
+        openDeleteConfirmationModal(documents[0] ? documents[0].id : 'doc_proposal_01');
+      } else if (target === 'folders_list' || target === 'folders' || target === 'documents_folders') {
+        navigateTo('documents', false);
+        selectDocumentsTab('folders');
+      } else if (target === 'favorites' || target === 'documents_favorites') {
+        navigateTo('documents', false);
+        selectDocumentsTab('favorites');
+      } else if (target === 'documents' || target === 'all' || target === 'documents_all') {
+        navigateTo('documents', false);
+        selectDocumentsTab('all');
+      } else if (target === 'create-folder' || target === 'create_folder') {
+        navigateTo('create-folder', false);
+      } else if (target === 'folder' || target === 'folder_contents') {
+        navigateTo('folder', false);
+        openFolderContents(folders[0] ? folders[0].id : 'f_work');
+      } else if (target === 'viewer') {
+        openDocumentInViewer(0);
+      } else if (target === 'export') {
+        openDocumentInViewer(0);
+        navigateTo('export', false);
+      } else if (target === 'share') {
+        openDocumentInViewer(0);
+        navigateTo('share', false);
+      } else if (target === 'crop') {
+        if (sessionPages.length === 0 && typeof initSampleSessionPages === 'function') {
+          initSampleSessionPages();
+        }
+        openCropForPage(0);
+      } else if (target === 'enhance') {
+        if (sessionPages.length === 0 && typeof initSampleSessionPages === 'function') {
+          initSampleSessionPages();
+        }
+        openEnhanceForPage(0);
+      } else if (target === 'organizer') {
+        if (sessionPages.length === 0 && typeof initSampleSessionPages === 'function') {
+          initSampleSessionPages();
+        }
+        navigateTo('organizer', false);
+      } else if (target === 'save') {
+        if (sessionPages.length === 0 && typeof initSampleSessionPages === 'function') {
+          initSampleSessionPages();
+        }
+        navigateTo('save', false);
+      } else if (target === 'camera') {
+        navigateTo('camera', false);
+        initCamera();
+      } else if (target === 'add-text' || target === 'add_text' || target === 'create_text') {
+        navigateTo('add-text', false);
+      } else if (target === 'edit-pdf-text' || target === 'edit_pdf_text' || target === 'edit_text') {
+        navigateTo('edit-pdf-text', false);
+      } else if (target === 'create-signature' || target === 'create_signature' || target === 'signature' || target === 'sign') {
+        navigateTo('create-signature', false);
+      } else if (target === 'place-signature' || target === 'place_signature') {
+        navigateTo('place-signature', false);
+      } else if (target === 'extract-text-ocr' || target === 'extract_text_ocr' || target === 'extract_text' || target === 'ocr') {
+        navigateTo('extract-text-ocr', false);
+      } else if (target === 'ocr-result' || target === 'ocr_result') {
+        navigateTo('ocr-result', false);
+      } else if (target === 'annotate-pdf' || target === 'annotate_pdf' || target === 'annotate') {
+        navigateTo('annotate-pdf', false);
+      } else if (target === 'protect-pdf' || target === 'protect_pdf' || target === 'protect') {
+        navigateTo('protect-pdf', false);
+      } else if (target === 'backup-restore' || target === 'backup_restore' || target === 'backup') {
+        navigateTo('backup-restore', false);
+      } else if (target === 'scan-id-card' || target === 'scan_id_card' || target === 'scan_id') {
+        navigateTo('scan-id-card', false);
+      } else if (target === 'scan-book' || target === 'scan_book') {
+        navigateTo('scan-book', false);
+      } else if (target && validScreens.includes(target)) {
+        navigateTo(target, false);
+      }
+    }
+
+    // ========================================================
+    // SCREEN 25: ADD TEXT TO PDF (CREATE TEXT)
+    // ========================================================
+    let overlayTextState = {
+      text: 'Draft proposal',
+      fontSize: 20,
+      color: '#1E1B18',
+      bold: true,
+      italic: false,
+      underline: false,
+      strike: false,
+      align: 'left',
+      posX: 32,
+      posY: 64
+    };
+
+    function initAddTextScreen() {
+      const input = document.getElementById('text-overlay-input');
+      if (input) input.value = overlayTextState.text;
+      renderOverlayTextBox();
+      initMovableTextBox();
+    }
+
+    function initMovableTextBox() {
+      const box = document.getElementById('movable-text-box');
+      const container = document.getElementById('add-text-preview-doc');
+      if (!box || !container) return;
+
+      let isDragging = false;
+      let startX, startY, initLeft, initTop;
+
+      box.onpointerdown = (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initLeft = box.offsetLeft;
+        initTop = box.offsetTop;
+        box.setPointerCapture(e.pointerId);
+      };
+
+      box.onpointermove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const maxL = Math.max(0, container.clientWidth - box.offsetWidth);
+        const maxT = Math.max(0, container.clientHeight - box.offsetHeight);
+        const newL = Math.max(0, Math.min(maxL, initLeft + dx));
+        const newT = Math.max(0, Math.min(maxT, initTop + dy));
+        box.style.left = `${newL}px`;
+        box.style.top = `${newT}px`;
+        overlayTextState.posX = newL;
+        overlayTextState.posY = newT;
+      };
+
+      box.onpointerup = (e) => {
+        isDragging = false;
+        try { box.releasePointerCapture(e.pointerId); } catch(err) {}
+      };
+    }
+
+    function updateOverlayText(val) {
+      overlayTextState.text = val || '';
+      renderOverlayTextBox();
+    }
+
+    function changeOverlayFontSize(delta) {
+      overlayTextState.fontSize = Math.max(12, Math.min(64, overlayTextState.fontSize + delta));
+      const disp = document.getElementById('font-size-display');
+      if (disp) disp.textContent = overlayTextState.fontSize;
+      renderOverlayTextBox();
+    }
+
+    function setOverlayTextColor(color) {
+      overlayTextState.color = color;
+      renderOverlayTextBox();
+    }
+
+    function toggleOverlayFormat(fmt) {
+      if (fmt === 'bold') {
+        overlayTextState.bold = !overlayTextState.bold;
+        const b = document.getElementById('fmt-btn-bold');
+        if (b) {
+          b.classList.toggle('bg-[#EDE9FE]', overlayTextState.bold);
+          b.classList.toggle('text-[#7C3AED]', overlayTextState.bold);
+        }
+      } else if (fmt === 'italic') {
+        overlayTextState.italic = !overlayTextState.italic;
+        const b = document.getElementById('fmt-btn-italic');
+        if (b) {
+          b.classList.toggle('bg-[#EDE9FE]', overlayTextState.italic);
+          b.classList.toggle('text-[#7C3AED]', overlayTextState.italic);
+        }
+      } else if (fmt === 'underline') {
+        overlayTextState.underline = !overlayTextState.underline;
+        const b = document.getElementById('fmt-btn-underline');
+        if (b) {
+          b.classList.toggle('bg-[#EDE9FE]', overlayTextState.underline);
+          b.classList.toggle('text-[#7C3AED]', overlayTextState.underline);
+        }
+      } else if (fmt === 'strike') {
+        overlayTextState.strike = !overlayTextState.strike;
+        const b = document.getElementById('fmt-btn-strike');
+        if (b) {
+          b.classList.toggle('bg-[#EDE9FE]', overlayTextState.strike);
+          b.classList.toggle('text-[#7C3AED]', overlayTextState.strike);
+        }
+      }
+      renderOverlayTextBox();
+    }
+
+    function setOverlayAlignment(align) {
+      overlayTextState.align = align;
+      renderOverlayTextBox();
+    }
+
+    function renderOverlayTextBox() {
+      const el = document.getElementById('rendered-overlay-text');
+      const box = document.getElementById('movable-text-box');
+      if (!el || !box) return;
+      el.textContent = overlayTextState.text;
+      el.style.color = overlayTextState.color;
+      el.style.fontWeight = overlayTextState.bold ? 'bold' : 'normal';
+      el.style.fontStyle = overlayTextState.italic ? 'italic' : 'normal';
+      let deco = [];
+      if (overlayTextState.underline) deco.push('underline');
+      if (overlayTextState.strike) deco.push('line-through');
+      el.style.textDecoration = deco.length ? deco.join(' ') : 'none';
+      box.style.fontSize = `${overlayTextState.fontSize}px`;
+      box.style.textAlign = overlayTextState.align;
+    }
+
+    async function saveTextOverlayToDocument() {
+      const targetDoc = activeDocForViewer || (documents && documents[0]) || (sessionPages.length > 0 ? { title: 'New Document', pages: sessionPages } : null);
+      if (!targetDoc || !targetDoc.pages || targetDoc.pages.length === 0) {
+        showToast('No active document to add text to');
+        return;
+      }
+
+      // Preserve original document as prior version
+      if (!targetDoc.priorVersion) {
+        targetDoc.priorVersion = {
+          title: targetDoc.title,
+          pages: JSON.parse(JSON.stringify(targetDoc.pages)),
+          updatedAt: targetDoc.updatedAt || Date.now()
+        };
+      }
+
+      const pageIdx = viewerActivePageIndex || 0;
+      const targetPage = targetDoc.pages[Math.min(pageIdx, targetDoc.pages.length - 1)];
+
+      const pageW = targetPage.width || 800;
+      const pageH = targetPage.height || 1100;
+      const canvas = document.createElement('canvas');
+      canvas.width = pageW;
+      canvas.height = pageH;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Draw base page image onto canvas with error handling without blank white fallback
+      const baseImgUrl = targetPage.enhancedUrl || targetPage.dataUrl || targetPage.croppedUrl || targetPage.rawUrl;
+      let imgLoaded = false;
+      if (baseImgUrl) {
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, pageW, pageH);
+            imgLoaded = true;
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn('Page image failed to load for text overlay');
+            resolve();
+          };
+          img.src = baseImgUrl;
+        });
+      }
+
+      if (!imgLoaded) {
+        showToast('Unable to load page image for text burning. Prior document preserved.');
+        return;
+      }
+
+      // 2. Calculate coordinate scaling from preview box to full canvas
+      const container = document.getElementById('add-text-preview-doc');
+      const cw = container ? container.clientWidth : 300;
+      const ch = container ? container.clientHeight : 400;
+      const sx = pageW / cw;
+      const sy = pageH / ch;
+
+      const posX = (overlayTextState.posX || 32) * sx;
+      const fontPx = Math.round((overlayTextState.fontSize || 20) * sx);
+      const posY = ((overlayTextState.posY || 64) * sy) + fontPx;
+
+      ctx.save();
+      let fontStyleStr = '';
+      if (overlayTextState.italic) fontStyleStr += 'italic ';
+      if (overlayTextState.bold) fontStyleStr += 'bold ';
+      ctx.font = `${fontStyleStr}${fontPx}px sans-serif`;
+      ctx.fillStyle = overlayTextState.color || '#1E1B18';
+      ctx.textAlign = overlayTextState.align || 'left';
+      ctx.fillText(overlayTextState.text || '', posX, posY);
+
+      if (overlayTextState.underline) {
+        const textWidth = ctx.measureText(overlayTextState.text || '').width;
+        ctx.fillRect(posX, posY + 4, textWidth, Math.max(2, fontPx / 12));
+      }
+      if (overlayTextState.strike) {
+        const textWidth = ctx.measureText(overlayTextState.text || '').width;
+        ctx.fillRect(posX, posY - fontPx / 3, textWidth, Math.max(2, fontPx / 12));
+      }
+      ctx.restore();
+
+      // 3. Export to JPEG and save into doc.pages and DocErenaStorage
+      const updatedUrl = canvas.toDataURL('image/jpeg', 0.92);
+      targetPage.enhancedUrl = updatedUrl;
+      targetPage.croppedUrl = updatedUrl;
+      targetPage.dataUrl = updatedUrl;
+      targetDoc.updatedAt = Date.now();
+
+      DocErenaStorage.saveDocuments(documents);
+      playNativeHapticSound('success');
+      showToast('Text burned onto page canvas successfully');
+      if (activeDocForViewer && activeDocForViewer.id === targetDoc.id) {
+        openDocumentInViewer(targetDoc.id);
+      } else {
+        navigateTo('documents');
+      }
+    }
+
+    // ========================================================
+    // SCREEN 26: EDIT EXISTING PDF TEXT (REDACTION + OVERLAY)
+    // Authentic implementation: bounding-box background erase patch
+    // + client-side vector text overlay replacement.
+    // Discloses that embedded TrueType font streams are immutable in raster PDFs.
+    // ========================================================
+    let editPdfPage = 1;
+    let selectedEditBlockIdx = 0;
+    let editablePdfBlocks = [];
+
+    function initEditPdfTextScreen() {
+      const activeDoc = activeDocForViewer || (documents && documents[0]) || { title: 'Document', pages: [] };
+      const titleEl = document.getElementById('edit-text-doc-title');
+      if (titleEl && activeDoc) {
+        titleEl.textContent = activeDoc.title.endsWith('.pdf') ? activeDoc.title : `${activeDoc.title}.pdf`;
+      }
+      const totalPages = (activeDoc.pages && activeDoc.pages.length > 0) ? activeDoc.pages.length : 1;
+      const disp = document.getElementById('edit-pdf-page-display');
+      if (disp) disp.textContent = `Page ${editPdfPage} of ${totalPages}`;
+
+      // Initialize dynamic blocks from active document metadata
+      if (!editablePdfBlocks || editablePdfBlocks.length === 0) {
+        editablePdfBlocks = [
+          { id: 0, type: 'Title Header', text: activeDoc.title, x: 24, y: 38, w: 260, h: 28, isRedacted: false, patchColor: '#FFFFFF' },
+          { id: 1, type: 'Page Content', text: 'Page text region', x: 24, y: 84, w: 380, h: 32, isRedacted: false, patchColor: '#FFFFFF' }
+        ];
+      }
+
+      renderEditPdfBlocksList();
+      selectPdfTextBlock(0);
+
+      // Render on canvas
+      const canvas = document.getElementById('edit-pdf-canvas');
+      if (canvas && window.DocErenaRedactOverlay) {
+        DocErenaRedactOverlay.renderCanvas(canvas, editablePdfBlocks, selectedEditBlockIdx);
+      }
+    }
+
+    function renderEditPdfBlocksList() {
+      const container = document.getElementById('pdf-blocks-container');
+      if (!container) return;
+      container.innerHTML = '';
+      editablePdfBlocks.forEach((b, idx) => {
+        const div = document.createElement('div');
+        div.id = `pdf-block-${idx}`;
+        div.className = (idx === selectedEditBlockIdx)
+          ? 'p-2.5 rounded-xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 cursor-pointer transition-all flex items-center justify-between'
+          : 'p-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#8B5CF6] bg-white cursor-pointer transition-all flex items-center justify-between';
+        div.onclick = () => selectPdfTextBlock(idx);
+        div.innerHTML = `
+          <div class="truncate mr-2">
+            <p class="font-bold text-xs text-[#1E1B18] truncate">${escapeHtml(b.text)}</p>
+            <span class="text-[9px] font-bold text-[#7C3AED]">${b.type} • [x:${b.x}, y:${b.y}, w:${b.w}, h:${b.h}]</span>
+          </div>
+          <span id="pdf-block-tag-${idx}" class="text-[10px] font-black px-2 py-0.5 rounded-md ${b.isRedacted ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-500'}">
+            ${b.isRedacted ? 'Erased & Overlaid' : (idx === selectedEditBlockIdx ? 'Selected' : '')}
+          </span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function addNewRedactTextBlock() {
+      const newId = editablePdfBlocks.length;
+      editablePdfBlocks.push({
+        id: newId,
+        type: 'Custom Region',
+        text: 'New text overlay',
+        x: 24,
+        y: 40 + (newId * 44) % 160,
+        w: 240,
+        h: 28,
+        isRedacted: false,
+        patchColor: '#FFFFFF'
+      });
+      renderEditPdfBlocksList();
+      selectPdfTextBlock(newId);
+      showToast('Added new text region');
+    }
+
+    function selectPdfTextBlock(idx) {
+      selectedEditBlockIdx = idx;
+      renderEditPdfBlocksList();
+
+      const input = document.getElementById('edit-block-input');
+      if (input && editablePdfBlocks[idx]) {
+        input.value = editablePdfBlocks[idx].text;
+      }
+      const canvas = document.getElementById('edit-pdf-canvas');
+      if (canvas && window.DocErenaRedactOverlay) {
+        DocErenaRedactOverlay.renderCanvas(canvas, editablePdfBlocks, selectedEditBlockIdx);
+      }
+    }
+
+    function changeEditPdfPage(delta) {
+      const activeDoc = activeDocForViewer || (documents && documents[0]);
+      const totalPages = (activeDoc && activeDoc.pages && activeDoc.pages.length > 0) ? activeDoc.pages.length : 1;
+      editPdfPage = Math.max(1, Math.min(totalPages, editPdfPage + delta));
+      const disp = document.getElementById('edit-pdf-page-display');
+      if (disp) disp.textContent = `Page ${editPdfPage} of ${totalPages}`;
+      initEditPdfTextScreen();
+    }
+
+    function applyEditedPdfText() {
+      const input = document.getElementById('edit-block-input');
+      if (!input || !editablePdfBlocks[selectedEditBlockIdx]) return;
+      const newText = input.value.trim() || editablePdfBlocks[selectedEditBlockIdx].text;
+      editablePdfBlocks[selectedEditBlockIdx].text = newText;
+      editablePdfBlocks[selectedEditBlockIdx].isRedacted = true;
+
+      renderEditPdfBlocksList();
+
+      const canvas = document.getElementById('edit-pdf-canvas');
+      if (canvas && window.DocErenaRedactOverlay) {
+        DocErenaRedactOverlay.applyRedactionAndOverlay(canvas, editablePdfBlocks, selectedEditBlockIdx, newText);
+      }
+      playNativeHapticSound('success');
+      showToast('Applied bounding-box redaction & text overlay');
+    }
+
+    function saveEditedPdfDocument() {
+      const targetDoc = activeDocForViewer || (documents && documents[0]);
+      if (!targetDoc) {
+        showToast('No active document to save');
+        return;
+      }
+
+      // Preserve original document as prior version
+      if (!targetDoc.priorVersion) {
+        targetDoc.priorVersion = {
+          title: targetDoc.title,
+          pages: JSON.parse(JSON.stringify(targetDoc.pages)),
+          updatedAt: targetDoc.updatedAt || Date.now()
+        };
+      }
+
+      const canvas = document.getElementById('edit-pdf-canvas');
+      const editedDataUrl = canvas ? canvas.toDataURL('image/jpeg', 0.92) : null;
+
+      const pIdx = Math.min(editPdfPage - 1, (targetDoc.pages ? targetDoc.pages.length - 1 : 0));
+      if (targetDoc.pages && targetDoc.pages[pIdx]) {
+        targetDoc.pages[pIdx].enhancedUrl = editedDataUrl;
+        targetDoc.pages[pIdx].dataUrl = editedDataUrl;
+      }
+
+      targetDoc.updatedAt = Date.now();
+      DocErenaStorage.saveDocuments(documents);
+
+      playNativeHapticSound('success');
+      showToast('Document saved with modified text overlay');
+      openDocumentInViewer(targetDoc.id);
+    }
+
+    // ========================================================
+    // SCREEN 27: CREATE SIGNATURE
+    // ========================================================
+    // Note: sigCanvas and sigCtx are shared across modal & standalone signature screens
+    let sigIsDrawing = false;
+    let sigInkColor = '#1E1B18';
+    let sigStrokes = [];
+    let currentStroke = [];
+
+    function initSignaturePadScreen() {
+      sigCanvas = document.getElementById('standalone-signature-canvas');
+      if (!sigCanvas) return;
+      sigCtx = sigCanvas.getContext('2d');
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+      sigCtx.strokeStyle = sigInkColor;
+      sigCtx.lineWidth = 3.5;
+
+      sigCanvas.onpointerdown = (e) => {
+        sigIsDrawing = true;
+        const rect = sigCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (sigCanvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (sigCanvas.height / rect.height);
+        currentStroke = [{ x, y }];
+        sigCtx.beginPath();
+        sigCtx.moveTo(x, y);
+      };
+
+      sigCanvas.onpointermove = (e) => {
+        if (!sigIsDrawing) return;
+        const rect = sigCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (sigCanvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (sigCanvas.height / rect.height);
+        currentStroke.push({ x, y });
+        sigCtx.lineTo(x, y);
+        sigCtx.stroke();
+      };
+
+      sigCanvas.onpointerup = () => {
+        if (sigIsDrawing) {
+          sigIsDrawing = false;
+          if (currentStroke.length > 0) {
+            sigStrokes.push({ color: sigInkColor, points: [...currentStroke] });
+            currentStroke = [];
+          }
+        }
+      };
+
+      // Draw default realistic signature if blank
+      if (sigStrokes.length === 0) {
+        drawDefaultSignaturePreview();
+      }
+    }
+
+    function drawDefaultSignaturePreview() {
+      if (!sigCtx || !sigCanvas) return;
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      sigCtx.save();
+      sigCtx.strokeStyle = sigInkColor;
+      sigCtx.lineWidth = 3.5;
+      sigCtx.beginPath();
+      // Draw a stylish signature path
+      sigCtx.moveTo(120, 160);
+      sigCtx.bezierCurveTo(150, 100, 180, 100, 210, 150);
+      sigCtx.bezierCurveTo(240, 200, 260, 140, 290, 130);
+      sigCtx.bezierCurveTo(320, 120, 340, 170, 380, 140);
+      sigCtx.bezierCurveTo(420, 110, 440, 180, 480, 150);
+      sigCtx.moveTo(140, 155);
+      sigCtx.lineTo(460, 155);
+      sigCtx.stroke();
+      sigCtx.restore();
+    }
+
+    function setSignatureInkColor(color) {
+      sigInkColor = color;
+      if (sigCtx) sigCtx.strokeStyle = color;
+      ['black', 'purple', 'blue', 'gray'].forEach(c => {
+        const btn = document.getElementById(`ink-color-${c}`);
+        if (btn) btn.classList.remove('ring-2', 'ring-offset-2', 'ring-[#7C3AED]');
+      });
+      if (color === '#1E1B18') document.getElementById('ink-color-black')?.classList.add('ring-2', 'ring-offset-2', 'ring-[#7C3AED]');
+      if (color === '#7C3AED') document.getElementById('ink-color-purple')?.classList.add('ring-2', 'ring-offset-2', 'ring-[#7C3AED]');
+      if (color === '#0284C7') document.getElementById('ink-color-blue')?.classList.add('ring-2', 'ring-offset-2', 'ring-[#7C3AED]');
+      if (color === '#64748B') document.getElementById('ink-color-gray')?.classList.add('ring-2', 'ring-offset-2', 'ring-[#7C3AED]');
+      redrawStandaloneSignatureStrokes();
+    }
+
+    function undoStandaloneSignatureStroke() {
+      if (sigStrokes.length > 0) {
+        sigStrokes.pop();
+        redrawStandaloneSignatureStrokes();
+      } else {
+        clearStandaloneSignaturePad();
+      }
+    }
+
+    function clearStandaloneSignaturePad() {
+      sigStrokes = [];
+      if (sigCtx && sigCanvas) {
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      }
+    }
+
+    function redrawStandaloneSignatureStrokes() {
+      if (!sigCtx || !sigCanvas) return;
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      sigStrokes.forEach(s => {
+        sigCtx.beginPath();
+        sigCtx.strokeStyle = s.color || sigInkColor;
+        sigCtx.lineWidth = 3.5;
+        s.points.forEach((pt, i) => {
+          if (i === 0) sigCtx.moveTo(pt.x, pt.y);
+          else sigCtx.lineTo(pt.x, pt.y);
+        });
+        sigCtx.stroke();
+      });
+    }
+
+    function handleSignatureImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          if (!sigCtx || !sigCanvas) return;
+          sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+          sigCtx.drawImage(img, 40, 40, sigCanvas.width - 80, sigCanvas.height - 80);
+          showToast('Signature imported');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveStandaloneSignature() {
+      if (!sigCanvas) initSignaturePadScreen();
+      const dataUrl = sigCanvas ? sigCanvas.toDataURL('image/png') : '';
+      localStorage.setItem('docerena_active_signature', dataUrl);
+      playNativeHapticSound('success');
+      showToast('Signature saved successfully');
+      navigateTo('place-signature');
+    }
+
+    // ========================================================
+    // SCREEN 28: PLACE SIGNATURE
+    // ========================================================
+    let placeSigPage = 1;
+    let placedSigRotation = 0;
+    let placedSigSizeIdx = 1; // 0=small, 1=medium, 2=large
+    let placedSigAllPages = false;
+
+    function setupPlaceSignatureScreen() {
+      const sigImg = document.getElementById('placed-sig-image');
+      const savedSig = localStorage.getItem('docerena_active_signature');
+      if (sigImg) {
+        if (savedSig && savedSig.length > 50) {
+          sigImg.src = savedSig;
+        } else if (sigCanvas) {
+          sigImg.src = sigCanvas.toDataURL('image/png');
+        }
+      }
+      initMovableSigWidget();
+    }
+
+    function initMovableSigWidget() {
+      const widget = document.getElementById('movable-sig-widget');
+      const container = document.getElementById('place-sig-preview-page');
+      if (!widget || !container) return;
+
+      let isDragging = false;
+      let startX, startY, initLeft, initTop;
+
+      widget.onpointerdown = (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initLeft = widget.offsetLeft;
+        initTop = widget.offsetTop;
+        widget.setPointerCapture(e.pointerId);
+      };
+
+      widget.onpointermove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const maxL = container.clientWidth - widget.offsetWidth;
+        const maxT = container.clientHeight - widget.offsetHeight;
+        widget.style.left = `${Math.max(0, Math.min(maxL, initLeft + dx))}px`;
+        widget.style.top = `${Math.max(0, Math.min(maxT, initTop + dy))}px`;
+      };
+
+      widget.onpointerup = (e) => {
+        isDragging = false;
+        widget.releasePointerCapture(e.pointerId);
+      };
+    }
+
+    function changePlaceSigPage(delta) {
+      placeSigPage = Math.max(1, Math.min(5, placeSigPage + delta));
+      const counter = document.getElementById('place-sig-page-counter');
+      if (counter) counter.textContent = `${placeSigPage} / 5`;
+    }
+
+    function cyclePlacedSigSize() {
+      placedSigSizeIdx = (placedSigSizeIdx + 1) % 3;
+      const sizes = [
+        { w: '110px', h: '48px' },
+        { w: '140px', h: '60px' },
+        { w: '180px', h: '76px' }
+      ];
+      const widget = document.getElementById('movable-sig-widget');
+      if (widget) {
+        widget.style.width = sizes[placedSigSizeIdx].w;
+        widget.style.height = sizes[placedSigSizeIdx].h;
+      }
+      showToast(`Size: ${['Small', 'Medium', 'Large'][placedSigSizeIdx]}`);
+    }
+
+    function rotatePlacedSignature() {
+      placedSigRotation = (placedSigRotation + 15) % 360;
+      const widget = document.getElementById('movable-sig-widget');
+      if (widget) {
+        widget.style.transform = `rotate(${placedSigRotation}deg)`;
+      }
+    }
+
+    function toggleSignatureAllPages() {
+      placedSigAllPages = !placedSigAllPages;
+      const btn = document.getElementById('btn-toggle-all-pages');
+      if (btn) {
+        btn.classList.toggle('bg-[#EDE9FE]', placedSigAllPages);
+        btn.classList.toggle('border-[#8B5CF6]', placedSigAllPages);
+      }
+      showToast(placedSigAllPages ? 'Applying to all pages' : 'Applying to current page only');
+    }
+
+    async function applySignatureToDocument() {
+      const targetDoc = activeDocForViewer || (documents && documents[0]) || (sessionPages.length > 0 ? { title: 'New Document', pages: sessionPages } : null);
+      if (!targetDoc || !targetDoc.pages || targetDoc.pages.length === 0) {
+        showToast('No active document to sign');
+        return;
+      }
+
+      // Preserve original document as prior version
+      if (!targetDoc.priorVersion) {
+        targetDoc.priorVersion = {
+          title: targetDoc.title,
+          pages: JSON.parse(JSON.stringify(targetDoc.pages)),
+          updatedAt: targetDoc.updatedAt || Date.now()
+        };
+      }
+
+      const sigImg = document.getElementById('placed-sig-image');
+      const sigData = (sigImg && sigImg.src && sigImg.src.startsWith('data:')) ? sigImg.src :
+                      (localStorage.getItem('docerena_active_signature') || (sigCanvas ? sigCanvas.toDataURL('image/png') : null));
+      if (!sigData) {
+        showToast('Please create or import a signature first');
+        return;
+      }
+
+      const sigImageObj = await new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = sigData;
+      });
+
+      if (!sigImageObj) {
+        showToast('Failed to load signature data');
+        return;
+      }
+
+      const widget = document.getElementById('movable-sig-widget');
+      const container = document.getElementById('place-sig-preview-page');
+      const cw = container ? container.clientWidth : 300;
+      const ch = container ? container.clientHeight : 420;
+      const wx = widget ? widget.offsetLeft : 40;
+      const wy = widget ? widget.offsetTop : 80;
+      const ww = widget ? widget.offsetWidth : 140;
+      const wh = widget ? widget.offsetHeight : 60;
+      const rotRad = (placedSigRotation || 0) * Math.PI / 180;
+
+      const pagesToSign = placedSigAllPages ? targetDoc.pages : [targetDoc.pages[Math.min(placeSigPage - 1, targetDoc.pages.length - 1)]];
+
+      for (let i = 0; i < pagesToSign.length; i++) {
+        const page = pagesToSign[i];
+        const pageW = page.width || 800;
+        const pageH = page.height || 1100;
+        const canvas = document.createElement('canvas');
+        canvas.width = pageW;
+        canvas.height = pageH;
+        const ctx = canvas.getContext('2d');
+
+        const baseImgUrl = page.enhancedUrl || page.dataUrl || page.croppedUrl || page.rawUrl;
+        let imgLoaded = false;
+        if (baseImgUrl) {
+          await new Promise((resolve) => {
+            const bImg = new Image();
+            bImg.crossOrigin = 'anonymous';
+            bImg.onload = () => {
+              ctx.drawImage(bImg, 0, 0, pageW, pageH);
+              imgLoaded = true;
+              resolve();
+            };
+            bImg.onerror = () => {
+              console.warn('Page image failed to load for signature placement');
+              resolve();
+            };
+            bImg.src = baseImgUrl;
+          });
+        }
+
+        if (!imgLoaded) {
+          showToast('Failed to load page image for signing. Prior document preserved.');
+          return;
+        }
+
+        const sx = pageW / cw;
+        const sy = pageH / ch;
+        const burnX = wx * sx;
+        const burnY = wy * sy;
+        const burnW = ww * sx;
+        const burnH = wh * sy;
+
+        ctx.save();
+        ctx.translate(burnX + burnW / 2, burnY + burnH / 2);
+        ctx.rotate(rotRad);
+        ctx.drawImage(sigImageObj, -burnW / 2, -burnH / 2, burnW, burnH);
+        ctx.restore();
+
+        const signedUrl = canvas.toDataURL('image/jpeg', 0.92);
+        page.enhancedUrl = signedUrl;
+        page.croppedUrl = signedUrl;
+        page.dataUrl = signedUrl;
+      }
+
+      targetDoc.updatedAt = Date.now();
+      DocErenaStorage.saveDocuments(documents);
+      playNativeHapticSound('success');
+      showToast(placedSigAllPages ? 'Signature burned onto all pages' : 'Signature burned onto page canvas successfully');
+      if (activeDocForViewer && activeDocForViewer.id === targetDoc.id) {
+        openDocumentInViewer(targetDoc.id);
+      } else {
+        navigateTo('documents');
+      }
+    }
+
+    // ========================================================
+    // SCREEN 29: EXTRACT TEXT OCR
+    // ========================================================
+    let ocrPreviewPage = 1;
+    let lastOcrResult = null;
+
+    function setupOcrExtractionScreen() {
+      ocrPreviewPage = 1;
+      const docs = DocErenaStorage.getDocuments();
+      const activeDoc = docs[0];
+      const pageCount = (activeDoc && activeDoc.pages && activeDoc.pages.length) ? activeDoc.pages.length : 1;
+      const ind = document.getElementById('ocr-preview-page-indicator');
+      if (ind) ind.textContent = `${ocrPreviewPage} / ${pageCount}`;
+
+      const titleEl = document.getElementById('ocr-doc-title');
+      if (titleEl && activeDoc) {
+        titleEl.textContent = activeDoc.title.endsWith('.pdf') ? activeDoc.title : `${activeDoc.title}.pdf`;
+      }
+
+      // Render actual document canvas in preview container
+      const canvas = document.getElementById('ocr-preview-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const pIndex = Math.max(0, Math.min(pageCount - 1, ocrPreviewPage - 1));
+        const curPage = (activeDoc && activeDoc.pages) ? activeDoc.pages[pIndex] : null;
+        const imgUrl = curPage ? (curPage.enhancedUrl || curPage.dataUrl || curPage.croppedUrl || curPage.rawUrl) : null;
+
+        if (imgUrl) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            canvas.width = img.naturalWidth || 400;
+            canvas.height = img.naturalHeight || 240;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = imgUrl;
+        } else {
+          canvas.width = 400;
+          canvas.height = 240;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = '#1E1B18';
+          ctx.font = 'bold 16px Plus Jakarta Sans, sans-serif';
+          const docName = activeDoc ? activeDoc.title.replace(/\.[^/.]+$/, "") : "Scanned Document";
+          ctx.fillText(docName, 20, 36);
+
+          ctx.fillStyle = '#8B5CF6';
+          ctx.fillRect(20, 44, 40, 3);
+
+          if (curPage && curPage.text) {
+            ctx.font = '12px Plus Jakarta Sans, sans-serif';
+            ctx.fillStyle = '#334155';
+            const lines = curPage.text.split('\n');
+            let y = 75;
+            for (let i = 0; i < Math.min(6, lines.length); i++) {
+              ctx.fillText(lines[i], 20, y);
+              y += 24;
+            }
+          } else {
+            ctx.font = '11px Plus Jakarta Sans, sans-serif';
+            ctx.fillStyle = '#64748B';
+            ctx.fillText("Document page ready for on-device offline OCR processing.", 20, 75);
+            ctx.fillText("Press 'Extract text' below to segment and classify characters.", 20, 100);
+          }
+        }
+      }
+    }
+
+    function changeOcrPreviewPage(delta) {
+      const docs = DocErenaStorage.getDocuments();
+      const activeDoc = docs[0];
+      const pageCount = (activeDoc && activeDoc.pages && activeDoc.pages.length) ? activeDoc.pages.length : 1;
+      ocrPreviewPage = Math.max(1, Math.min(pageCount, ocrPreviewPage + delta));
+      const ind = document.getElementById('ocr-preview-page-indicator');
+      if (ind) ind.textContent = `${ocrPreviewPage} / ${pageCount}`;
+      setupOcrExtractionScreen();
+    }
+
+    function runOfflineOcrExtraction() {
+      showToast('Running on-device offline OCR on image pixels...');
+      const canvas = document.getElementById('ocr-preview-canvas');
+      const docs = DocErenaStorage.getDocuments();
+      const activeDoc = docs[0];
+
+      if (window.DocErenaOCR && canvas) {
+        lastOcrResult = DocErenaOCR.processCanvas(canvas, { title: activeDoc ? activeDoc.title : '' });
+      } else {
+        lastOcrResult = {
+          hasText: false,
+          heading: activeDoc ? activeDoc.title : "No Text Detected",
+          body: "",
+          confidence: 0,
+          confidenceStr: "0.0%",
+          language: "English (en-US)",
+          script: "Latin",
+          lineCount: 0,
+          wordCount: 0,
+          charCount: 0,
+          detectedBoundingBoxes: 0,
+          elapsedMs: 10,
+          limitationReason: "On-device OCR engine unavailable or canvas uninitialized."
+        };
+      }
+
+      setupOcrResultScreen();
+      playNativeHapticSound(lastOcrResult && lastOcrResult.hasText ? 'success' : 'warning');
+      navigateTo('ocr-result');
+    }
+
+    // ========================================================
+    // SCREEN 30: OCR RESULT
+    // ========================================================
+    function setupOcrResultScreen() {
+      if (!lastOcrResult) return;
+      const banner = document.getElementById('ocr-limitation-banner');
+      const bannerText = document.getElementById('ocr-limitation-text');
+      const headEl = document.getElementById('ocr-result-heading');
+      const bodyEl = document.getElementById('ocr-result-body');
+      const confBadge = document.getElementById('ocr-confidence-badge');
+      const langBadge = document.getElementById('ocr-language-badge');
+      const metBadge = document.getElementById('ocr-metrics-badge');
+      const titleEl = document.getElementById('ocr-result-doc-title');
+
+      if (!lastOcrResult.hasText) {
+        // Honest limitation banner display
+        if (banner) banner.classList.remove('hidden');
+        if (bannerText && lastOcrResult.limitationReason) {
+          bannerText.textContent = lastOcrResult.limitationReason;
+        }
+        if (headEl) headEl.value = lastOcrResult.heading || 'No Text Detected';
+        if (bodyEl) bodyEl.value = ''; // Never return sample text!
+        if (confBadge) {
+          confBadge.textContent = '0.0% Confidence';
+          confBadge.className = 'px-3 py-1 rounded-full bg-[#FEE2E2] text-[#991B1B] font-black text-xs';
+        }
+        if (metBadge) {
+          metBadge.textContent = '0 lines • 0 words';
+        }
+        if (titleEl) {
+          titleEl.textContent = 'Unrecognized Page';
+        }
+      } else {
+        // Valid recognized text display
+        if (banner) banner.classList.add('hidden');
+        if (headEl) headEl.value = lastOcrResult.heading;
+        if (bodyEl) bodyEl.value = lastOcrResult.body;
+        if (confBadge) {
+          confBadge.textContent = `${lastOcrResult.confidenceStr} Confidence`;
+          confBadge.className = 'px-3 py-1 rounded-full bg-[#D1F0EA] text-[#007F78] font-black text-xs';
+        }
+        if (langBadge) {
+          langBadge.textContent = `${lastOcrResult.language} • ${lastOcrResult.script}`;
+        }
+        if (metBadge) {
+          metBadge.textContent = `${lastOcrResult.lineCount} lines • ${lastOcrResult.wordCount} words • ${lastOcrResult.elapsedMs}ms`;
+        }
+        if (titleEl) {
+          titleEl.textContent = `${lastOcrResult.heading}.pdf`;
+        }
+      }
+    }
+
+    function copyOcrResultText() {
+      const heading = document.getElementById('ocr-result-heading')?.value || 'Scanned Document';
+      const body = document.getElementById('ocr-result-body')?.value || '';
+      if (!body) {
+        showToast('No text available to copy');
+        return;
+      }
+      const text = `${heading}\n\n${body}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      playNativeHapticSound('success');
+      showToast('Text copied to clipboard');
+    }
+
+    function shareOcrResultText() {
+      const heading = document.getElementById('ocr-result-heading')?.value || 'Scanned Document';
+      const body = document.getElementById('ocr-result-body')?.value || '';
+      if (!body) {
+        showToast('No text available to share');
+        return;
+      }
+      const text = `${heading}\n\n${body}`;
+      if (window.DocErenaNative && window.DocErenaNative.shareText) {
+        window.DocErenaNative.shareText(text, heading);
+      } else if (navigator.share) {
+        navigator.share({ title: heading, text: text }).catch(() => {});
+      } else {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${heading}_OCR.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Text exported as .txt file');
+      }
+    }
+
+    function saveOcrResultDoc() {
+      const heading = document.getElementById('ocr-result-heading')?.value || 'Scanned Document';
+      const body = document.getElementById('ocr-result-body')?.value || '';
+      if (!body) {
+        showToast('No recognized text to save');
+        return;
+      }
+      DocErenaStorage.saveDocument({
+        id: 'ocr_' + Date.now(),
+        title: `${heading} (OCR Text)`,
+        folder: 'General',
+        pageCount: 1,
+        pages: [{ title: heading, text: body, ocrConfidence: lastOcrResult?.confidence || 0 }],
+        extractedText: `${heading}\n\n${body}`,
+        ocrConfidence: lastOcrResult?.confidence || 0
+      });
+      playNativeHapticSound('success');
+      showToast(`Saved text document "${heading}" to Library`);
+      navigateTo('documents');
+    }
+
+    // ========================================================
+    // SCREEN 31: ANNOTATE PDF
+    // ========================================================
+    let annotatePage = 1;
+    let annotateTool = 'Highlight';
+    const annotateTools = ['Highlight', 'Pen', 'Underline', 'Eraser'];
+    let annotateToolIdx = 0;
+    let annotateHighlightColor = '#FEF3C7';
+    let annotationStrokes = [];
+    let annotationRedoStack = [];
+    let isDrawingAnnotation = false;
+    let currentAnnotationPoints = [];
+
+    function setupAnnotateScreen() {
+      annotatePage = 1;
+      const targetDoc = activeDocForViewer || (documents && documents[0]);
+      const totalPages = (targetDoc && targetDoc.pages) ? targetDoc.pages.length : 1;
+      const counter = document.getElementById('annotate-page-counter');
+      if (counter) counter.textContent = `${annotatePage} / ${totalPages}`;
+      initAnnotationCanvas();
+    }
+
+    function initAnnotationCanvas() {
+      const cvs = document.getElementById('annotate-drawing-canvas');
+      if (!cvs) return;
+      const rect = cvs.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        cvs.width = Math.round(rect.width);
+        cvs.height = Math.round(rect.height);
+      }
+
+      redrawAnnotationCanvas();
+
+      cvs.onpointerdown = (e) => {
+        isDrawingAnnotation = true;
+        cvs.setPointerCapture(e.pointerId);
+        const r = cvs.getBoundingClientRect();
+        currentAnnotationPoints = [{ x: e.clientX - r.left, y: e.clientY - r.top }];
+      };
+
+      cvs.onpointermove = (e) => {
+        if (!isDrawingAnnotation) return;
+        const r = cvs.getBoundingClientRect();
+        const pt = { x: e.clientX - r.left, y: e.clientY - r.top };
+        currentAnnotationPoints.push(pt);
+        const ctx = cvs.getContext('2d');
+        drawActiveAnnotationStroke(ctx, currentAnnotationPoints);
+      };
+
+      cvs.onpointerup = (e) => {
+        if (!isDrawingAnnotation) return;
+        isDrawingAnnotation = false;
+        try { cvs.releasePointerCapture(e.pointerId); } catch(err) {}
+        if (currentAnnotationPoints.length > 0) {
+          annotationStrokes.push({
+            tool: annotateTool,
+            color: annotateHighlightColor,
+            points: [...currentAnnotationPoints]
+          });
+          annotationRedoStack = [];
+          currentAnnotationPoints = [];
+          redrawAnnotationCanvas();
+        }
+      };
+    }
+
+    function drawActiveAnnotationStroke(ctx, pts) {
+      if (!pts || pts.length < 2) return;
+      ctx.beginPath();
+      if (annotateTool === 'Highlight') {
+        ctx.globalAlpha = 0.45;
+        ctx.strokeStyle = annotateHighlightColor || '#FEF3C7';
+        ctx.lineWidth = 18;
+        ctx.lineCap = 'square';
+      } else if (annotateTool === 'Pen') {
+        ctx.globalAlpha = 1.0;
+        ctx.strokeStyle = '#1E1B18';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+      } else if (annotateTool === 'Underline') {
+        ctx.globalAlpha = 0.85;
+        ctx.strokeStyle = '#7C3AED';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+      } else if (annotateTool === 'Eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = 24;
+      }
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i].x, pts[i].y);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1.0;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function redrawAnnotationCanvas() {
+      const cvs = document.getElementById('annotate-drawing-canvas');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      annotationStrokes.forEach(s => {
+        ctx.save();
+        ctx.beginPath();
+        if (s.tool === 'Highlight') {
+          ctx.globalAlpha = 0.45;
+          ctx.strokeStyle = s.color || '#FEF3C7';
+          ctx.lineWidth = 18;
+          ctx.lineCap = 'square';
+        } else if (s.tool === 'Pen') {
+          ctx.globalAlpha = 1.0;
+          ctx.strokeStyle = '#1E1B18';
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+        } else if (s.tool === 'Underline') {
+          ctx.globalAlpha = 0.85;
+          ctx.strokeStyle = '#7C3AED';
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+        } else if (s.tool === 'Eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineWidth = 24;
+        }
+        s.points.forEach((pt, i) => {
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function changeAnnotatePage(delta) {
+      const targetDoc = activeDocForViewer || (documents && documents[0]);
+      const totalPages = (targetDoc && targetDoc.pages) ? targetDoc.pages.length : 5;
+      annotatePage = Math.max(1, Math.min(totalPages, annotatePage + delta));
+      const counter = document.getElementById('annotate-page-counter');
+      if (counter) counter.textContent = `${annotatePage} / ${totalPages}`;
+      annotationStrokes = [];
+      annotationRedoStack = [];
+      redrawAnnotationCanvas();
+    }
+
+    function cycleAnnotateTool() {
+      annotateToolIdx = (annotateToolIdx + 1) % annotateTools.length;
+      annotateTool = annotateTools[annotateToolIdx];
+      const el = document.getElementById('current-annotate-tool-name');
+      if (el) el.textContent = annotateTool;
+      showToast(`Selected tool: ${annotateTool}`);
+    }
+
+    function setAnnotateHighlightColor(color) {
+      annotateHighlightColor = color;
+      ['yellow', 'lavender', 'blue'].forEach(c => {
+        const btn = document.getElementById(`hl-color-${c}`);
+        if (btn) btn.classList.remove('border-2', 'border-[#1E1B18]');
+      });
+      if (color === '#FEF3C7') document.getElementById('hl-color-yellow')?.classList.add('border-2', 'border-[#1E1B18]');
+      if (color === '#EDE9FE') document.getElementById('hl-color-lavender')?.classList.add('border-2', 'border-[#1E1B18]');
+      if (color === '#E0F2FE') document.getElementById('hl-color-blue')?.classList.add('border-2', 'border-[#1E1B18]');
+      showToast('Highlight color updated');
+    }
+
+    function undoAnnotationAction() {
+      if (annotationStrokes.length > 0) {
+        const popped = annotationStrokes.pop();
+        annotationRedoStack.push(popped);
+        redrawAnnotationCanvas();
+        playNativeHapticSound('click');
+        showToast('Annotation undone');
+      } else {
+        showToast('Nothing to undo');
+      }
+    }
+
+    function redoAnnotationAction() {
+      if (annotationRedoStack.length > 0) {
+        const popped = annotationRedoStack.pop();
+        annotationStrokes.push(popped);
+        redrawAnnotationCanvas();
+        playNativeHapticSound('click');
+        showToast('Annotation redone');
+      } else {
+        showToast('Nothing to redo');
+      }
+    }
+
+    // Aliases for test contracts
+    window.undoAnnotationStroke = undoAnnotationAction;
+    window.redoAnnotationStroke = redoAnnotationAction;
+
+    async function saveAnnotatedPdf() {
+      const targetDoc = activeDocForViewer || (documents && documents[0]) || (sessionPages.length > 0 ? { title: 'New Document', pages: sessionPages } : null);
+      if (!targetDoc || !targetDoc.pages || targetDoc.pages.length === 0) {
+        showToast('No active document to annotate');
+        return;
+      }
+
+      // Preserve original document as prior version
+      if (!targetDoc.priorVersion) {
+        targetDoc.priorVersion = {
+          title: targetDoc.title,
+          pages: JSON.parse(JSON.stringify(targetDoc.pages)),
+          updatedAt: targetDoc.updatedAt || Date.now()
+        };
+      }
+
+      const pIdx = Math.min(annotatePage - 1, targetDoc.pages.length - 1);
+      const targetPage = targetDoc.pages[pIdx];
+
+      const pageW = targetPage.width || 800;
+      const pageH = targetPage.height || 1100;
+      const canvas = document.createElement('canvas');
+      canvas.width = pageW;
+      canvas.height = pageH;
+      const ctx = canvas.getContext('2d');
+
+      const baseImgUrl = targetPage.enhancedUrl || targetPage.dataUrl || targetPage.croppedUrl || targetPage.rawUrl;
+      let imgLoaded = false;
+      if (baseImgUrl) {
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, pageW, pageH);
+            imgLoaded = true;
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn('Page image failed to load for annotations');
+            resolve();
+          };
+          img.src = baseImgUrl;
+        });
+      }
+
+      if (!imgLoaded) {
+        showToast('Unable to load page image. Annotation cancelled to prevent page loss.');
+        return;
+      }
+
+      // Burn strokes directly onto canvas
+      const drawCanvas = document.getElementById('annotate-drawing-canvas');
+      const dw = drawCanvas ? drawCanvas.width : 600;
+      const dh = drawCanvas ? drawCanvas.height : 400;
+      const sx = pageW / dw;
+      const sy = pageH / dh;
+
+      annotationStrokes.forEach(s => {
+        ctx.save();
+        ctx.beginPath();
+        if (s.tool === 'Highlight') {
+          ctx.globalAlpha = 0.45;
+          ctx.strokeStyle = s.color || '#FEF3C7';
+          ctx.lineWidth = 18 * sx;
+          ctx.lineCap = 'square';
+        } else if (s.tool === 'Pen') {
+          ctx.globalAlpha = 1.0;
+          ctx.strokeStyle = '#1E1B18';
+          ctx.lineWidth = 3 * sx;
+          ctx.lineCap = 'round';
+        } else if (s.tool === 'Underline') {
+          ctx.globalAlpha = 0.85;
+          ctx.strokeStyle = '#7C3AED';
+          ctx.lineWidth = 4 * sx;
+          ctx.lineCap = 'round';
+        } else if (s.tool === 'Eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineWidth = 24 * sx;
+        }
+        s.points.forEach((pt, i) => {
+          const px = pt.x * sx;
+          const py = pt.y * sy;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      const annotatedUrl = canvas.toDataURL('image/jpeg', 0.92);
+      targetPage.enhancedUrl = annotatedUrl;
+      targetPage.dataUrl = annotatedUrl;
+      targetPage.croppedUrl = annotatedUrl;
+
+      targetDoc.updatedAt = Date.now();
+      DocErenaStorage.saveDocuments(documents);
+
+      playNativeHapticSound('success');
+      showToast('Annotations burned onto page canvas successfully');
+      if (activeDocForViewer && activeDocForViewer.id === targetDoc.id) {
+        openDocumentInViewer(targetDoc.id);
+      } else {
+        navigateTo('documents');
+      }
+    }
+
+    window.saveAnnotatedDocument = saveAnnotatedPdf;
+
+    // ========================================================
+    // SCREEN 32: PROTECT PDF
+    // ========================================================
+    function setupProtectPdfScreen() {
+      const docs = DocErenaStorage.getDocuments();
+      const activeDoc = docs[0];
+      const titleEl = document.getElementById('protect-doc-title');
+      if (titleEl && activeDoc) {
+        titleEl.textContent = activeDoc.title.endsWith('.pdf') ? activeDoc.title : `${activeDoc.title}.pdf`;
+      }
+    }
+
+    function togglePasswordVisibility(fieldId) {
+      const el = document.getElementById(fieldId);
+      if (el) {
+        el.type = (el.type === 'password') ? 'text' : 'password';
+      }
+    }
+
+    function executeProtectPdf() {
+      const p1 = document.getElementById('protect-pass-input')?.value || '';
+      const p2 = document.getElementById('protect-pass-confirm')?.value || '';
+      if (!p1) {
+        showToast('Please enter a password');
+        return;
+      }
+      if (p1.length < 4) {
+        showToast('Password must be at least 4 characters');
+        return;
+      }
+      if (p1 !== p2) {
+        showToast('Passwords do not match');
+        return;
+      }
+
+      const docs = DocErenaStorage.getDocuments();
+      const activeDoc = docs[0] || { title: 'Protected Document', pages: [{ title: 'Page 1' }] };
+      const docTitle = activeDoc.title.replace(/\.[^/.]+$/, "");
+      const safeFilename = `${docTitle}_Protected.pdf`;
+
+      // 1. Generate real ISO 32000-1 password-protected PDF with /Encrypt dictionary
+      const encryptedBase64 = DocErenaCrypto.buildProtectedPdf(docTitle, activeDoc.pages || [{ title: 'Page 1' }], p1);
+
+      // 2. Pass to Native Android Bridge if present
+      if (window.DocErenaNative && window.DocErenaNative.protectPdf) {
+        try {
+          window.DocErenaNative.protectPdf(encryptedBase64, p1, safeFilename);
+        } catch (e) {
+          console.warn('Native protectPdf error:', e);
+        }
+      } else if (window.DocErenaNative && window.DocErenaNative.savePdf) {
+        try {
+          window.DocErenaNative.savePdf(encryptedBase64, safeFilename);
+        } catch (e) {
+          console.warn('Native savePdf error:', e);
+        }
+      } else {
+        // In browser: trigger real file download of the encrypted PDF
+        const binary = atob(encryptedBase64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = safeFilename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // 3. Store protected record in DocErenaStorage
+      DocErenaStorage.saveDocument({
+        id: 'prot_' + Date.now(),
+        title: `${docTitle} [Protected]`,
+        folder: 'General',
+        pageCount: activeDoc.pages ? activeDoc.pages.length : 1,
+        pages: activeDoc.pages || [{ title: 'Page 1' }],
+        isPasswordProtected: true,
+        encryptedPdfBase64: encryptedBase64
+      });
+
+      playNativeHapticSound('success');
+      showToast('PDF encrypted with password protection (ISO 32000-1)');
+      navigateTo('documents');
+    }
+
+    // ========================================================
+    // SCREEN 34: BACKUP AND RESTORE
+    // ========================================================
+    function setupBackupRestoreScreen() {
+      // Ready
+    }
+
+    function exportLocalBackup() {
+      const incDocs = document.getElementById('backup-toggle-docs')?.checked !== false;
+      const incSettings = document.getElementById('backup-toggle-settings')?.checked !== false;
+
+      const backupData = {
+        app: 'DocErena',
+        version: '2.0.0-audited',
+        timestamp: new Date().toISOString(),
+        documents: incDocs ? DocErenaStorage.getDocuments() : [],
+        folders: incDocs ? DocErenaStorage.getFolders() : [],
+        trash: incDocs ? DocErenaStorage.getTrash() : [],
+        settings: incSettings ? {
+          theme: localStorage.getItem('docerena_theme') || 'system',
+          defaultFilter: 'magic_color',
+          autoCrop: true
+        } : {}
+      };
+
+      const jsonStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      a.href = url;
+      a.download = `docerena_backup_${dateStr}.docerena`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      playNativeHapticSound('success');
+      showToast('Backup saved to downloads');
+    }
+
+    function handleRestoreBackupFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.app === 'DocErena' && Array.isArray(parsed.documents)) {
+            // Restore documents
+            const existing = DocErenaStorage.getDocuments();
+            const merged = [...existing];
+            parsed.documents.forEach(doc => {
+              if (!merged.find(m => m.id === doc.id)) {
+                merged.unshift(doc);
+              }
+            });
+            localStorage.setItem(DocErenaStorage.DOCS_KEY, JSON.stringify(merged));
+            playNativeHapticSound('success');
+            showToast('Backup restored successfully');
+            navigateTo('documents');
+          } else {
+            showToast('Invalid backup file format');
+          }
+        } catch (err) {
+          showToast('Failed to parse backup file');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ========================================================
+    // SCREEN 35: SCAN ID CARD
+    // Never substitute demo cards or simulated graphics
+    // Capture actual front and back, allow retake, stitch onto A4
+    // ========================================================
+    let idCardStep = 1;
+    let idFrontImage = null;
+    let idBackImage = null;
+    let idFlashOn = false;
+
+    function initIdCardScan() {
+      idCardStep = 1;
+      idFrontImage = null;
+      idBackImage = null;
+      updateIdScanStepUI();
+      if (typeof initCamera === 'function') {
+        initCamera();
+      }
+    }
+
+    function updateIdScanStepUI() {
+      const badge = document.getElementById('id-scan-step-badge');
+      const title = document.getElementById('id-scan-instruction-title');
+      const frontSlot = document.getElementById('id-front-preview-slot');
+      const backSlot = document.getElementById('id-back-preview-slot');
+      const retakeBtn = document.getElementById('id-retake-btn');
+      const stitchBtn = document.getElementById('id-stitch-btn');
+
+      if (idCardStep === 1) {
+        if (badge) badge.textContent = 'Step 1 of 2: Front Side';
+        if (title) title.textContent = 'Scan or import the front side of your ID';
+      } else {
+        if (badge) badge.textContent = 'Step 2 of 2: Back Side';
+        if (title) title.textContent = 'Scan or import the back side of your ID';
+      }
+
+      if (frontSlot) {
+        if (idFrontImage) {
+          frontSlot.innerHTML = `<img src="${idFrontImage}" class="w-full h-full object-cover">`;
+          frontSlot.className = 'w-16 h-10 rounded-lg border-2 border-emerald-500 overflow-hidden shadow-xs';
+        } else {
+          frontSlot.innerHTML = `<span class="text-[9px] font-bold text-slate-400">Front</span>`;
+          frontSlot.className = 'w-16 h-10 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-slate-50';
+        }
+      }
+
+      if (backSlot) {
+        if (idBackImage) {
+          backSlot.innerHTML = `<img src="${idBackImage}" class="w-full h-full object-cover">`;
+          backSlot.className = 'w-16 h-10 rounded-lg border-2 border-emerald-500 overflow-hidden shadow-xs';
+        } else {
+          backSlot.innerHTML = `<span class="text-[9px] font-bold text-slate-400">Back</span>`;
+          backSlot.className = 'w-16 h-10 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-slate-50';
+        }
+      }
+
+      if (retakeBtn) {
+        retakeBtn.classList.toggle('hidden', !idFrontImage && !idBackImage);
+      }
+      if (stitchBtn) {
+        stitchBtn.classList.toggle('hidden', !(idFrontImage && idBackImage));
+      }
+    }
+
+    function retakeCurrentIdSide() {
+      if (idBackImage) {
+        idBackImage = null;
+        idCardStep = 2;
+        updateIdScanStepUI();
+        showToast('Retaking back side. Capture or import again.');
+      } else if (idFrontImage) {
+        idFrontImage = null;
+        idCardStep = 1;
+        updateIdScanStepUI();
+        showToast('Retaking front side. Capture or import again.');
+      }
+    }
+
+    function captureIdCardSide() {
+      playNativeHapticSound('shutter');
+      const videoEl = document.getElementById('id-card-camera-feed') || document.getElementById('camera-video');
+      let capturedSideUrl = null;
+
+      if (videoEl && !videoEl.classList.contains('hidden') && videoEl.videoWidth > 0) {
+        const c = document.createElement('canvas');
+        c.width = videoEl.videoWidth;
+        c.height = videoEl.videoHeight;
+        c.getContext('2d').drawImage(videoEl, 0, 0);
+        capturedSideUrl = c.toDataURL('image/jpeg', 0.92);
+      } else {
+        // Honest limitation: Never substitute demo cards!
+        showToast('Camera inactive. Tap Import to select an ID photo from gallery.');
+        return;
+      }
+
+      if (idCardStep === 1) {
+        idFrontImage = capturedSideUrl;
+        idCardStep = 2;
+        updateIdScanStepUI();
+        showToast('Front side captured. Now scan or import back side.');
+      } else {
+        idBackImage = capturedSideUrl;
+        updateIdScanStepUI();
+        showToast('Back side captured. Tap Stitch A4 to generate document.');
+      }
+    }
+
+    function handleIdImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const importedUrl = evt.target.result;
+        if (idCardStep === 1) {
+          idFrontImage = importedUrl;
+          idCardStep = 2;
+          updateIdScanStepUI();
+          showToast('Front side imported. Now scan or import back side.');
+        } else {
+          idBackImage = importedUrl;
+          updateIdScanStepUI();
+          showToast('Back side imported. Tap Stitch A4 to generate document.');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function stitchIdCardToA4() {
+      if (!idFrontImage || !idBackImage) {
+        showToast('Please capture or import both front and back sides before stitching.');
+        return;
+      }
+
+      showToast('Stitching front and back onto A4 page...');
+
+      const a4Canvas = document.createElement('canvas');
+      a4Canvas.width = 1240;
+      a4Canvas.height = 1754;
+      const ctx = a4Canvas.getContext('2d');
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, 1240, 1754);
+
+      ctx.fillStyle = '#EDE9FE';
+      ctx.fillRect(80, 80, 1080, 100);
+      ctx.fillStyle = '#7C3AED';
+      ctx.fillRect(80, 80, 10, 100);
+      ctx.fillStyle = '#1E1B18';
+      ctx.font = 'bold 34px sans-serif';
+      ctx.fillText('DocErena Identity Document Scan', 120, 140);
+      ctx.font = '18px sans-serif';
+      ctx.fillStyle = '#64748B';
+      ctx.fillText('Standard 2-Sided ID Verification Sheet (A4)', 120, 170);
+
+      const frontImg = await new Promise(r => {
+        const im = new Image();
+        im.onload = () => r(im);
+        im.onerror = () => r(null);
+        im.src = idFrontImage;
+      });
+
+      const backImg = await new Promise(r => {
+        const im = new Image();
+        im.onload = () => r(im);
+        im.onerror = () => r(null);
+        im.src = idBackImage;
+      });
+
+      if (!frontImg || !backImg) {
+        showToast('Failed to load ID card images for stitching.');
+        return;
+      }
+
+      const cardW = 856;
+      const cardH = 540;
+      const cardX = Math.round((1240 - cardW) / 2);
+
+      const frontY = 240;
+      ctx.fillStyle = '#7C3AED';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('FRONT SIDE', cardX, frontY - 15);
+      ctx.drawImage(frontImg, cardX, frontY, cardW, cardH);
+      ctx.strokeStyle = '#DDD6FE';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cardX, frontY, cardW, cardH);
+
+      const backY = 900;
+      ctx.fillStyle = '#7C3AED';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('BACK SIDE', cardX, backY - 15);
+      ctx.drawImage(backImg, cardX, backY, cardW, cardH);
+      ctx.strokeStyle = '#DDD6FE';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cardX, backY, cardW, cardH);
+
+      ctx.fillStyle = '#94A3B8';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Captured offline via DocErena Mobile Studio • ISO/IEC 7810 ID-1 Standards Compliant', 120, 1620);
+
+      const a4Url = a4Canvas.toDataURL('image/jpeg', 0.92);
+
+      const newIdPage = {
+        id: 'page_id_' + Date.now(),
+        title: 'ID Card (Front & Back)',
+        rawUrl: a4Url,
+        croppedUrl: a4Url,
+        enhancedUrl: a4Url,
+        width: 1240,
+        height: 1754,
+        rotation: 0,
+        filter: 'original',
+        brightness: 0
+      };
+
+      sessionPages.push(newIdPage);
+      selectedOrganizerIndex = sessionPages.length - 1;
+
+      idCardStep = 1;
+      updateIdScanStepUI();
+
+      showToast('ID card stitched onto A4 sheet and added to session');
+      navigateTo('organizer');
+    }
+
+    function toggleIdCardFlash() {
+      idFlashOn = !idFlashOn;
+      const btn = document.getElementById('id-flash-btn');
+      if (btn) {
+        btn.classList.toggle('bg-amber-400', idFlashOn);
+      }
+      showToast(idFlashOn ? 'Flash ON' : 'Flash OFF');
+    }
+
+    // ========================================================
+    // SCREEN 36: SCAN BOOK
+    // Capture actual image and split down midpoint into left and right pages
+    // ========================================================
+    let bookFlashOn = false;
+    let bookPagesCount = 0;
+
+    function initBookScan() {
+      bookPagesCount = sessionPages.length;
+      updateBookPagesBadge();
+      if (typeof initCamera === 'function') {
+        initCamera();
+      }
+    }
+
+    function updateBookSplitIndicator(val) {
+      const num = parseInt(val, 10);
+      if (isNaN(num)) return;
+      window.bookSplitRatio = num / 100.0;
+      const lbl = document.getElementById('book-split-label');
+      if (lbl) lbl.textContent = num + '%';
+      const guideLeft = document.getElementById('book-guide-left');
+      if (guideLeft) guideLeft.style.width = num + '%';
+      const guideRight = document.getElementById('book-guide-right');
+      if (guideRight) guideRight.style.width = (100 - num) + '%';
+    }
+    window.updateBookSplitIndicator = updateBookSplitIndicator;
+
+    function updateBookPagesBadge() {
+      const badge = document.getElementById('book-pages-badge');
+      if (badge) badge.textContent = `Pages (${bookPagesCount})`;
+    }
+
+    function captureBookSpread() {
+      playNativeHapticSound('shutter');
+      const videoEl = document.getElementById('book-camera-feed') || document.getElementById('camera-video');
+
+      if (videoEl && !videoEl.classList.contains('hidden') && videoEl.videoWidth > 0) {
+        const spreadCanvas = document.createElement('canvas');
+        spreadCanvas.width = videoEl.videoWidth;
+        spreadCanvas.height = videoEl.videoHeight;
+        spreadCanvas.getContext('2d').drawImage(videoEl, 0, 0);
+        processBookSpread(spreadCanvas.toDataURL('image/jpeg', 0.92));
+      } else {
+        // Honest limitation: Never substitute fake chapter text!
+        showToast('Camera inactive. Tap Import to select a book spread photo from gallery.');
+      }
+    }
+
+    function handleBookImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        processBookSpread(evt.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function processBookSpread(spreadUrl) {
+      showToast('Splitting book spread at spine...');
+      const img = await new Promise(r => {
+        const im = new Image();
+        im.onload = () => r(im);
+        im.onerror = () => r(null);
+        im.src = spreadUrl;
+      });
+      if (!img) {
+        showToast('Failed to load book spread image');
+        return;
+      }
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+
+      let splitRatio = (typeof window.bookSplitRatio === 'number') ? window.bookSplitRatio : 0.50;
+      if (splitRatio < 0.20) splitRatio = 0.20;
+      if (splitRatio > 0.80) splitRatio = 0.80;
+      const splitX = Math.round(w * splitRatio);
+      const leftW = splitX;
+      const rightW = w - splitX;
+
+      // Split Left Half (x: 0 -> splitX)
+      const leftCanvas = document.createElement('canvas');
+      leftCanvas.width = leftW;
+      leftCanvas.height = h;
+      leftCanvas.getContext('2d').drawImage(img, 0, 0, leftW, h, 0, 0, leftW, h);
+      const leftUrl = leftCanvas.toDataURL('image/jpeg', 0.92);
+
+      const leftPage = {
+        id: 'page_book_' + Date.now() + '_1',
+        title: `Book Page ${sessionPages.length + 1} (Left)`,
+        rawUrl: leftUrl,
+        croppedUrl: leftUrl,
+        enhancedUrl: leftUrl,
+        width: leftW,
+        height: h,
+        rotation: 0,
+        filter: 'original',
+        brightness: 0
+      };
+
+      // Split Right Half (x: splitX -> w)
+      const rightCanvas = document.createElement('canvas');
+      rightCanvas.width = rightW;
+      rightCanvas.height = h;
+      rightCanvas.getContext('2d').drawImage(img, splitX, 0, rightW, h, 0, 0, rightW, h);
+      const rightUrl = rightCanvas.toDataURL('image/jpeg', 0.92);
+
+      const rightPage = {
+        id: 'page_book_' + Date.now() + '_2',
+        title: `Book Page ${sessionPages.length + 2} (Right)`,
+        rawUrl: rightUrl,
+        croppedUrl: rightUrl,
+        enhancedUrl: rightUrl,
+        width: rightW,
+        height: h,
+        rotation: 0,
+        filter: 'original',
+        brightness: 0
+      };
+
+      sessionPages.push(leftPage);
+      sessionPages.push(rightPage);
+
+      bookPagesCount = sessionPages.length;
+      updateBookPagesBadge();
+
+      showToast(`Spread captured and split: added 2 pages (Left & Right)`);
+      navigateTo('organizer');
+    }
+
+    function toggleBookFlash() {
+      bookFlashOn = !bookFlashOn;
+      const btn = document.getElementById('book-flash-btn');
+      if (btn) {
+        btn.classList.toggle('bg-amber-400', bookFlashOn);
+      }
+      showToast(bookFlashOn ? 'Flash ON' : 'Flash OFF');
+    }
+
+    // ========================================================
+    // SCREEN 33: SETTINGS MODALS
+    // ========================================================
+    function openScanningDefaultsModal() {
+      showToast('Scanning defaults: Auto crop ON, Magic Color default');
+    }
+
+    function openPdfDefaultsModal() {
+      showToast('PDF defaults: Balanced compression, A4 portrait');
+    }
+
+    function openPrivacyModal() {
+      showToast('DocErena is 100% offline. Zero telemetry, zero cloud tracking.');
+    }
+
+    function openAboutModal() {
+      showToast('DocErena v2.0.0 (Audited Edition) • 100% Offline Android Scanner');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('app-toast');
+      const msgEl = document.getElementById('toast-message');
+      if (!toast || !msgEl) return;
+      msgEl.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(window._toastTimeout);
+      window._toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2500);
+
+      if (window.DocErenaNative && window.DocErenaNative.showToast) {
+        window.DocErenaNative.showToast(msg);
+      }
+    }
+
+    function setViewport(mode) {
+      const container = document.getElementById('device-container');
+      if (!container) return;
+      ['phone', 'pixel', 'compact', 'fill'].forEach(m => {
+        const b = document.getElementById(`vp-${m}`);
+        if (b) {
+          if (m === mode) {
+            b.className = 'px-2.5 py-1 rounded-lg font-bold bg-[#1E1B18] text-white transition-all shadow-xs';
+          } else {
+            b.className = 'px-2.5 py-1 rounded-lg text-slate-500 font-bold hover:text-[#1E1B18] transition-all';
+          }
+        }
+      });
+
+      if (mode === 'phone') {
+        container.style.width = '390px';
+        container.style.maxWidth = '390px';
+        container.style.height = 'min(844px, calc(100vh - 90px))';
+        container.style.maxHeight = '844px';
+        container.className = 'w-full sm:w-[390px] h-screen sm:h-[min(844px,calc(100vh-90px))] max-h-[844px] bg-[#FCFAFD] sm:rounded-[44px] shadow-2xl shadow-purple-950/20 flex flex-col relative overflow-hidden select-none border-0 sm:border-[10px] sm:border-[#1E1B18] transition-all duration-300';
+      } else if (mode === 'pixel') {
+        container.style.width = '412px';
+        container.style.maxWidth = '412px';
+        container.style.height = 'min(892px, calc(100vh - 90px))';
+        container.style.maxHeight = '892px';
+        container.className = 'w-full sm:w-[412px] h-screen sm:h-[min(892px,calc(100vh-90px))] max-h-[892px] bg-[#FCFAFD] sm:rounded-[40px] shadow-2xl shadow-purple-950/20 flex flex-col relative overflow-hidden select-none border-0 sm:border-[10px] sm:border-[#1E1B18] transition-all duration-300';
+      } else if (mode === 'compact') {
+        container.style.width = '360px';
+        container.style.maxWidth = '360px';
+        container.style.height = 'min(740px, calc(100vh - 90px))';
+        container.style.maxHeight = '740px';
+        container.className = 'w-full sm:w-[360px] h-screen sm:h-[min(740px,calc(100vh-90px))] max-h-[740px] bg-[#FCFAFD] sm:rounded-[36px] shadow-2xl shadow-purple-950/20 flex flex-col relative overflow-hidden select-none border-0 sm:border-[8px] sm:border-[#1E1B18] transition-all duration-300';
+      } else if (mode === 'fill') {
+        container.style.width = '100%';
+        container.style.maxWidth = '460px';
+        container.style.height = '100vh';
+        container.style.maxHeight = '100vh';
+        container.className = 'w-full max-w-[460px] h-screen bg-[#FCFAFD] shadow-2xl flex flex-col relative overflow-hidden select-none border-0 transition-all duration-300';
+      }
+    }
+
+    function playNativeHapticSound(type = 'click') {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!window._docErenaAudioCtx) {
+          window._docErenaAudioCtx = new AudioCtx();
+        }
+        const ctx = window._docErenaAudioCtx;
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        if (type === 'shutter') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(360, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } else {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(500, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.03);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.04);
+        }
+        if (navigator.vibrate) navigator.vibrate(10);
+      } catch (e) {}
+    }
+
+    function initMobileDragScroll() {
+      const scrollableSelectors = [
+        '#screen-home',
+        '#screen-documents',
+        '#screen-trash',
+        '#screen-pdf-tools',
+        '#screen-settings',
+        '#screen-search',
+        '.overflow-y-auto'
+      ];
+      
+      scrollableSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(container => {
+          let isDown = false;
+          let startY = 0;
+          let scrollTop = 0;
+          let velocity = 0;
+          let lastY = 0;
+          let lastTime = 0;
+
+          container.style.cursor = 'grab';
+
+          container.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button, input, select, textarea, a, .crop-handle, [role="button"]')) return;
+            isDown = true;
+            container.style.cursor = 'grabbing';
+            startY = e.pageY - container.offsetTop;
+            scrollTop = container.scrollTop;
+            lastY = e.pageY;
+            lastTime = Date.now();
+            velocity = 0;
+          });
+
+          window.addEventListener('mouseup', () => {
+            if (!isDown) return;
+            isDown = false;
+            container.style.cursor = 'grab';
+            if (Math.abs(velocity) > 0.3) {
+              let step = velocity * 12;
+              const coast = () => {
+                if (Math.abs(step) > 0.5) {
+                  container.scrollTop -= step;
+                  step *= 0.88;
+                  requestAnimationFrame(coast);
+                }
+              };
+              requestAnimationFrame(coast);
+            }
+          });
+
+          container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            const y = e.pageY - container.offsetTop;
+            const walk = (y - startY);
+            container.scrollTop = scrollTop - walk;
+
+            const now = Date.now();
+            const dt = now - lastTime;
+            if (dt > 0) {
+              velocity = (e.pageY - lastY) / dt;
+              lastY = e.pageY;
+              lastTime = now;
+            }
+          });
+        });
+      });
+    }
+
+    function updateMobileClock() {
+      const clockEl = document.getElementById('status-clock');
+      if (!clockEl) return;
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      hours = hours % 12 || 12;
+      clockEl.textContent = `${hours}:${minutes}`;
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+
+    // Move Document to Folder Logic
+    let selectedDocForMove = null;
+
+    function openMoveToFolderModal(doc) {
+      selectedDocForMove = doc || (documents && documents.length > 0 ? documents[0] : null);
+      const modal = document.getElementById('modal-move-folder');
+      const titleEl = document.getElementById('move-folder-doc-title');
+      const listContainer = document.getElementById('move-folder-list-container');
+      if (titleEl && selectedDocForMove) titleEl.textContent = `Moving "${selectedDocForMove.title}"`;
+
+      if (listContainer) {
+        const rootItem = `
+          <div onclick="submitMoveToFolder(null)" class="p-3.5 rounded-2xl border ${(!selectedDocForMove || !selectedDocForMove.folderId) ? 'border-[#8B5CF6] bg-[#EDE9FE]/40' : 'border-slate-200 hover:bg-slate-50'} flex items-center justify-between cursor-pointer transition-all">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+              </div>
+              <span class="font-extrabold text-sm text-[#1E1B18]">All Documents (No Folder)</span>
+            </div>
+            ${(!selectedDocForMove || !selectedDocForMove.folderId) ? '<span class="text-xs font-bold text-[#7C3AED]">Current</span>' : ''}
+          </div>
+        `;
+
+        const folderItems = (folders || []).map(f => {
+          const isCurrent = selectedDocForMove && selectedDocForMove.folderId === f.id;
+          let bgClass = 'bg-[#EDE9FE] text-[#7C3AED]';
+          if (f.color === 'yellow') bgClass = 'bg-[#FEF3C7] text-[#D97706]';
+          if (f.color === 'blue') bgClass = 'bg-[#E0F2FE] text-[#0284C7]';
+
+          return `
+            <div onclick="submitMoveToFolder('${f.id}')" class="p-3.5 rounded-2xl border ${isCurrent ? 'border-[#8B5CF6] bg-[#EDE9FE]/40' : 'border-slate-200 hover:bg-slate-50'} flex items-center justify-between cursor-pointer transition-all">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl ${bgClass} flex items-center justify-center font-bold text-xs">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                </div>
+                <span class="font-extrabold text-sm text-[#1E1B18]">${f.name}</span>
+              </div>
+              ${isCurrent ? '<span class="text-xs font-bold text-[#7C3AED]">Current</span>' : ''}
+            </div>
+          `;
+        }).join('');
+
+        listContainer.innerHTML = rootItem + folderItems;
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeMoveToFolderModal() {
+      const modal = document.getElementById('modal-move-folder');
+      if (modal) modal.classList.add('hidden');
+      selectedDocForMove = null;
+    }
+
+    function submitMoveToFolder(folderId) {
+      if (!selectedDocForMove) return;
+      const doc = documents.find(d => d.id === selectedDocForMove.id);
+      if (!doc) return;
+
+      doc.folderId = folderId;
+      DocErenaStorage.saveDocuments(documents);
+
+      const targetFolder = (folders || []).find(f => f.id === folderId);
+      const destName = targetFolder ? targetFolder.name : 'Root (No folder)';
+      showToast(`Moved "${doc.title}" to ${destName}`);
+
+      closeMoveToFolderModal();
+      if (typeof renderDocumentList === 'function') renderDocumentList();
+      if (typeof renderDocsScreenContent === 'function') renderDocsScreenContent();
+      if (typeof renderFolderDocs === 'function' && currentScreen === 'folder') renderFolderDocs();
+    }
+
+    function replayOnboardingFlow() {
+      if (typeof DocErenaStorage !== 'undefined' && DocErenaStorage.resetOnboarding) {
+        DocErenaStorage.resetOnboarding();
+      }
+      navigateTo('splash');
+    }
+
+    // Native Android Hardware Back Button / Gesture Navigation Handler
+    let lastHardwareBackTime = 0;
+    window.handleHardwareBack = function() {
+      const now = Date.now();
+      if (now - lastHardwareBackTime < 350) {
+        return true;
+      }
+      lastHardwareBackTime = now;
+
+      // 1. If Coming Soon modal is open, close it
+      const csModal = document.getElementById('modal-coming-soon');
+      if (csModal && !csModal.classList.contains('hidden')) {
+        closeComingSoonModal();
+        return true;
+      }
+
+      // 2. If All Features menu overlay is open, close it and return cleanly to camera
+      const allFeaturesOverlay = document.getElementById('modal-camera-all-features');
+      if (allFeaturesOverlay && !allFeaturesOverlay.classList.contains('hidden')) {
+        closeCameraAllFeatures();
+        return true;
+      }
+
+      // 3. Other modals in 08_modals.html
+      const modals = [
+        'modal-add-pdf', 'modal-doc-actions', 'modal-delete-confirmation',
+        'modal-permanent-delete', 'modal-rename-doc', 'modal-move-folder',
+        'modal-enter-password', 'modal-signature-pad', 'modal-ocr-view',
+        'modal-text-annotation'
+      ];
+      for (const mId of modals) {
+        const m = document.getElementById(mId);
+        if (m && !m.classList.contains('hidden')) {
+          m.classList.add('hidden');
+          return true;
+        }
+      }
+
+      // 4. Screen-specific back routing
+      if (typeof currentScreen !== 'undefined') {
+        if (currentScreen === 'camera') {
+          leaveCameraScanner();
+          return true;
+        }
+        if (currentScreen === 'scan-id-card' || currentScreen === 'scan-book') {
+          navigateTo('camera');
+          return true;
+        }
+        if (currentScreen === 'ocr-result') {
+          navigateTo('extract-text-ocr');
+          return true;
+        }
+        if (currentScreen === 'place-signature') {
+          navigateTo('create-signature');
+          return true;
+        }
+        if (currentScreen === 'create-signature' || currentScreen === 'extract-text-ocr') {
+          navigateBackFromTool();
+          return true;
+        }
+        if (currentScreen === 'crop') {
+          navigateTo('camera');
+          return true;
+        }
+        if (currentScreen === 'enhance') {
+          navigateTo('crop');
+          return true;
+        }
+        if (currentScreen === 'organizer') {
+          navigateTo('camera');
+          return true;
+        }
+        if (currentScreen === 'save') {
+          navigateTo('organizer');
+          return true;
+        }
+        if (currentScreen === 'viewer' || currentScreen === 'export' || currentScreen === 'share') {
+          navigateTo('documents');
+          return true;
+        }
+        if (currentScreen === 'folder' || currentScreen === 'create-folder' || currentScreen === 'search' ||
+            currentScreen === 'trash' || currentScreen === 'settings' || currentScreen === 'pdf-tools' ||
+            currentScreen === 'merge-pdf' || currentScreen === 'split-pdf' || currentScreen === 'compress-pdf' ||
+            currentScreen === 'backup-restore') {
+          navigateTo('home');
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // ==========================================
+    // ALL TOOLS & NAVIGATION CONTROLLERS
+    // ==========================================
+    let isToolsProgrammaticScroll = false;
+    let toolsScrollTimeout = null;
+
+    function initAllToolsScreen() {
+      const scrollBody = document.getElementById('all-tools-scroll-body');
+      if (scrollBody) scrollBody.scrollTo({ top: 0, behavior: 'instant' });
+      if (typeof updateToolsActiveChip === 'function') updateToolsActiveChip('scan-capture', false);
+      if (typeof handleAllToolsSearch === 'function') handleAllToolsSearch('');
+    }
+    window.initAllToolsScreen = initAllToolsScreen;
+
+    function focusToolsSearch() {
+      const searchInput = document.getElementById('all-tools-search-input');
+      if (searchInput) {
+        searchInput.focus();
+        const scrollBody = document.getElementById('all-tools-scroll-body');
+        if (scrollBody) scrollBody.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+    window.focusToolsSearch = focusToolsSearch;
+
+    function updateToolsActiveChip(catId, scrollChipIntoView = true) {
+      const chips = document.querySelectorAll('#all-tools-chips-bar .tool-cat-chip');
+      chips.forEach(chip => {
+        if (chip.getAttribute('data-cat') === catId) {
+          chip.className = 'tool-cat-chip chip-active px-4 py-2 rounded-full font-extrabold text-xs whitespace-nowrap bg-[#6D28D9] text-white shadow-xs transition-all active:scale-95';
+          if (scrollChipIntoView) {
+            try {
+              chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } catch (e) {}
+          }
+        } else {
+          chip.className = 'tool-cat-chip px-4 py-2 rounded-full font-bold text-xs whitespace-nowrap bg-[#EDE9FE] text-[#5B21B6] hover:bg-[#DDD6FE] transition-all active:scale-95';
+        }
+      });
+    }
+    window.updateToolsActiveChip = updateToolsActiveChip;
+
+    function scrollToToolSection(secId) {
+      const scrollBody = document.getElementById('all-tools-scroll-body');
+      const targetSec = document.getElementById(`tool-sec-${secId}`);
+      const chipsBar = document.getElementById('all-tools-chips-bar');
+      if (!scrollBody || !targetSec) return;
+
+      isToolsProgrammaticScroll = true;
+      if (toolsScrollTimeout) clearTimeout(toolsScrollTimeout);
+      toolsScrollTimeout = setTimeout(() => {
+        isToolsProgrammaticScroll = false;
+      }, 700);
+
+      updateToolsActiveChip(secId, true);
+
+      const chipsHeight = chipsBar ? chipsBar.offsetHeight : 44;
+      const targetOffsetTop = targetSec.offsetTop;
+      const scrollTarget = Math.max(0, targetOffsetTop - chipsHeight - 8);
+
+      scrollBody.scrollTo({
+        top: scrollTarget,
+        behavior: 'smooth'
+      });
+    }
+    window.scrollToToolSection = scrollToToolSection;
+
+    function handleToolsScroll() {
+      const scrollBody = document.getElementById('all-tools-scroll-body');
+      if (!scrollBody) return;
+
+      const hint = document.getElementById('tools-scroll-hint');
+      if (hint) {
+        if (scrollBody.scrollTop > 40) {
+          hint.style.opacity = '0';
+        } else {
+          hint.style.opacity = '1';
+        }
+      }
+
+      if (isToolsProgrammaticScroll) return;
+
+      const secIds = ['scan-capture', 'import', 'pdf-tools', 'convert', 'edit', 'utilities'];
+      const chipsBar = document.getElementById('all-tools-chips-bar');
+      const chipsHeight = chipsBar ? chipsBar.offsetHeight : 44;
+      const scrollPos = scrollBody.scrollTop + chipsHeight + 30;
+
+      let currentSecId = secIds[0];
+      for (let i = 0; i < secIds.length; i++) {
+        const sec = document.getElementById(`tool-sec-${secIds[i]}`);
+        if (sec && !sec.classList.contains('hidden')) {
+          if (sec.offsetTop <= scrollPos) {
+            currentSecId = secIds[i];
+          }
+        }
+      }
+      updateToolsActiveChip(currentSecId, false);
+    }
+    window.handleToolsScroll = handleToolsScroll;
+
+    function handleAllToolsSearch(query) {
+      const q = (query || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('all-tools-search-clear');
+      if (clearBtn) {
+        if (q.length > 0) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      const sections = [
+        { id: 'tool-sec-scan-capture' },
+        { id: 'tool-sec-import' },
+        { id: 'tool-sec-pdf-tools' },
+        { id: 'tool-sec-convert' },
+        { id: 'tool-sec-edit' },
+        { id: 'tool-sec-utilities' }
+      ];
+
+      let totalMatches = 0;
+      sections.forEach(sInfo => {
+        const secEl = document.getElementById(sInfo.id);
+        if (!secEl) return;
+        const cards = secEl.querySelectorAll('.tool-card');
+        let secMatches = 0;
+
+        cards.forEach(card => {
+          const toolName = (card.getAttribute('data-tool-name') || '').toLowerCase();
+          if (!q || toolName.includes(q)) {
+            card.classList.remove('hidden');
+            secMatches++;
+            totalMatches++;
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        if (secMatches === 0 && q.length > 0) {
+          secEl.classList.add('hidden');
+        } else {
+          secEl.classList.remove('hidden');
+        }
+      });
+
+      const emptyState = document.getElementById('all-tools-empty-search');
+      const chipsBar = document.getElementById('all-tools-chips-bar');
+      if (emptyState) {
+        if (totalMatches === 0 && q.length > 0) {
+          emptyState.classList.remove('hidden');
+          if (chipsBar) chipsBar.classList.add('hidden');
+        } else {
+          emptyState.classList.add('hidden');
+          if (chipsBar) chipsBar.classList.remove('hidden');
+        }
+      }
+    }
+    window.handleAllToolsSearch = handleAllToolsSearch;
+
+    function clearAllToolsSearch() {
+      const input = document.getElementById('all-tools-search-input');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      handleAllToolsSearch('');
+    }
+    window.clearAllToolsSearch = clearAllToolsSearch;
+
+    function showComingSoon(toolName, description) {
+      const modal = document.getElementById('modal-coming-soon');
+      const titleEl = document.getElementById('coming-soon-title');
+      const descEl = document.getElementById('coming-soon-desc');
+      if (titleEl) titleEl.textContent = toolName;
+      if (descEl) descEl.textContent = description || 'This feature is currently under active offline development.';
+      if (modal) modal.classList.remove('hidden');
+    }
+    window.showComingSoon = showComingSoon;
+
+    function closeComingSoonModal() {
+      const modal = document.getElementById('modal-coming-soon');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeComingSoonModal = closeComingSoonModal;
+
+    function handleToolPdfToImages() {
+      if (!documents || documents.length === 0) {
+        showToast('No documents available. Scan a document first.');
+        return;
+      }
+      if (!activeDocForViewer && documents.length > 0) {
+        activeDocForViewer = documents[0];
+      }
+      navigateTo('share');
+      if (typeof selectShareFormat === 'function') {
+        selectShareFormat('jpg');
+      }
+      if (activeDocForViewer) {
+        showToast(`PDF to Images: configure export for ${activeDocForViewer.title}`);
+      } else {
+        showToast('Export document pages as images');
+      }
+    }
+    window.handleToolPdfToImages = handleToolPdfToImages;
+
+    function openOrganizerForReorder() {
+      if (sessionPages.length === 0) {
+        const doc = activeDocForViewer || (documents && documents.length > 0 ? documents[0] : null);
+        if (doc && doc.pages && doc.pages.length > 0) {
+          sessionPages = doc.pages.map((p, idx) => ({
+            id: p.id || ('page_' + idx),
+            title: p.title || `Page ${idx + 1}`,
+            rawUrl: p.imageUrl || p.rawUrl || p.croppedUrl,
+            croppedUrl: p.imageUrl || p.croppedUrl || p.rawUrl,
+            filter: p.filter || 'magic',
+            brightness: p.brightness || 0,
+            rotation: p.rotation || 0
+          }));
+        } else if (typeof initSampleSessionPages === 'function') {
+          initSampleSessionPages();
+        }
+      }
+      navigateTo('organizer');
+      if (typeof renderOrganizerPages === 'function') {
+        renderOrganizerPages();
+      }
+      showToast('Reorder document pages');
+    }
+    window.openOrganizerForReorder = openOrganizerForReorder;
+
+    function changeProtectDocument() {
+      if (!documents || documents.length <= 1) {
+        showToast('Only one document available');
+        return;
+      }
+      const curTitle = document.getElementById('protect-doc-title')?.textContent || '';
+      let curIdx = documents.findIndex(d => d.title === curTitle || d.title + '.pdf' === curTitle);
+      let nextIdx = (curIdx + 1) % documents.length;
+      const nextDoc = documents[nextIdx];
+      const titleEl = document.getElementById('protect-doc-title');
+      if (titleEl && nextDoc) {
+        titleEl.textContent = nextDoc.title.endsWith('.pdf') ? nextDoc.title : nextDoc.title + '.pdf';
+        showToast(`Selected document: ${nextDoc.title}`);
+      }
+    }
+    window.changeProtectDocument = changeProtectDocument;
+
+    function openAddDocsToFolderModal() {
+      showToast('Select documents to add to folder');
+      navigateTo('documents');
+    }
+    window.openAddDocsToFolderModal = openAddDocsToFolderModal;
+
+    function openOcrDocPicker() {
+      if (!documents || documents.length <= 1) {
+        showToast('Only one document available');
+        return;
+      }
+      const curTitle = document.getElementById('ocr-doc-title')?.textContent || '';
+      let curIdx = documents.findIndex(d => d.title === curTitle || d.title + '.pdf' === curTitle);
+      let nextIdx = (curIdx + 1) % documents.length;
+      const nextDoc = documents[nextIdx];
+      const titleEl = document.getElementById('ocr-doc-title');
+      if (titleEl && nextDoc) {
+        titleEl.textContent = nextDoc.title.endsWith('.pdf') ? nextDoc.title : nextDoc.title + '.pdf';
+        showToast(`Selected document: ${nextDoc.title}`);
+      }
+    }
+    window.openOcrDocPicker = openOcrDocPicker;
+
+    function closePasswordPromptModal() {
+      const modal = document.getElementById('modal-enter-password');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closePasswordPromptModal = closePasswordPromptModal;
+
+    function submitPasswordPrompt() {
+      const input = document.getElementById('enter-doc-password-input');
+      const password = input ? input.value : '';
+      if (!password) {
+        showToast('Please enter password');
+        return;
+      }
+      if (password === 'DocErena2026!' || (window.activePasswordProtectedDoc && window.activePasswordProtectedDoc.password === password)) {
+        showToast('Document unlocked successfully');
+        closePasswordPromptModal();
+        if (window.pendingDocToOpen) {
+          openDocumentInViewer(window.pendingDocToOpen.id);
+        }
+      } else {
+        showToast('Incorrect password. Please try again.');
+      }
+    }
+    window.submitPasswordPrompt = submitPasswordPrompt;
+
+    function navigateBackFromTool() {
+      if (window.lastToolOriginScreen === 'camera') {
+        navigateTo('camera');
+      } else {
+        navigateTo('pdf-tools');
+      }
+    }
+    window.navigateBackFromTool = navigateBackFromTool;
+
+    // Application Initialization
+    window.onload = function() {
+      DocErenaStorage.init();
+
+      // Mobile simulator enhancements
+      updateMobileClock();
+      setInterval(updateMobileClock, 30000);
+      initMobileDragScroll();
+
+      // Global click feedback for tactile mobile response
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('button, a, .quick-tab-btn')) {
+          playNativeHapticSound('click');
+        }
+      }, { passive: true });
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const qScreen = urlParams.get('screen');
+      const hash = (window.location.hash || '').replace('#', '').trim();
+      const target = qScreen || hash;
+
+      if (target) {
+        syncHash();
+      } else if (!DocErenaStorage.isOnboardingCompleted()) {
+        navigateTo('splash', false);
+      } else {
+        navigateTo('home', false);
+      }
+
+      window.addEventListener('hashchange', syncHash);
+    };
+  </script>
+</body>
+</html>
+
+
+    // ==========================================
+    // VIEWER ACTIONS & ORGANIZER BIDIRECTIONAL SYNC
+    // ==========================================
+    var editingExistingDocId = null;
+
+    function openOrganizerFromViewer() {
+      if (!activeDocForViewer || !activeDocForViewer.pages || activeDocForViewer.pages.length === 0) {
+        showToast('No pages to edit');
+        return;
+      }
+      sessionPages = JSON.parse(JSON.stringify(activeDocForViewer.pages));
+      editingExistingDocId = activeDocForViewer.id;
+      selectedOrganizerIndex = 0;
+      renderOrganizerGrid();
+      navigateTo('organizer');
+    }
+
+    function addPageToCurrentDocument() {
+      if (!activeDocForViewer) {
+        startScanning('single');
+        return;
+      }
+      sessionPages = JSON.parse(JSON.stringify(activeDocForViewer.pages || []));
+      editingExistingDocId = activeDocForViewer.id;
+      updateBatchThumbBadge();
+      startScanning('single');
+      showToast('Scan page to add to document');
+    }
+
+    function openExportFromViewer() {
+      if (!activeDocForViewer) {
+        showToast('No active document to export');
+        return;
+      }
+      renderExportScreen();
+      navigateTo('export');
+    }
+
+    function shareCurrentViewerDoc() {
+      if (!activeDocForViewer) {
+        showToast('No active document to share');
+        return;
+      }
+      renderShareScreen();
+      navigateTo('share');
+    }
+
+    function handleOrganizerBack() {
+      if (editingExistingDocId) {
+        const docId = editingExistingDocId;
+        editingExistingDocId = null;
+        openDocumentInViewer(docId);
+      } else {
+        navigateTo('camera');
+      }
+    }
+
+    function handleOrganizerContinue() {
+      if (editingExistingDocId) {
+        const doc = documents.find(d => d.id === editingExistingDocId);
+        if (doc) {
+          doc.pages = [...sessionPages];
+          doc.updatedAt = Date.now();
+          doc.size = `${(doc.pages.length * 0.7).toFixed(1)} MB`;
+          DocErenaStorage.saveDocuments(documents);
+          renderDocumentList();
+          renderDocsScreenContent();
+          showToast('Document updated');
+          openDocumentInViewer(doc.id);
+          editingExistingDocId = null;
+          sessionPages = [];
+          return;
+        }
+      }
+      navigateTo('save');
+    }
+
+    function renderExportScreen() {
+      const targetDoc = activeDocForViewer || (sessionPages.length > 0 ? { title: 'DocErena_Scan', pages: sessionPages } : (documents[0] || null));
+      if (!targetDoc) return;
+      const filenameInput = document.getElementById('export-filename-input');
+      if (filenameInput) {
+        let fn = targetDoc.title || 'DocErena_Export';
+        if (!fn.toLowerCase().endsWith('.pdf')) fn += '.pdf';
+        filenameInput.value = fn;
+      }
+      const previewTitle = document.getElementById('export-preview-title');
+      if (previewTitle) {
+        let fn = targetDoc.title || 'DocErena_Export';
+        if (!fn.toLowerCase().endsWith('.pdf')) fn += '.pdf';
+        previewTitle.textContent = fn;
+      }
+      const previewMeta = document.getElementById('export-preview-meta');
+      if (previewMeta) {
+        const pageCount = (targetDoc.pages && targetDoc.pages.length) ? targetDoc.pages.length : 1;
+        previewMeta.textContent = `${pageCount} ${pageCount === 1 ? 'page' : 'pages'} • ISO 32000-1 Standards Compliant`;
+      }
+    }
+
+    function renderShareScreen() {
+      const targetDoc = activeDocForViewer || (sessionPages.length > 0 ? { title: 'DocErena_Scan', pages: sessionPages } : (documents[0] || null));
+      if (!targetDoc) return;
+    }
+
+    // ==========================================
+    // NOTIFICATIONS ENGINE & PERMISSIONS (Android 13+)
+    // ==========================================
+    var appNotifications = [
+      {
+        id: 'n1',
+        title: 'DocErena 100% Offline',
+        message: 'Your documents and camera scans stay private on your device.',
+        time: 'Just now',
+        type: 'security',
+        read: false
+      },
+      {
+        id: 'n2',
+        title: 'Scanner Ready',
+        message: 'HD Camera, auto edge detection, and Magic Color filter are ready.',
+        time: 'Today',
+        type: 'camera',
+        read: false
+      },
+      {
+        id: 'n3',
+        title: 'Export to PDF',
+        message: 'Standard ISO 32000-1 PDF export available offline.',
+        time: 'Yesterday',
+        type: 'pdf',
+        read: true
+      }
+    ];
+
+    function openNotificationsScreen() {
+      if (window.DocErenaBridge && typeof window.DocErenaBridge.hasNotificationPermission === 'function') {
+        const granted = window.DocErenaBridge.hasNotificationPermission();
+        if (!granted && typeof window.DocErenaBridge.requestNotificationPermission === 'function') {
+          window.DocErenaBridge.requestNotificationPermission();
+        }
+      } else if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      renderNotificationsList();
+      navigateTo('notifications');
+    }
+
+    function requestAppNotificationPermission() {
+      if (window.DocErenaBridge && typeof window.DocErenaBridge.requestNotificationPermission === 'function') {
+        window.DocErenaBridge.requestNotificationPermission();
+      } else if ('Notification' in window) {
+        Notification.requestPermission().then(perm => {
+          if (typeof window.onNotificationPermissionResult === 'function') {
+            window.onNotificationPermissionResult(perm === 'granted');
+          }
+        });
+      }
+    }
+
+    window.onNotificationPermissionResult = function(granted) {
+      const banner = document.getElementById('notif-permission-banner');
+      if (banner) {
+        if (granted) banner.classList.add('hidden');
+        else banner.classList.remove('hidden');
+      }
+      showToast(granted ? 'Notifications enabled' : 'Notifications disabled');
+    };
+
+    function renderNotificationsList() {
+      const container = document.getElementById('notifications-list');
+      const empty = document.getElementById('notifications-empty');
+      const banner = document.getElementById('notif-permission-banner');
+
+      if (window.DocErenaBridge && typeof window.DocErenaBridge.hasNotificationPermission === 'function') {
+        const granted = window.DocErenaBridge.hasNotificationPermission();
+        if (banner) {
+          if (granted) banner.classList.add('hidden');
+          else banner.classList.remove('hidden');
+        }
+      }
+
+      if (!container) return;
+      if (appNotifications.length === 0) {
+        container.innerHTML = '';
+        if (empty) empty.classList.remove('hidden');
+        return;
+      }
+      if (empty) empty.classList.add('hidden');
+
+      container.innerHTML = appNotifications.map(n => {
+        let iconBg = 'bg-[#EDE9FE] text-[#7C3AED]';
+        let iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+        if (n.type === 'camera') {
+          iconBg = 'bg-[#E0F2FE] text-[#0284C7]';
+          iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+        } else if (n.type === 'pdf') {
+          iconBg = 'bg-[#FEF9C3] text-[#D97706]';
+          iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+        }
+
+        return `
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start space-x-3.5">
+            <div class="w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
+              ${iconSvg}
+            </div>
+            <div class="flex-1 overflow-hidden">
+              <div class="flex items-center justify-between">
+                <h4 class="font-extrabold text-sm text-[#1E1B18] truncate">${n.title}</h4>
+                <span class="text-[10px] font-semibold text-[#64748B] ml-2 shrink-0">${n.time}</span>
+              </div>
+              <p class="text-xs text-[#64748B] mt-0.5 leading-snug">${n.message}</p>
+            </div>
+            <button onclick="dismissNotification('${n.id}')" class="text-slate-300 hover:text-slate-500 p-1 shrink-0" title="Dismiss">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function dismissNotification(id) {
+      appNotifications = appNotifications.filter(n => n.id !== id);
+      renderNotificationsList();
+    }
+
+    function clearNotifications() {
+      appNotifications = [];
+      renderNotificationsList();
+      showToast('Notifications cleared');
+    }

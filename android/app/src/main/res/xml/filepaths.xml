@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- App-private files directory (Context.filesDir) -->
+    <files-path name="app_files" path="." />
+    <!-- App-private cache directory for PDF exports and previews (Context.cacheDir) -->
+    <cache-path name="app_cache" path="." />
+</paths>

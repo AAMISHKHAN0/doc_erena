@@ -1,0 +1,1596 @@
+<!-- ========================================================== -->
+<!-- SCREEN 25: ADD TEXT TO PDF / CREATE TEXT (25_Add_Text_to_PDF)-->
+<!-- ========================================================== -->
+<div id="screen-add-text"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('pdf-tools')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Create Text</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Add custom text to your PDF pages</p>
+  </div>
+
+  <!-- Main Canvas / Text Placement Preview -->
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- Interactive Document Canvas Viewport -->
+    <div id="add-text-canvas-wrapper"
+      class="w-full h-72 rounded-3xl bg-white border border-slate-200/80 shadow-xs relative flex items-center justify-center overflow-hidden p-4">
+      <div id="add-text-preview-doc"
+        class="w-full h-full bg-[#FAF9F6] rounded-xl border border-dashed border-slate-300 relative shadow-inner overflow-hidden p-4 flex flex-col justify-start">
+        <h4 class="font-bold text-xs text-slate-400">Project Proposal</h4>
+        <div class="w-24 h-1.5 bg-slate-200 rounded mt-1"></div>
+        <div class="w-48 h-1 bg-slate-200 rounded mt-2"></div>
+        <div class="w-40 h-1 bg-slate-200 rounded mt-1"></div>
+
+        <!-- Movable Text Box on Page -->
+        <div id="movable-text-box"
+          class="absolute left-8 top-16 border-2 border-dashed border-[#8B5CF6] bg-[#EDE9FE]/70 rounded-xl px-3 py-2 cursor-move shadow-md select-none transition-all"
+          style="font-size: 20px;">
+          <span id="rendered-overlay-text" class="font-bold text-[#1E1B18]">Draft proposal</span>
+          <div class="absolute -right-1.5 -bottom-1.5 w-3.5 h-3.5 bg-[#8B5CF6] rounded-full border border-white"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text Input Field -->
+    <div
+      class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs focus-within:border-[#8B5CF6] transition-all">
+      <label for="text-overlay-input" class="block text-[11px] font-extrabold text-[#64748B] mb-1">Text content</label>
+      <input type="text" id="text-overlay-input" value="Draft proposal" oninput="updateOverlayText(this.value)"
+        class="w-full font-bold text-base text-[#1E1B18] outline-none bg-transparent" placeholder="Type text here...">
+    </div>
+
+    <!-- Controls: Font Size Stepper, Color Swatches -->
+    <div class="grid grid-cols-2 gap-3">
+      <!-- Font Size Stepper: [-] 24 [+] -->
+      <div class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <span class="text-xs font-extrabold text-[#1E1B18]">Size</span>
+        <div class="flex items-center space-x-1">
+          <button onclick="changeOverlayFontSize(-2)"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-slate-100 hover:bg-slate-200 text-[#1E1B18] font-black text-sm flex items-center justify-center transition-colors"
+            title="Decrease size" aria-label="Decrease size">−</button>
+          <span id="font-size-display" class="font-black text-sm text-[#1E1B18] w-6 text-center">20</span>
+          <button onclick="changeOverlayFontSize(2)"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-slate-100 hover:bg-slate-200 text-[#1E1B18] font-black text-sm flex items-center justify-center transition-colors"
+            title="Increase size" aria-label="Increase size">+</button>
+        </div>
+      </div>
+
+      <!-- Color Swatch Selector -->
+      <div class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <span class="text-xs font-extrabold text-[#1E1B18]">Color</span>
+        <div class="flex items-center space-x-1">
+          <button onclick="setOverlayTextColor('#1E1B18')"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] p-3 flex items-center justify-center" title="Black"
+            aria-label="Black">
+            <span class="w-6 h-6 rounded-full bg-[#1E1B18] ring-2 ring-offset-1 ring-slate-400 inline-block"></span>
+          </button>
+          <button onclick="setOverlayTextColor('#7C3AED')"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] p-3 flex items-center justify-center" title="Purple"
+            aria-label="Purple">
+            <span class="w-6 h-6 rounded-full bg-[#7C3AED] inline-block"></span>
+          </button>
+          <button onclick="setOverlayTextColor('#0284C7')"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] p-3 flex items-center justify-center" title="Blue"
+            aria-label="Blue">
+            <span class="w-6 h-6 rounded-full bg-[#0284C7] inline-block"></span>
+          </button>
+          <button onclick="setOverlayTextColor('#DC2626')"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] p-3 flex items-center justify-center" title="Red"
+            aria-label="Red">
+            <span class="w-6 h-6 rounded-full bg-[#DC2626] inline-block"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typography Formatting: B / I / U / S & Alignment -->
+    <div class="grid grid-cols-2 gap-3">
+      <!-- B/I/U/S -->
+      <div class="p-2 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-around">
+        <button id="fmt-btn-bold" onclick="toggleOverlayFormat('bold')"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-[#EDE9FE] text-[#7C3AED] font-black text-xs flex items-center justify-center"
+          title="Bold" aria-label="Bold">B</button>
+        <button id="fmt-btn-italic" onclick="toggleOverlayFormat('italic')"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-slate-50 hover:bg-slate-100 text-[#1E1B18] italic font-serif font-black text-xs flex items-center justify-center"
+          title="Italic" aria-label="Italic">I</button>
+        <button id="fmt-btn-underline" onclick="toggleOverlayFormat('underline')"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-slate-50 hover:bg-slate-100 text-[#1E1B18] underline font-black text-xs flex items-center justify-center"
+          title="Underline" aria-label="Underline">U</button>
+        <button id="fmt-btn-strike" onclick="toggleOverlayFormat('strike')"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-slate-50 hover:bg-slate-100 text-[#1E1B18] line-through font-black text-xs flex items-center justify-center"
+          title="Strikethrough" aria-label="Strikethrough">S</button>
+      </div>
+
+      <!-- Alignment -->
+      <div class="p-2 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-around">
+        <button onclick="setOverlayAlignment('left')"
+          class="p-3 min-w-[48px] min-h-[48px] rounded-xl hover:bg-slate-100 text-[#1E1B18] flex items-center justify-center"
+          title="Align left" aria-label="Align left">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="17" y1="10" x2="3" y2="10" />
+            <line x1="21" y1="6" x2="3" y2="6" />
+            <line x1="21" y1="14" x2="3" y2="14" />
+            <line x1="17" y1="18" x2="3" y2="18" />
+          </svg>
+        </button>
+        <button onclick="setOverlayAlignment('center')"
+          class="p-3 min-w-[48px] min-h-[48px] rounded-xl hover:bg-slate-100 text-[#1E1B18] flex items-center justify-center"
+          title="Align center" aria-label="Align center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="10" x2="6" y2="10" />
+            <line x1="21" y1="6" x2="3" y2="6" />
+            <line x1="21" y1="14" x2="3" y2="14" />
+            <line x1="18" y1="18" x2="6" y2="18" />
+          </svg>
+        </button>
+        <button onclick="setOverlayAlignment('right')"
+          class="p-3 min-w-[48px] min-h-[48px] rounded-xl hover:bg-slate-100 text-[#1E1B18] flex items-center justify-center"
+          title="Align right" aria-label="Align right">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="21" y1="10" x2="7" y2="10" />
+            <line x1="21" y1="6" x2="3" y2="6" />
+            <line x1="21" y1="14" x2="3" y2="14" />
+            <line x1="21" y1="18" x2="7" y2="18" />
+          </svg>
+        </button>
+        <button onclick="setOverlayAlignment('justify')"
+          class="p-3 min-w-[48px] min-h-[48px] rounded-xl hover:bg-slate-100 text-[#1E1B18] flex items-center justify-center"
+          title="Justify" aria-label="Justify">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="21" y1="6" x2="3" y2="6" />
+            <line x1="21" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="18" x2="3" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom CTAs: Done & Save -->
+  <div class="p-5 bg-white border-t border-slate-200/80 flex items-center space-x-3 shrink-0">
+    <button onclick="navigateTo('pdf-tools')"
+      class="flex-1 min-h-[50px] py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-[#1E1B18] font-black text-sm transition-colors text-center">
+      Done
+    </button>
+    <button onclick="saveTextOverlayToDocument()"
+      class="flex-1 min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Save
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 26: EDIT EXISTING PDF TEXT (26_Edit_Existing_PDF_Text)  -->
+<!-- ============================================================== -->
+<div id="screen-edit-pdf-text"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('pdf-tools')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Edit PDF Text</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Modify text on document pages</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- Honest Technical Disclosure & OCR Banner -->
+    <div class="p-4 rounded-3xl bg-amber-50 border border-amber-300 shadow-xs space-y-2">
+      <div class="flex items-start space-x-3">
+        <div
+          class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5 shadow-xs">
+          !</div>
+        <div class="space-y-1">
+          <h5 class="text-xs font-black text-amber-950">Technical Disclosure: Font Immutability in Raster PDFs</h5>
+          <p class="text-[11px] font-medium text-amber-900 leading-relaxed">
+            Embedded TrueType font streams are immutable in raster PDFs. DocErena provides authentic
+            <strong>bounding-box background erase + vector text overlay</strong> on the document canvas, or you can run
+            offline OCR to extract and edit full text.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 pt-1">
+        <button onclick="navigateTo('extract-text-ocr')"
+          class="px-3.5 py-2 rounded-xl bg-amber-200 hover:bg-amber-300 text-amber-950 font-black text-xs shadow-xs active:scale-95 transition-all flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+          </svg>
+          <span>Direct to OCR</span>
+        </button>
+        <button onclick="addNewRedactTextBlock()"
+          class="px-3.5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs shadow-xs active:scale-95 transition-all flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Add Text Region</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Document Pill with Change Button -->
+    <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <div class="flex items-center space-x-3 truncate">
+        <div class="w-10 h-10 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div class="truncate">
+          <h4 id="edit-text-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Document.pdf</h4>
+          <p id="edit-text-doc-subtitle" class="text-xs font-semibold text-[#64748B]">PDF Page Text Modification</p>
+        </div>
+      </div>
+      <button onclick="showToast('Document selected')"
+        class="px-3.5 py-1.5 rounded-full bg-[#FEF3C7] text-[#D97706] font-extrabold text-xs shrink-0 shadow-xs active:scale-95 transition-all">
+        Change
+      </button>
+    </div>
+
+    <!-- Document Canvas Preview with Selectable Text Blocks -->
+    <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-extrabold text-[#1E1B18]">Select a block to edit or erase</span>
+        <!-- Page Stepper: < Page 1 of 5 > -->
+        <div class="flex items-center space-x-1 text-xs font-bold text-[#64748B]">
+          <button onclick="changeEditPdfPage(-1)"
+            class="p-3 min-w-[48px] min-h-[48px] flex items-center justify-center hover:text-[#1E1B18]"
+            title="Previous page" aria-label="Previous page">&lt;</button>
+          <span id="edit-pdf-page-display">Page 1 of 1</span>
+          <button onclick="changeEditPdfPage(1)"
+            class="p-3 min-w-[48px] min-h-[48px] flex items-center justify-center hover:text-[#1E1B18]"
+            title="Next page" aria-label="Next page">&gt;</button>
+        </div>
+      </div>
+
+      <!-- Document Render Canvas -->
+      <canvas id="edit-pdf-canvas" width="460" height="240"
+        class="w-full h-auto rounded-xl border border-slate-200 bg-white shadow-xs"></canvas>
+
+      <!-- Dynamic Selectable Bounding-Box Blocks Container -->
+      <div id="pdf-blocks-container"
+        class="w-full max-h-48 rounded-2xl bg-[#FAF9F6] border border-slate-200 p-3 space-y-2 overflow-y-auto">
+        <!-- Dynamically populated by renderEditPdfBlocksList() -->
+      </div>
+    </div>
+
+    <!-- Edit Text Input -->
+    <div
+      class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs focus-within:border-[#8B5CF6] transition-all">
+      <label for="edit-block-input" class="block text-[11px] font-extrabold text-[#64748B] mb-1">Replacement text
+        (Opaque Redaction + Font Overlay)</label>
+      <textarea id="edit-block-input" rows="2"
+        class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent resize-none"
+        placeholder="Enter replacement text to overlay..."></textarea>
+    </div>
+  </div>
+
+  <!-- Action Row: Apply Changes & Save -->
+  <div class="p-5 bg-white border-t border-slate-200/80 flex items-center space-x-3 shrink-0">
+    <button onclick="applyEditedPdfText()"
+      class="flex-1 min-h-[50px] py-3 rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#D97706] font-black text-sm shadow-xs active:scale-95 transition-all text-center">
+      Apply changes
+    </button>
+    <button onclick="saveEditedPdfDocument()"
+      class="flex-1 min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Save
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 27: CREATE SIGNATURE (27_Create_Signature)              -->
+<!-- ============================================================== -->
+<div id="screen-create-signature"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateBackFromTool()"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Create Signature</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Draw or import your signature to sign documents</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- Signature Drawing Canvas Area -->
+    <div
+      class="w-full rounded-3xl bg-white border border-slate-200/80 shadow-xs p-4 flex flex-col items-center relative">
+      <div
+        class="w-full h-56 rounded-2xl bg-[#FAF9F6] border-2 border-dashed border-slate-300 relative overflow-hidden flex items-center justify-center">
+        <canvas id="standalone-signature-canvas" width="600" height="300"
+          class="w-full h-full touch-none cursor-crosshair"></canvas>
+        <!-- Baseline Dotted Guide -->
+        <div
+          class="absolute bottom-10 left-8 right-8 border-b-2 border-dashed border-slate-300 pointer-events-none flex items-center justify-between">
+          <span class="text-[10px] font-extrabold text-slate-400 mb-1">Sign here</span>
+          <span class="text-xs font-bold text-slate-300">×</span>
+        </div>
+      </div>
+
+      <!-- Undo & Clear Actions Row -->
+      <div class="w-full flex items-center justify-end space-x-2 mt-3">
+        <button onclick="undoStandaloneSignatureStroke()"
+          class="px-5 py-3 min-h-[48px] rounded-full bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-extrabold text-xs shadow-xs active:scale-95 transition-all">
+          Undo
+        </button>
+        <button onclick="clearStandaloneSignaturePad()"
+          class="px-5 py-3 min-h-[48px] rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#D97706] font-extrabold text-xs shadow-xs active:scale-95 transition-all">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 Ink Colors Selector -->
+    <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <span class="text-xs font-extrabold text-[#1E1B18]">Ink color</span>
+      <div class="flex items-center space-x-1">
+        <button onclick="setSignatureInkColor('#1E1B18')" id="ink-color-black"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-full transition-all"
+          title="Black" aria-label="Black">
+          <span class="w-7 h-7 rounded-full bg-[#1E1B18] ring-2 ring-offset-2 ring-[#7C3AED] inline-block"></span>
+        </button>
+        <button onclick="setSignatureInkColor('#7C3AED')" id="ink-color-purple"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-full transition-all"
+          title="Purple" aria-label="Purple">
+          <span class="w-7 h-7 rounded-full bg-[#7C3AED] inline-block"></span>
+        </button>
+        <button onclick="setSignatureInkColor('#0284C7')" id="ink-color-blue"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-full transition-all"
+          title="Blue" aria-label="Blue">
+          <span class="w-7 h-7 rounded-full bg-[#0284C7] inline-block"></span>
+        </button>
+        <button onclick="setSignatureInkColor('#64748B')" id="ink-color-gray"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-full transition-all"
+          title="Gray" aria-label="Gray">
+          <span class="w-7 h-7 rounded-full bg-[#64748B] inline-block"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Import Signature Card -->
+    <label for="import-sig-file-input"
+      class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all">
+      <div class="flex items-center space-x-3.5">
+        <div
+          class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <circle cx="9" cy="9" r="2" />
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="font-extrabold text-sm text-[#1E1B18]">Import signature</h4>
+          <p class="text-xs font-semibold text-[#64748B]">Use an image from your device</p>
+        </div>
+      </div>
+      <span class="px-3.5 py-1.5 rounded-full bg-slate-100 text-[#1E1B18] font-bold text-xs">Browse</span>
+      <input type="file" id="import-sig-file-input" accept="image/*" class="hidden"
+        onchange="handleSignatureImportFile(event)">
+    </label>
+  </div>
+
+  <!-- Save Signature Button -->
+  <div class="p-5 bg-white border-t border-slate-200/80 shrink-0">
+    <button onclick="saveStandaloneSignature()"
+      class="w-full min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Save signature
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 28: PLACE SIGNATURE (28_Place_Signature)                -->
+<!-- ============================================================== -->
+<div id="screen-place-signature"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('create-signature')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Place Signature</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Drag to position your signature on the page</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- Document Canvas Preview with Floating Signature -->
+    <div
+      class="w-full h-80 rounded-3xl bg-white border border-slate-200/80 shadow-xs p-4 flex flex-col justify-between relative overflow-hidden">
+      <div id="place-sig-preview-page"
+        class="w-full h-64 bg-[#FAF9F6] rounded-2xl border border-slate-200 relative overflow-hidden p-4">
+        <h4 class="font-black text-sm text-[#1E1B18]">Project Proposal</h4>
+        <div class="w-32 h-1.5 bg-slate-200 rounded mt-2"></div>
+        <div class="w-full h-1 bg-slate-200 rounded mt-3"></div>
+        <div class="w-5/6 h-1 bg-slate-200 rounded mt-1.5"></div>
+        <div class="w-4/6 h-1 bg-slate-200 rounded mt-1.5"></div>
+
+        <div class="mt-8 border-t border-slate-300 pt-3">
+          <span class="text-[10px] font-bold text-slate-400">Authorized Signature:</span>
+        </div>
+
+        <!-- Movable Floating Signature Widget -->
+        <div id="movable-sig-widget"
+          class="absolute left-8 bottom-6 border-2 border-dashed border-[#8B5CF6] bg-white/80 rounded-xl p-2 cursor-move shadow-md select-none flex items-center justify-center transition-transform"
+          style="width: 140px; height: 60px;">
+          <img id="placed-sig-image" src="" alt="Signature" class="max-w-full max-h-full object-contain">
+          <div class="absolute -right-1.5 -bottom-1.5 w-3 h-3 bg-[#8B5CF6] rounded-full border border-white"></div>
+        </div>
+      </div>
+
+      <!-- Page Stepper: < 1 / 5 > -->
+      <div class="flex items-center justify-center space-x-4 pt-2">
+        <button onclick="changePlaceSigPage(-1)"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-xs"
+          title="Previous page" aria-label="Previous page">&lt;</button>
+        <span id="place-sig-page-counter" class="text-xs font-black text-[#1E1B18]">1 / 5</span>
+        <button onclick="changePlaceSigPage(1)"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-xs"
+          title="Next page" aria-label="Next page">&gt;</button>
+      </div>
+    </div>
+
+    <!-- Signature Tool Options Row: Resize, Rotate, All pages -->
+    <div class="grid grid-cols-3 gap-2.5">
+      <button onclick="cyclePlacedSigSize()"
+        class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col items-center justify-center active:scale-95 transition-all">
+        <svg class="w-5 h-5 text-[#7C3AED] mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+        <span class="text-xs font-extrabold text-[#1E1B18]">Resize</span>
+      </button>
+
+      <button onclick="rotatePlacedSignature()"
+        class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col items-center justify-center active:scale-95 transition-all">
+        <svg class="w-5 h-5 text-[#0284C7] mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+        <span class="text-xs font-extrabold text-[#1E1B18]">Rotate</span>
+      </button>
+
+      <button id="btn-toggle-all-pages" onclick="toggleSignatureAllPages()"
+        class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col items-center justify-center active:scale-95 transition-all">
+        <svg class="w-5 h-5 text-[#D97706] mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+        <span id="label-all-pages-sig" class="text-xs font-extrabold text-[#1E1B18]">All pages</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Apply Signature Button -->
+  <div class="p-5 bg-white border-t border-slate-200/80 shrink-0">
+    <button onclick="applySignatureToDocument()"
+      class="w-full min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Apply signature
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 29: EXTRACT TEXT OCR (29_Extract_Text_OCR)              -->
+<!-- ============================================================== -->
+<div id="screen-extract-text-ocr"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateBackFromTool()"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Extract text OCR</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Convert scan to high-accuracy editable text</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- Select Document Card -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-extrabold text-[#1E1B18]">Select document</label>
+      <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div class="flex items-center space-x-3 truncate">
+          <div class="w-10 h-10 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <div class="truncate">
+            <h4 id="ocr-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Project Proposal.pdf</h4>
+            <p class="text-xs font-semibold text-[#64748B]">PDF • 4.8 MB</p>
+          </div>
+        </div>
+        <button onclick="openOcrDocPicker()"
+          class="px-3.5 py-1.5 rounded-full bg-[#FEF3C7] text-[#D97706] font-extrabold text-xs shrink-0 shadow-xs active:scale-95 transition-all">
+          Change
+        </button>
+      </div>
+    </div>
+
+    <!-- Select Pages Section -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-extrabold text-[#1E1B18]">Select pages</label>
+      <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+          </div>
+          <div class="space-y-2 flex-1">
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="radio" name="ocr-page-selection" value="all" checked
+                class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+              <span class="text-xs font-extrabold text-[#1E1B18]">All pages (1 – 24)</span>
+            </label>
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="radio" name="ocr-page-selection" value="custom"
+                class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+              <span class="text-xs font-bold text-slate-600">Custom pages</span>
+              <input type="text" placeholder="e.g. 1, 3, 5–8"
+                class="text-xs px-2.5 py-1 rounded-lg border border-slate-200 outline-none w-28 font-medium">
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recognition Language -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-extrabold text-[#1E1B18]">Recognition language</label>
+      <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-9 h-9 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-bold text-xs shrink-0">
+            A文
+          </div>
+          <span class="text-xs font-extrabold text-[#1E1B18]">English</span>
+        </div>
+        <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Offline Model Card -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-extrabold text-[#1E1B18]">Offline model</label>
+      <div class="p-4 rounded-3xl bg-[#FEF3C7]/40 border border-[#FDE68A] flex items-center justify-between shadow-xs">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="20" height="14" x="2" y="3" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-xs text-[#1E1B18]">Offline OCR engine (DocErenaOCR)</h4>
+            <p class="text-[11px] font-semibold text-[#64748B]">Active engine: Pure JS raster pattern matcher. 100% offline.</p>
+            <p class="text-[10px] font-medium text-amber-700 mt-0.5">Experimental offline text recognition: Raster template match scores do not equate to verified character accuracy.</p>
+          </div>
+        </div>
+        <span
+          class="px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] font-black text-[10px] flex items-center space-x-1 shrink-0">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>Experimental</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Document Preview Container -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-extrabold text-[#1E1B18]">Document preview</label>
+      <div class="w-full rounded-3xl bg-[#EDE9FE]/30 border border-[#DDD6FE]/60 p-4 flex flex-col items-center">
+        <canvas id="ocr-preview-canvas" width="400" height="240"
+          class="w-full max-w-xs h-auto bg-white rounded-2xl shadow-sm border border-slate-200/80"></canvas>
+
+        <!-- Page Turner Indicator: < 1 / 24 > -->
+        <div class="flex items-center space-x-4 mt-3">
+          <button onclick="changeOcrPreviewPage(-1)"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] hover:bg-[#DDD6FE] flex items-center justify-center font-bold text-xs"
+            title="Previous page" aria-label="Previous page">&lt;</button>
+          <span id="ocr-preview-page-indicator"
+            class="px-3 py-1 rounded-full bg-[#EDE9FE] text-[#7C3AED] font-black text-xs">1 / 24</span>
+          <button onclick="changeOcrPreviewPage(1)"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] hover:bg-[#DDD6FE] flex items-center justify-center font-bold text-xs"
+            title="Next page" aria-label="Next page">&gt;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Extract Text Button -->
+  <div class="p-5 bg-white border-t border-slate-200/80 shrink-0">
+    <button onclick="runOfflineOcrExtraction()"
+      class="w-full min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Extract text
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 30: OCR RESULT (30_OCR_Result)                          -->
+<!-- ============================================================== -->
+<div id="screen-ocr-result"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('extract-text-ocr')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">OCR Result</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Extracted text is ready to edit, copy and share</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- Honest Limitation Notice Banner (Shown when no recognizable text or unsupported script) -->
+    <div id="ocr-limitation-banner"
+      class="hidden p-4 rounded-3xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] space-y-1.5 shadow-xs">
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5 text-[#DC2626] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h4 class="font-extrabold text-xs text-[#991B1B]">Recognition Limitation Notice</h4>
+      </div>
+      <p id="ocr-limitation-text" class="text-[11px] font-medium text-[#B91C1C] leading-snug">
+        No recognizable printed Latin text was detected on this page. DocErena's on-device OCR engine processes clear
+        printed Latin script offline and does not support complex graphics, unsegmented handwriting, or unsupported
+        scripts.
+      </p>
+    </div>
+
+    <!-- Document Pill -->
+    <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      </div>
+      <div>
+        <h4 id="ocr-result-doc-title" class="font-extrabold text-sm text-[#1E1B18]">Document Text (OCR)</h4>
+        <p class="text-xs font-semibold text-[#64748B]">PDF • OCR (Text Recognized)</p>
+      </div>
+    </div>
+
+    <!-- OCR Metadata & Confidence Card -->
+    <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span id="ocr-confidence-badge" class="px-3 py-1 rounded-full bg-[#D1F0EA] text-[#007F78] font-black text-xs">--
+          Confidence</span>
+        <span id="ocr-language-badge"
+          class="px-2.5 py-1 rounded-full bg-[#EDE9FE] text-[#7C3AED] font-extrabold text-[11px]">English (en-US) •
+          Latin</span>
+      </div>
+      <span id="ocr-metrics-badge" class="text-[11px] font-bold text-slate-500">0 lines • 0 words</span>
+    </div>
+
+    <!-- Recognized Text Header & Editable Badge -->
+    <div class="flex items-center justify-between pt-1">
+      <h3 class="font-black text-lg text-[#1E1B18]">Recognized Text</h3>
+      <span class="px-3 py-1 rounded-full bg-[#FEF3C7] text-[#D97706] font-extrabold text-xs">Editable</span>
+    </div>
+
+    <!-- Editable Text Box -->
+    <div
+      class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-2 focus-within:border-[#8B5CF6] transition-all">
+      <input type="text" id="ocr-result-heading" value="" placeholder="Recognized Heading"
+        class="font-black text-base text-[#1E1B18] w-full outline-none bg-transparent">
+      <textarea id="ocr-result-body" rows="6"
+        placeholder="Recognized text will appear here after on-device offline extraction..."
+        class="w-full font-medium text-xs text-[#1E1B18] leading-relaxed outline-none bg-transparent resize-none"></textarea>
+    </div>
+
+    <!-- 3 Action Buttons: Copy (Purple), Share (Yellow), Save (Light blue) -->
+    <div class="grid grid-cols-3 gap-2.5">
+      <!-- Copy Button -->
+      <button onclick="copyOcrResultText()"
+        class="p-3.5 rounded-2xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+        <span class="font-extrabold text-xs">Copy</span>
+      </button>
+
+      <!-- Share Button -->
+      <button onclick="shareOcrResultText()"
+        class="p-3.5 rounded-2xl bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#D97706] flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+        <span class="font-extrabold text-xs">Share</span>
+      </button>
+
+      <!-- Save Button -->
+      <button onclick="saveOcrResultDoc()"
+        class="p-3.5 rounded-2xl bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0284C7] flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        <span class="font-extrabold text-xs">Save</span>
+      </button>
+    </div>
+
+    <!-- About OCR Card -->
+    <div class="space-y-1.5 pt-1">
+      <h4 class="font-black text-sm text-[#1E1B18]">About OCR</h4>
+      <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </div>
+
+        <!-- About OCR Card -->
+        <div class="space-y-1.5 pt-1">
+          <h4 class="font-black text-sm text-[#1E1B18]">About OCR</h4>
+          <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-xs text-[#1E1B18]">Text recognition</h5>
+              <p class="text-[11px] font-semibold text-[#64748B]">Converted your document to editable text.</p>
+              <p class="text-[10px] font-medium text-slate-500 mt-0.5">Engine: DocErena experimental on-device offline
+                OCR (pure JS raster analysis). Note: Raster template match score indicates visual similarity and does
+                not guarantee character accuracy.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 31: ANNOTATE PDF (31_Annotate_PDF)                      -->
+<!-- ============================================================== -->
+<div id="screen-annotate-pdf"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('pdf-tools')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Annotate PDF</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Highlight, underline and markup pages</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-4">
+    <!-- File Selector Card -->
+    <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <div class="flex items-center space-x-3 truncate">
+        <div class="w-10 h-10 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div class="truncate">
+          <h4 id="annotate-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Project Proposal.pdf</h4>
+          <p class="text-xs font-semibold text-[#64748B]">PDF • Annotation Mode</p>
+        </div>
+      </div>
+      <button onclick="showToast('Document selected')"
+        class="px-3.5 py-1.5 rounded-full bg-[#FEF3C7] text-[#D97706] font-extrabold text-xs shrink-0 shadow-xs active:scale-95 transition-all">
+        Change
+      </button>
+    </div>
+
+    <!-- PDF Document Canvas Preview -->
+    <div class="w-full rounded-3xl bg-white border border-slate-200/80 shadow-xs p-4 flex flex-col items-center">
+      <div id="annotate-canvas-container"
+        class="w-full h-64 bg-[#FAF9F6] rounded-2xl border border-slate-200 p-4 relative overflow-hidden flex flex-col justify-between">
+        <canvas id="annotate-drawing-canvas" width="600" height="400"
+          class="absolute inset-0 w-full h-full cursor-crosshair z-10 touch-none"></canvas>
+        <div>
+          <h4 class="font-black text-sm text-[#1E1B18]">Project Proposal</h4>
+          <p class="text-[10px] text-slate-500 mt-0.5">A plan for the next phase</p>
+          <div class="w-full h-px bg-slate-200 my-2"></div>
+
+          <h5 class="text-[11px] font-bold text-[#1E1B18]">1. Overview</h5>
+          <p class="text-[10px] text-slate-600">This proposal outlines the project goals, scope, timeline, and expected
+            outcomes.</p>
+
+          <h5 class="text-[11px] font-bold text-[#1E1B18] mt-2">2. Objectives</h5>
+          <p class="text-[10px] text-slate-700 bg-[#FEF3C7] rounded px-1 py-0.5 inline-block">
+            Deliver a high-quality solution that meets user needs and business goals.
+          </p>
+
+          <h5 class="text-[11px] font-bold text-[#1E1B18] mt-2">3. Scope</h5>
+          <p class="text-[10px] text-slate-600">
+            The project includes research, design, <span
+              class="bg-[#EDE9FE] text-[#7C3AED] px-1 rounded font-semibold">development</span>, testing, and
+            deployment.
+          </p>
+        </div>
+
+        <!-- Page Stepper: < 1 / 5 > -->
+        <div class="flex items-center justify-center space-x-3 pt-2">
+          <button onclick="changeAnnotatePage(-1)"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-xs"
+            title="Previous page" aria-label="Previous page">&lt;</button>
+          <span id="annotate-page-counter" class="text-xs font-bold text-[#64748B]">1 / 5</span>
+          <button onclick="changeAnnotatePage(1)"
+            class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-xs"
+            title="Next page" aria-label="Next page">&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Annotation Tool Selection & Undo/Redo -->
+    <div class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <button onclick="cycleAnnotateTool()"
+          class="px-3.5 py-1.5 rounded-xl bg-[#FEF3C7] text-[#D97706] font-extrabold text-xs flex items-center space-x-1.5 shadow-xs">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="m18 2 4 4-12 12H6v-4L18 2z" />
+            <line x1="14" y1="6" x2="18" y2="10" />
+          </svg>
+          <span id="current-annotate-tool-name">Highlight</span>
+          <svg class="w-3 h-3 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button onclick="undoAnnotationAction()"
+          class="p-2 rounded-xl hover:bg-slate-100 text-[#1E1B18] flex items-center space-x-1" title="Undo"
+          aria-label="Undo">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M3 7v6h6" />
+            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+          </svg>
+          <span class="text-[11px] font-bold">Undo</span>
+        </button>
+        <button onclick="redoAnnotationAction()"
+          class="p-2 rounded-xl hover:bg-slate-100 text-[#1E1B18] flex items-center space-x-1" title="Redo"
+          aria-label="Redo">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M21 7v6h-6" />
+            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+          </svg>
+          <span class="text-[11px] font-bold">Redo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Highlight Color Palette -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-extrabold text-[#1E1B18]">Highlight color</label>
+      <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-2">
+        <button onclick="setAnnotateHighlightColor('#FEF3C7')" id="hl-color-yellow"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-xl" title="Yellow"
+          aria-label="Yellow">
+          <span class="w-8 h-8 rounded-xl bg-[#FEF3C7] border-2 border-[#1E1B18] shadow-xs inline-block"></span>
+        </button>
+        <button onclick="setAnnotateHighlightColor('#EDE9FE')" id="hl-color-lavender"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-xl" title="Lavender"
+          aria-label="Lavender">
+          <span
+            class="w-8 h-8 rounded-xl bg-[#EDE9FE] hover:border-2 hover:border-slate-400 shadow-xs inline-block"></span>
+        </button>
+        <button onclick="setAnnotateHighlightColor('#E0F2FE')" id="hl-color-blue"
+          class="w-12 h-12 min-w-[48px] min-h-[48px] p-2 flex items-center justify-center rounded-xl" title="Light Blue"
+          aria-label="Light Blue">
+          <span
+            class="w-8 h-8 rounded-xl bg-[#E0F2FE] hover:border-2 hover:border-slate-400 shadow-xs inline-block"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Button -->
+  <div class="p-5 bg-white border-t border-slate-200/80 shrink-0">
+    <button onclick="saveAnnotatedPdf()"
+      class="w-full min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Save
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 32: PROTECT PDF (32_Protect_PDF)                        -->
+<!-- ============================================================== -->
+<div id="screen-protect-pdf"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('pdf-tools')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Protect PDF</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Encrypt your document with AES-128 password</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-4 pb-4">
+    <!-- Document Pill -->
+    <div class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <div class="flex items-center space-x-3 truncate">
+        <div class="w-10 h-10 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div class="truncate">
+          <h4 id="protect-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Project Proposal.pdf</h4>
+          <p class="text-xs font-semibold text-[#64748B]">PDF • Standard ISO 32000-1 Encrypt</p>
+        </div>
+      </div>
+      <button onclick="changeProtectDocument()"
+        class="px-3.5 py-1.5 rounded-full bg-[#FEF3C7] text-[#D97706] font-extrabold text-xs shrink-0 shadow-xs active:scale-95 transition-all"
+        title="Select different document" aria-label="Change document">
+        Change
+      </button>
+    </div>
+
+    <!-- Add Password Banner -->
+    <div class="p-4 rounded-3xl bg-[#EDE9FE]/50 border border-[#DDD6FE] flex items-center space-x-3.5">
+      <div
+        class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shadow-xs shrink-0">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      </div>
+      <div>
+        <h4 class="font-black text-sm text-[#1E1B18]">Add a password</h4>
+        <p class="text-[11px] font-semibold text-[#64748B] leading-tight mt-0.5">Protect your PDF with a password to
+          restrict opening and viewing.</p>
+      </div>
+    </div>
+
+    <!-- Password Field -->
+    <div class="space-y-1.5">
+      <label for="protect-pass-input" class="block text-xs font-extrabold text-[#1E1B18]">Password</label>
+      <div
+        class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between focus-within:border-[#8B5CF6]">
+        <input type="password" id="protect-pass-input" value="DocErena2026!"
+          class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+        <button onclick="togglePasswordVisibility('protect-pass-input')"
+          class="p-3 min-w-[48px] min-h-[48px] flex items-center justify-center text-slate-400 hover:text-[#1E1B18] ml-2"
+          title="Toggle password visibility" aria-label="Toggle password visibility">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirm Password Field -->
+    <div class="space-y-1.5">
+      <label for="protect-pass-confirm" class="block text-xs font-extrabold text-[#1E1B18]">Confirm password</label>
+      <div
+        class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between focus-within:border-[#8B5CF6]">
+        <input type="password" id="protect-pass-confirm" value="DocErena2026!"
+          class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+        <button onclick="togglePasswordVisibility('protect-pass-confirm')"
+          class="p-3 min-w-[48px] min-h-[48px] flex items-center justify-center text-slate-400 hover:text-[#1E1B18] ml-2"
+          title="Toggle password visibility" aria-label="Toggle password visibility">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Strong Password Hint Card -->
+    <div class="flex items-start space-x-2 text-slate-500 py-1">
+      <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+      <span class="text-xs text-slate-600 font-medium">Use a strong password (e.g., 8+ characters with a mix of letters,
+        numbers, and symbols) to keep your PDF secure.</span>
+    </div>
+  </div>
+
+  <!-- Protect PDF Button -->
+  <div class="p-5 bg-white border-t border-slate-200/80 shrink-0">
+    <button onclick="executeProtectPdf()"
+      class="w-full min-h-[50px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-sm shadow-md active:scale-95 transition-all text-center">
+      Protect PDF
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 34: BACKUP AND RESTORE (34_Backup_and_Restore)          -->
+<!-- ============================================================== -->
+<div id="screen-backup-restore"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('settings')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-2 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Backup and restore</h1>
+    <p class="text-xs font-semibold text-[#64748B] mt-0.5">Create a backup of your app data and restore it later from a
+      backup file.</p>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-4 pb-4">
+    <!-- Section: Backup settings -->
+    <div class="space-y-1.5">
+      <h4 class="font-black text-sm text-[#1E1B18]">Backup settings</h4>
+      <div class="rounded-3xl bg-white border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
+        <!-- Include documents -->
+        <div class="p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                <polyline points="2 17 12 22 22 17" />
+                <polyline points="2 12 12 17 22 12" />
+              </svg>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-xs text-[#1E1B18]">Include documents</h5>
+              <p class="text-[11px] font-semibold text-[#64748B]">Back up your documents and files.</p>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="backup-toggle-docs" checked class="sr-only peer">
+            <div
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B5CF6]">
+            </div>
+          </label>
+        </div>
+
+        <!-- Include settings -->
+        <div class="p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shadow-xs shrink-0">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-xs text-[#1E1B18]">Include settings</h5>
+              <p class="text-[11px] font-semibold text-[#64748B]">Back up app preferences and options.</p>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="backup-toggle-settings" checked class="sr-only peer">
+            <div
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B5CF6]">
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Local backup -->
+    <div class="space-y-1.5">
+      <h4 class="font-black text-sm text-[#1E1B18]">Local backup</h4>
+      <div class="p-4 rounded-3xl bg-[#EDE9FE]/50 border border-[#DDD6FE] flex items-center justify-between shadow-xs">
+        <div class="flex items-center space-x-3.5">
+          <div
+            class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <div>
+            <h5 class="font-black text-xs text-[#1E1B18]">Create backup</h5>
+            <p class="text-[11px] font-semibold text-[#64748B] leading-tight">Save a backup file to a folder on your
+              device.</p>
+          </div>
+        </div>
+        <button onclick="exportLocalBackup()"
+          class="px-4 py-2 rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#D97706] font-black text-xs shrink-0 shadow-xs active:scale-95 transition-all">
+          Choose folder
+        </button>
+      </div>
+    </div>
+
+    <!-- Section: Import backup -->
+    <div class="space-y-1.5">
+      <h4 class="font-black text-sm text-[#1E1B18]">Import backup</h4>
+      <label for="restore-backup-file-input"
+        class="p-4 rounded-3xl bg-white border border-slate-200/80 flex items-center justify-between shadow-xs cursor-pointer hover:border-slate-300 transition-all">
+        <div class="flex items-center space-x-3.5">
+          <div
+            class="w-11 h-11 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shadow-xs shrink-0">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </div>
+          <div>
+            <h5 class="font-black text-xs text-[#1E1B18]">Restore from backup</h5>
+            <p class="text-[11px] font-semibold text-[#64748B] leading-tight">Select a backup file from your device and
+              restore your data and settings.</p>
+          </div>
+        </div>
+        <span
+          class="px-4 py-2 rounded-full bg-[#FEF3C7] text-[#D97706] font-black text-xs shrink-0 shadow-xs active:scale-95 transition-all">
+          Choose file
+        </span>
+        <input type="file" id="restore-backup-file-input" accept=".json,.docerena" class="hidden"
+          onchange="handleRestoreBackupFile(event)">
+      </label>
+    </div>
+
+    <!-- Info Note at Bottom -->
+    <div class="flex items-start space-x-2 text-slate-500 py-1">
+      <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+      <span class="text-xs text-slate-600 font-medium leading-relaxed">Backups are stored locally on your device. Choose
+        a folder you can access and keep it safe.</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 35: SCAN ID CARD (35_Scan_ID_Card)                      -->
+<!-- ============================================================== -->
+<div id="screen-scan-id-card"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('camera')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-1 flex items-center justify-between shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Scan ID</h1>
+    <span id="id-scan-step-badge" class="px-3.5 py-1 rounded-full bg-[#FEF3C7] text-[#D97706] font-black text-xs">Step 1
+      of 2</span>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-2 flex flex-col justify-between">
+    <!-- Instruction Card -->
+    <div class="p-3.5 rounded-3xl bg-[#EDE9FE]/50 border border-[#DDD6FE] flex items-center space-x-3.5">
+      <div
+        class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="20" height="14" x="2" y="5" rx="2" />
+          <circle cx="8" cy="12" r="2" />
+          <line x1="14" y1="10" x2="18" y2="10" />
+          <line x1="14" y1="14" x2="18" y2="14" />
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h4 id="id-scan-instruction-title" class="font-black text-sm text-[#1E1B18]">Scan the front side</h4>
+        <p class="text-[11px] font-semibold text-[#64748B]">Place your ID within the frame or tap Import below.</p>
+      </div>
+    </div>
+
+    <!-- Viewfinder with ID Card Aspect Ratio Guideline (85.6mm x 53.98mm) -->
+    <div
+      class="w-full flex-1 rounded-3xl bg-[#2D2A26] relative overflow-hidden flex items-center justify-center p-4 min-h-[260px]">
+      <video id="id-card-camera-feed" autoplay playsinline muted
+        class="hidden w-full h-full object-cover rounded-2xl"></video>
+
+      <!-- Honest Inactive Camera Placeholder -->
+      <div id="id-card-inactive-view"
+        class="flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-2 z-10">
+        <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 shadow-inner">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="20" height="14" x="2" y="5" rx="2" />
+            <circle cx="8" cy="12" r="2" />
+            <line x1="14" y1="10" x2="18" y2="10" />
+          </svg>
+        </div>
+        <p class="text-xs font-semibold text-slate-300">Position ID card in frame.<br>Tap Import below to choose an ID
+          photo from gallery.</p>
+      </div>
+
+      <!-- Guideline Frame for ID Card -->
+      <div
+        class="w-[85%] max-w-[320px] aspect-[85.6/53.98] border-2 border-white/70 rounded-2xl pointer-events-none relative flex items-center justify-center z-20 shadow-lg">
+        <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#8B5CF6] rounded-tl-lg"></div>
+        <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#8B5CF6] rounded-tr-lg"></div>
+        <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#8B5CF6] rounded-bl-lg"></div>
+        <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#8B5CF6] rounded-br-lg"></div>
+      </div>
+    </div>
+
+    <!-- Review & Status Card (Shows captured front & back thumbnails) -->
+    <div id="id-card-review-strip"
+      class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div id="id-front-preview-slot"
+          class="w-16 h-10 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-slate-50">
+          <span class="text-[9px] font-bold text-slate-400">Front</span>
+        </div>
+        <div id="id-back-preview-slot"
+          class="w-16 h-10 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-slate-50">
+          <span class="text-[9px] font-bold text-slate-400">Back</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="retakeCurrentIdSide()" id="id-retake-btn"
+          class="hidden px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs shadow-xs transition-all">
+          Retake
+        </button>
+        <button onclick="stitchIdCardToA4()" id="id-stitch-btn"
+          class="hidden px-3.5 py-1.5 rounded-xl bg-[#1E1B18] hover:bg-black text-white font-extrabold text-xs shadow-xs active:scale-95 transition-all">
+          Stitch A4
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera Shutter & Controls -->
+  <div class="p-5 bg-white border-t border-slate-200/80 flex items-center justify-between shrink-0">
+    <!-- Import Button -->
+    <label for="id-import-file-input"
+      class="w-14 h-14 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex flex-col items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+      title="Import photo">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+      </svg>
+      <span class="text-[9px] font-black mt-0.5">Import</span>
+      <input type="file" id="id-import-file-input" accept="image/*" class="hidden" onchange="handleIdImportFile(event)">
+    </label>
+
+    <!-- Big Shutter Button -->
+    <button onclick="captureIdCardSide()" class="flex flex-col items-center space-y-1 active:scale-95 transition-all"
+      title="Take Photo" aria-label="Take Photo">
+      <div
+        class="w-20 h-20 rounded-full border-4 border-[#EDE9FE] bg-[#1E1B18] text-white flex items-center justify-center shadow-lg">
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+          <circle cx="12" cy="13" r="4" />
+        </svg>
+      </div>
+      <span class="text-[11px] font-black text-[#1E1B18]">Take Photo</span>
+    </button>
+
+    <!-- Flash Button -->
+    <button onclick="toggleIdCardFlash()" id="id-flash-btn"
+      class="w-14 h-14 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex flex-col items-center justify-center shadow-xs active:scale-95 transition-all"
+      title="Flash" aria-label="Flash">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+      <span class="text-[9px] font-black mt-0.5">Flash</span>
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- SCREEN 36: SCAN BOOK (36_Scan_Book)                            -->
+<!-- ============================================================== -->
+<div id="screen-scan-book"
+  class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+  <!-- Top Brand & Header -->
+  <div class="px-5 pt-3 pb-1 flex items-center justify-between shrink-0">
+    <button onclick="navigateTo('camera')"
+      class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-[#EDE9FE] text-[#1E1B18] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors shadow-xs"
+      title="Back" aria-label="Back">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="flex items-center space-x-2">
+      <div
+        class="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#DDD6FE] overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <span class="font-black text-xl text-[#1E1B18] tracking-tight">DocErena</span>
+    </div>
+    <div class="w-12"></div>
+  </div>
+
+  <div class="px-5 pt-2 pb-1 shrink-0">
+    <h1 class="font-black text-3xl text-[#1E1B18] tracking-tight">Scan book</h1>
+  </div>
+
+  <div class="flex-1 px-5 overflow-y-auto space-y-3 pb-2 flex flex-col justify-between">
+    <!-- Book Scan Description Card -->
+    <div class="p-3.5 rounded-3xl bg-[#EDE9FE]/50 border border-[#DDD6FE] flex items-center space-x-3.5">
+      <div
+        class="w-11 h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs shrink-0">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+          <path d="M6 2v20" />
+        </svg>
+      </div>
+      <div>
+        <h4 class="font-black text-sm text-[#1E1B18]">Book spread capture</h4>
+        <p class="text-[11px] font-semibold text-[#64748B]">Splits the open spread at the spine into Left &amp; Right
+          pages.</p>
+      </div>
+    </div>
+
+    <!-- Open Book Viewfinder with Central Spine Guideline -->
+    <div
+      class="w-full flex-1 rounded-3xl bg-[#2D2A26] relative overflow-hidden flex items-center justify-center p-3 min-h-[280px]">
+      <video id="book-camera-feed" class="hidden w-full h-full object-cover rounded-2xl" autoplay playsinline
+        muted></video>
+
+      <!-- Honest Inactive Viewfinder Placeholder -->
+      <div id="book-inactive-view"
+        class="flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-2 z-10">
+        <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 shadow-inner">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+            <path d="M6 2v20" />
+          </svg>
+        </div>
+        <p class="text-xs font-semibold text-slate-300">Align open book spread.<br>Tap Import below to choose a spread
+          photo from gallery.</p>
+      </div>
+
+      <!-- Open Book Guideline Frame & Central Spine -->
+      <div id="book-guideline-box"
+        class="w-full h-64 rounded-2xl border-2 border-white/60 relative flex overflow-hidden pointer-events-none z-20 shadow-lg">
+        <!-- Left page guide -->
+        <div id="book-guide-left" style="width: 50%;" class="h-full border-r-2 border-dashed border-[#8B5CF6] flex items-center justify-center transition-all">
+          <span class="text-xs font-black text-white/50 tracking-wider">LEFT PAGE</span>
+        </div>
+        <!-- Right page guide -->
+        <div id="book-guide-right" style="width: 50%;" class="h-full flex items-center justify-center transition-all">
+          <span class="text-xs font-black text-white/50 tracking-wider">RIGHT PAGE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Spine Split Adjustment (20% to 80%) -->
+    <div class="p-3 rounded-2xl bg-[#EDE9FE]/50 border border-[#DDD6FE] flex items-center space-x-3">
+      <span class="text-xs font-black text-[#1E1B18] whitespace-nowrap">Spine Split:</span>
+      <input type="range" id="book-split-slider" min="20" max="80" value="50" class="flex-1 accent-[#7C3AED] h-2 bg-slate-200 rounded-lg cursor-pointer" oninput="updateBookSplitIndicator(this.value)">
+      <span id="book-split-label" class="text-xs font-black text-[#7C3AED] min-w-[36px] text-right">50%</span>
+    </div>
+  </div>
+
+  <!-- Shutter & Bottom Controls -->
+  <div class="p-5 bg-white border-t border-slate-200/80 flex items-center justify-between shrink-0">
+    <!-- Import Button -->
+    <label for="book-import-file-input"
+      class="w-14 h-14 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex flex-col items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+      title="Import spread">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+      </svg>
+      <span class="text-[9px] font-black mt-0.5">Import</span>
+      <input type="file" id="book-import-file-input" accept="image/*" class="hidden"
+        onchange="handleBookImportFile(event)">
+    </label>
+
+    <!-- Big Shutter Button -->
+    <button onclick="captureBookSpread()" class="flex flex-col items-center space-y-1 active:scale-95 transition-all"
+      title="Capture" aria-label="Capture">
+      <div
+        class="w-20 h-20 rounded-full border-4 border-[#EDE9FE] bg-[#1E1B18] text-white flex items-center justify-center shadow-lg">
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+          <circle cx="12" cy="13" r="4" />
+        </svg>
+      </div>
+      <span class="text-[11px] font-black text-[#1E1B18]">Capture</span>
+    </button>
+
+    <!-- Pages Counter & Review Button -->
+    <button onclick="navigateTo('organizer')"
+      class="w-20 h-14 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex flex-col items-center justify-center shadow-xs active:scale-95 transition-all"
+      title="Pages" aria-label="Pages">
+      <div class="flex items-center space-x-1">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <polygon points="12 2 2 7 12 12 22 7 12 2" />
+          <polyline points="2 17 12 22 22 17" />
+          <polyline points="2 12 12 17 22 12" />
+        </svg>
+        <span id="book-pages-badge" class="font-black text-xs">Pages (0)</span>
+      </div>
+      <span class="text-[8px] font-bold text-slate-500 mt-0.5">Review</span>
+    </button>
+  </div>
+</div>

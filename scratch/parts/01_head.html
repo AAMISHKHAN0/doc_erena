@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>DocErena — Mobile Scanner &amp; PDF Studio</title>
+  <meta name="theme-color" content="#FCFAFD">
+  <link rel="icon" type="image/png" href="docerena-logo.png">
+  <script src="tailwind.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              offWhite: '#FCFAFD',
+              dark: '#1E1B18',
+              navy: '#1E1B18',
+              navyMuted: '#64748B',
+              lavender: '#EDE9FE',
+              lavenderBorder: '#DDD6FE',
+              lavenderText: '#7C3AED',
+              lavenderDark: '#6D28D9',
+              yellow: '#FEF3C7',
+              yellowBorder: '#FDE68A',
+              yellowText: '#D97706',
+              yellowDark: '#B45309',
+              blue: '#E0F2FE',
+              blueBorder: '#BAE6FD',
+              blueText: '#0284C7',
+              blueDark: '#0369A1',
+              card: '#FFFFFF',
+              cardBorder: 'rgba(30, 27, 24, 0.08)',
+              teal: '#007F78',
+              tealDark: '#006D67',
+              tealLight: '#14B8A6',
+              mint: '#E3F5F2',
+              mintPill: '#D1F0EA',
+              mintBorder: '#A7F3D0'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box !important; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .hidden { display: none !important; }
+    .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    ::-webkit-scrollbar { width: 0px !important; height: 0px !important; display: none !important; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Edge-to-edge system insets */
+    .safe-top { padding-top: max(env(safe-area-inset-top, 0px), 12px); }
+    .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); }
+
+    /* Full responsive viewport handling */
+    @media (max-width: 640px) {
+      body { padding: 0 !important; margin: 0 !important; overflow: hidden !important; background: #FCFAFD !important; }
+      #desktop-header { display: none !important; }
+      #simulated-status-bar { display: none !important; }
+      #device-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      #dev-quick-pill { display: flex !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-[#1E1B18] min-h-screen flex flex-col items-center justify-start p-0 sm:p-5 transition-colors duration-300">
+
+  <!-- Desktop Environment Bar (Hidden on Mobile) -->
+  <header id="desktop-header" class="w-full max-w-5xl hidden sm:flex flex-wrap items-center justify-between gap-4 mb-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
+        <img src="docerena-logo.png" alt="DocErena Logo" class="w-full h-full object-contain">
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-base font-extrabold text-[#1E1B18] dark:text-white">DocErena</h1>
+          <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]">26 Pastel Screens</span>
+        </div>
+        <p class="text-[11px] text-slate-500">by DigitalErena · Android Offline Scanner &amp; PDF Studio</p>
+      </div>
+    </div>
+
+    <!-- Screen Jump Bar for quick evaluation -->
+    <div class="flex items-center space-x-1.5 text-xs overflow-x-auto py-1">
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Jump to:</span>
+      <button onclick="navigateTo('splash')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">01 Welcome</button>
+      <button onclick="navigateTo('onboarding')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">02 Onboard</button>
+      <button onclick="navigateTo('home')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">04 Home</button>
+      <button onclick="navigateTo('camera')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">05 Camera</button>
+      <button onclick="navigateTo('crop')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">06 Edges</button>
+      <button onclick="navigateTo('enhance')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">07 Enhance</button>
+      <button onclick="navigateTo('organizer')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">08 Review</button>
+      <button onclick="navigateTo('save')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">09 Save</button>
+      <button onclick="navigateTo('viewer')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">10 Viewer</button>
+      <button onclick="navigateTo('export')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">11 Export</button>
+      <button onclick="navigateTo('share')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">12 Share</button>
+      <button onclick="navigateTo('documents')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">13 Documents</button>
+      <button onclick="navigateTo('documents'); selectDocumentsTab('folders');" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">14 Folders (Your folders)</button>
+      <button onclick="navigateTo('pdf-tools')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">23 Tools</button>
+      <button onclick="navigateTo('merge-pdf')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">24 Merge</button>
+      <button onclick="navigateTo('split-pdf')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">25 Split</button>
+      <button onclick="navigateTo('compress-pdf')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">26 Compress</button>
+      <button onclick="navigateTo('settings')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#EDE9FE] hover:text-[#7C3AED] text-slate-700 font-semibold text-[11px] transition-all">Settings</button>
+    </div>
+
+    <!-- Device Sizing & Mobile Simulator Controls on Desktop -->
+    <div class="flex items-center space-x-2">
+      <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700 text-xs">
+        <button onclick="setViewport('phone')" id="vp-phone" class="px-2.5 py-1 rounded-lg font-bold bg-[#1E1B18] text-white transition-all" title="iPhone / Modern Mobile (390x844)">Phone</button>
+        <button onclick="setViewport('pixel')" id="vp-pixel" class="px-2.5 py-1 rounded-lg text-slate-500 font-bold hover:text-[#1E1B18] transition-all" title="Google Pixel / Large Phone (412x892)">Pixel</button>
+        <button onclick="setViewport('compact')" id="vp-compact" class="px-2.5 py-1 rounded-lg text-slate-500 font-bold hover:text-[#1E1B18] transition-all" title="Compact Phone (360x740)">Compact</button>
+        <button onclick="setViewport('fill')" id="vp-fill" class="px-2.5 py-1 rounded-lg text-slate-500 font-bold hover:text-[#1E1B18] transition-all" title="Full Screen Mobile View">Full Mobile</button>
+      </div>
+      <a href="docerena_v2_audited.apk" download="docerena_v2_audited.apk" class="px-3.5 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-xs shadow-md shadow-purple-500/20 flex items-center space-x-2 transition-all active:scale-95 shrink-0" title="Download DocErena v2 Audited APK">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download APK</span>
+      </a>
+      <button onclick="toggleTheme()" class="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-[#1E1B18]" title="Toggle Theme">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Mobile App Scaffold (Responsive Auto-Fit Mobile Container) -->
+  <main id="device-container" class="w-full sm:w-[390px] h-screen sm:h-[min(844px,calc(100vh-90px))] max-h-[844px] bg-[#FCFAFD] sm:rounded-[44px] shadow-2xl shadow-purple-950/20 flex flex-col relative overflow-hidden select-none border-0 sm:border-[10px] sm:border-[#1E1B18] transition-all duration-300">
+    <!-- Simulated Mobile Status Bar (9:41, Notch, Wifi, Battery) -->
+    <div id="simulated-status-bar" class="w-full h-8 px-6 pt-1 flex items-center justify-between text-xs font-bold text-[#1E1B18] shrink-0 z-40 bg-transparent select-none">
+      <span id="status-clock" class="text-[13px] font-black tracking-tight">9:41</span>
+      <!-- Dynamic Punch Hole / Notch -->
+      <div class="w-24 h-4 bg-[#1E1B18] rounded-full flex items-center justify-center -mt-1 shadow-inner">
+        <div class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-700"></div>
+      </div>
+      <div class="flex items-center space-x-1.5 text-[11px] font-bold">
+        <!-- Cellular Bars -->
+        <svg class="w-3.5 h-3.5 text-[#1E1B18]" viewBox="0 0 24 24" fill="currentColor"><path d="M2 20h2v-4H2v4zm4 0h2v-8H6v8zm4 0h2V8h-2v12zm4 0h2V4h-2v16zm4 0h2v-18h-2v18z"/></svg>
+        <!-- Wifi -->
+        <svg class="w-3.5 h-3.5 text-[#1E1B18]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4z"/></svg>
+        <!-- Battery 100% -->
+        <div class="flex items-center space-x-0.5">
+          <div class="w-5 h-2.5 rounded-sm border border-[#1E1B18] p-0.5 flex items-center">
+            <div class="w-full h-full bg-[#1E1B18] rounded-xs"></div>
+          </div>
+          <div class="w-0.5 h-1 bg-[#1E1B18] rounded-r-xs"></div>
+        </div>
+      </div>
+    </div>

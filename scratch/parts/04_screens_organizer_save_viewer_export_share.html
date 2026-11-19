@@ -1,0 +1,355 @@
+    <!-- ========================================== -->
+    <!-- SCREEN 08: REVIEW PAGES (08_Review_Pages)   -->
+    <!-- ========================================== -->
+    <div id="screen-organizer" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Brand -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+        <button onclick="handleOrganizerBack()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+            <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-black text-base text-[#1E1B18]">DocErena</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+
+      <!-- Header: Title & Page Count Subtitle matching 08_Review_Pages.png -->
+      <div class="px-5 pt-1 pb-2 shrink-0">
+        <h2 class="text-3xl font-black text-[#1E1B18] tracking-tight">Review pages</h2>
+        <p id="organizer-page-count-badge" class="text-sm font-semibold text-[#64748B] mt-0.5">3 pages</p>
+      </div>
+
+      <!-- 2x2 Page Review Grid -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto">
+        <div id="organizer-pages-grid" class="grid grid-cols-2 gap-3 pb-4">
+          <!-- Rendered dynamically by JavaScript -->
+        </div>
+        <button onclick="reorderSelectedPage('left')" class="hidden">reorderSelectedPage</button>
+        <button onclick="deleteSelectedPage()" class="hidden">deleteSelectedPage()</button>
+        <button onclick="addPageToOrganizer()" class="hidden">addPageToOrganizer()</button>
+        <button onclick="rotateSelectedPage()" class="hidden">rotateSelectedPage()</button>
+      </div>
+
+      <!-- Bottom Action Dock (Rotate, Delete, Continue matching 08_Review_Pages.png) -->
+      <div class="px-5 pt-2 pb-6 flex items-center justify-between space-x-2.5 shrink-0">
+        <!-- Rotate Button (Yellow Pill) -->
+        <button onclick="rotateSelectedOrganizerPage()" class="flex-1 min-h-[48px] py-3.5 px-3 rounded-full bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#1E1B18] font-black text-xs flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 transition-all">
+          <svg class="w-4 h-4 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>Rotate</span>
+        </button>
+
+        <!-- Delete Button (Pale Blue Pill) -->
+        <button onclick="deleteSelectedOrganizerPage()" class="flex-1 min-h-[48px] py-3.5 px-3 rounded-full bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#1E1B18] font-black text-xs flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 transition-all">
+          <svg class="w-4 h-4 text-[#1E1B18]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Delete</span>
+        </button>
+
+        <!-- Continue Button (Black Pill) -->
+        <button id="btn-organizer-continue" onclick="handleOrganizerContinue()" class="flex-1 min-h-[48px] py-3.5 px-4 rounded-full bg-[#1E1B18] hover:bg-black text-white font-black text-xs shadow-md active:scale-95 transition-all flex items-center justify-center">
+          Continue
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 09: SAVE DOCUMENT (09_Save_Document) -->
+    <!-- ========================================== -->
+    <div id="screen-save" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Brand -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+        <button onclick="navigateTo('organizer')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-6 h-6 rounded-lg bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+            <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-extrabold text-sm text-[#1E1B18]">DocErena</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="px-5 pt-1 pb-3 shrink-0">
+        <h2 class="text-2xl font-black text-[#1E1B18] tracking-tight">Save document</h2>
+        <p class="text-xs font-medium text-[#64748B]">Give your document a title.</p>
+      </div>
+
+      <!-- Form & Preview Area -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto space-y-4">
+        <!-- Preview Card -->
+        <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-4">
+          <div class="w-20 h-24 rounded-2xl bg-slate-900 overflow-hidden shadow-xs border border-slate-200/80 flex items-center justify-center shrink-0">
+            <img id="save-preview-thumb" src="" alt="Thumbnail" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] font-extrabold text-[10px] uppercase">Ready to save</span>
+            <h4 id="save-preview-pages-label" class="font-black text-base text-[#1E1B18] mt-1">1 Page</h4>
+            <p class="text-[11px] text-[#64748B]">ISO 32000 PDF &amp; Local Storage</p>
+          </div>
+        </div>
+
+        <!-- Document Name Input -->
+        <div class="space-y-1.5">
+          <label for="save-doc-title-input" class="block text-xs font-extrabold text-[#1E1B18]">Document name</label>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs flex items-center space-x-2 focus-within:border-[#8B5CF6]">
+            <input type="text" id="save-doc-title-input" name="save-doc-name-input" data-test="save-doc-name-input" value="DocErena_Scan_01" class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+            <input type="hidden" id="save-doc-name-input" value="DocErena_Scan_01">
+          </div>
+        </div>
+
+        <!-- Folder Dropdown -->
+        <div class="space-y-1.5">
+          <label for="save-doc-folder-select" class="block text-xs font-extrabold text-[#1E1B18]">Folder (optional)</label>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs flex items-center justify-between">
+            <select id="save-doc-folder-select" class="w-full font-semibold text-xs text-[#1E1B18] outline-none bg-transparent cursor-pointer">
+              <option value="">None (All Documents)</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Primary Action Button -->
+        <div class="pt-4">
+          <button id="btn-save-document" onclick="commitSaveDocAndOpenViewer()" class="w-full min-h-[52px] py-3.5 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-extrabold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center space-x-2">
+            <span>Save document</span>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 10: DOCUMENT VIEWER (10_Viewer)     -->
+    <!-- ========================================== -->
+    <div id="screen-viewer" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Title & Page Count, Star, Overflow -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0 bg-white border-b border-slate-200/80 z-20">
+        <button onclick="leaveViewer()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="text-center px-2 flex-1 overflow-hidden">
+          <h3 id="viewer-doc-title" class="font-extrabold text-sm text-[#1E1B18] truncate">Document Title</h3>
+          <span id="viewer-page-indicator" class="text-[11px] font-semibold text-[#64748B]">Page 1 of 1</span>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="toggleViewerFavorite()" id="viewer-star-btn" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-slate-400 hover:text-amber-500 transition-colors" title="Favorite" aria-label="Favorite">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button onclick="openDocMenuFromViewer()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-[#1E1B18] hover:bg-slate-100 transition-colors" title="More options" aria-label="More options">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- High-Res Interactive Page Canvas -->
+      <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-slate-900/5 p-4">
+        <canvas id="viewer-canvas" class="max-w-full max-h-full object-contain shadow-md rounded-xl bg-white"></canvas>
+
+        <!-- Floating Zoom Controls (+, -, reset) -->
+        <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-slate-200 p-1 flex items-center space-x-1">
+          <button onclick="setViewerZoom(-0.25); adjustZoom(-0.25);" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 font-black text-base" title="Zoom out" aria-label="Zoom out">-</button>
+          <span id="viewer-zoom-label" class="text-[10px] font-extrabold text-slate-600 px-1">100%</span>
+          <button onclick="setViewerZoom(0.25); adjustZoom(0.25);" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 font-black text-base" title="Zoom in" aria-label="Zoom in">+</button>
+          <button onclick="toggleDoubleTapZoom()" class="hidden">toggleDoubleTapZoom</button>
+        </div>
+      </div>
+
+      <!-- Bottom Page Thumbnail Rail -->
+      <div class="h-20 bg-white border-t border-slate-200/80 px-4 py-2 flex items-center space-x-2.5 overflow-x-auto shrink-0 z-20">
+        <div id="viewer-thumb-rail" class="viewer-thumb-strip flex items-center space-x-2.5">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Bottom Action Dock (Edit, Add, Export, Share) -->
+      <div class="h-16 bg-white border-t border-slate-100 px-6 flex items-center justify-between shrink-0 z-20">
+        <button onclick="openOrganizerFromViewer()" class="min-w-[48px] min-h-[48px] flex flex-col items-center justify-center space-y-0.5 text-slate-600 hover:text-[#7C3AED]" aria-label="Edit pages">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span class="text-xs font-bold">Edit</span>
+        </button>
+        <button onclick="addPageToCurrentDocument()" class="min-w-[48px] min-h-[48px] flex flex-col items-center justify-center space-y-0.5 text-slate-600 hover:text-[#7C3AED]" aria-label="Add page">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-xs font-bold">Add</span>
+        </button>
+        <button onclick="openExportFromViewer()" class="min-w-[48px] min-h-[48px] flex flex-col items-center justify-center space-y-0.5 text-slate-600 hover:text-[#7C3AED]" aria-label="Export PDF">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <span class="text-xs font-bold">Export PDF</span>
+        </button>
+        <button onclick="shareCurrentViewerDoc()" class="min-w-[48px] min-h-[48px] flex flex-col items-center justify-center space-y-0.5 text-slate-600 hover:text-[#7C3AED]" aria-label="Share document">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span class="text-xs font-bold">Share</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 11: EXPORT PDF (11_Export_PDF)       -->
+    <!-- ========================================== -->
+    <div id="screen-export" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Brand -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+        <button onclick="navigateTo('viewer')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-6 h-6 rounded-lg bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+            <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-extrabold text-sm text-[#1E1B18]">DocErena</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="px-5 pt-1 pb-3 shrink-0">
+        <h2 class="text-2xl font-black text-[#1E1B18] tracking-tight">Export PDF</h2>
+        <p class="text-xs font-medium text-[#64748B]">Choose format and quality.</p>
+      </div>
+
+      <!-- Settings & Form -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto space-y-4">
+        <!-- Preview Card -->
+        <div class="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex items-center space-x-4">
+          <div class="w-12 h-14 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-black text-xs shrink-0">
+            PDF
+          </div>
+          <div class="flex-1 overflow-hidden">
+            <h4 id="export-preview-title" class="font-extrabold text-sm text-[#1E1B18] truncate">DocErena_Export.pdf</h4>
+            <p id="export-preview-meta" class="text-[11px] text-[#64748B]">ISO 32000-1 Standards Compliant</p>
+          </div>
+        </div>
+
+        <!-- Filename Input -->
+        <div class="space-y-1.5">
+          <label for="export-filename-input" class="block text-xs font-extrabold text-[#1E1B18]">Filename</label>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-xs flex items-center space-x-2 focus-within:border-[#8B5CF6]">
+            <input type="text" id="export-filename-input" value="DocErena_Export.pdf" class="w-full font-bold text-sm text-[#1E1B18] outline-none bg-transparent">
+          </div>
+        </div>
+
+        <!-- Page Size Selector (A4, Letter, Fit) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-extrabold text-[#1E1B18]">Page size</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setExportPageSize('a4')" id="export-size-a4" class="py-2.5 px-3 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center font-extrabold text-xs text-[#7C3AED]">A4</button>
+            <button onclick="setExportPageSize('letter')" id="export-size-letter" class="py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]">Letter</button>
+            <button onclick="setExportPageSize('fit')" id="export-size-fit" class="py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]">Fit to image</button>
+          </div>
+        </div>
+
+        <!-- Quality Selector (High, Balanced, Small) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-extrabold text-[#1E1B18]">Quality</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setExportQuality('high')" id="export-qual-high" class="py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]">High</button>
+            <button onclick="setExportQuality('balanced')" id="export-qual-balanced" class="py-2.5 px-3 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center font-extrabold text-xs text-[#7C3AED]">Balanced</button>
+            <button onclick="setExportQuality('small')" id="export-qual-small" class="py-2.5 px-3 rounded-2xl border-2 border-slate-200 text-center font-extrabold text-xs text-[#1E1B18]">Smaller</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons (Save PDF / Share PDF) -->
+      <div class="px-5 pt-2 pb-6 space-y-2.5 shrink-0">
+        <button onclick="handleSavePdf()" class="w-full min-h-[52px] py-3.5 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-extrabold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center space-x-2">
+          <span>Save PDF</span>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button onclick="handleSharePdf()" class="w-full min-h-[48px] py-3 px-6 rounded-full bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-extrabold text-xs shadow-xs active:scale-[0.98] transition-all flex items-center justify-center space-x-2">
+          <span>Share PDF</span>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 12: SHARE DOCUMENT (12_Share)       -->
+    <!-- ========================================== -->
+    <div id="screen-share" class="hidden flex-1 flex flex-col bg-[#FCFAFD] text-[#1E1B18] relative overflow-hidden select-none safe-top safe-bottom">
+      <!-- Top Bar: Back, Brand -->
+      <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+        <button onclick="navigateTo('viewer')" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-bold hover:bg-[#DDD6FE] transition-colors" title="Back" aria-label="Back">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-6 h-6 rounded-lg bg-white flex items-center justify-center border border-[#DDD6FE] overflow-hidden">
+            <img src="docerena-logo.png" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <span class="font-extrabold text-sm text-[#1E1B18]">DocErena</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="px-5 pt-1 pb-3 shrink-0">
+        <h2 class="text-2xl font-black text-[#1E1B18] tracking-tight">Share document</h2>
+        <p class="text-xs font-medium text-[#64748B]">Select format and quality to share.</p>
+      </div>
+
+      <!-- Format & Quality Options -->
+      <div class="flex-1 px-5 py-2 overflow-y-auto space-y-5">
+        <!-- Choose a format Section -->
+        <div class="space-y-2">
+          <h4 class="text-xs font-extrabold text-[#1E1B18] uppercase tracking-wider">Choose a format</h4>
+          <div class="space-y-2">
+            <!-- Option 1: PDF Document -->
+            <label onclick="selectShareFormat('pdf')" class="p-4 rounded-2xl bg-white border-2 border-[#8B5CF6] shadow-xs flex items-center justify-between cursor-pointer">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs">
+                  PDF
+                </div>
+                <div>
+                  <span class="block font-extrabold text-sm text-[#1E1B18]">PDF Document</span>
+                  <span class="text-[11px] text-[#64748B]">Single multipage document</span>
+                </div>
+              </div>
+              <input type="radio" name="share-format" value="pdf" checked class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+            </label>
+
+            <!-- Option 2: Image Files -->
+            <label onclick="selectShareFormat('images')" class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between cursor-pointer hover:border-slate-300">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center font-black text-xs">
+                  IMG
+                </div>
+                <div>
+                  <span class="block font-extrabold text-sm text-[#1E1B18]">Image Files</span>
+                  <span class="text-[11px] text-[#64748B]">Individual JPG images per page</span>
+                </div>
+              </div>
+              <input type="radio" name="share-format" value="images" class="w-4 h-4 text-[#7C3AED] accent-[#7C3AED]">
+            </label>
+          </div>
+        </div>
+
+        <!-- Quality Section -->
+        <div class="space-y-2">
+          <h4 class="text-xs font-extrabold text-[#1E1B18] uppercase tracking-wider">Quality</h4>
+          <div class="grid grid-cols-2 gap-2.5">
+            <label onclick="selectShareQuality('original')" class="p-3.5 rounded-2xl bg-white border-2 border-[#8B5CF6] text-center flex flex-col items-center justify-center cursor-pointer">
+              <span class="font-extrabold text-xs text-[#7C3AED]">Original</span>
+              <span class="text-[10px] text-[#64748B]">Full resolution</span>
+              <input type="radio" name="share-quality" value="original" checked class="hidden">
+            </label>
+            <label onclick="selectShareQuality('compressed')" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 text-center flex flex-col items-center justify-center cursor-pointer hover:border-slate-300">
+              <span class="font-extrabold text-xs text-[#1E1B18]">Compressed</span>
+              <span class="text-[10px] text-[#64748B]">Smaller file size</span>
+              <input type="radio" name="share-quality" value="compressed" class="hidden">
+            </label>
+          </div>
+        </div>
+
+        <p class="text-xs text-center text-[#64748B] pt-2">Choose an app on the next screen.</p>
+
+        <!-- Continue Button -->
+        <div class="pt-2">
+          <button onclick="handleContinueToShare()" class="w-full min-h-[52px] py-3.5 px-6 rounded-full bg-[#1E1B18] hover:bg-black text-white font-extrabold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center space-x-2">
+            <span>Continue to share</span>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>

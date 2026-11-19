@@ -1,0 +1,732 @@
+    <!-- ========================================== -->
+    <!-- MODAL 1: ADD PDF MODAL (modal-add-pdf)      -->
+    <!-- ========================================== -->
+    <div id="modal-add-pdf" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex flex-col justify-end transition-opacity" onclick="closeAddPdfModal()">
+      <div class="bg-white rounded-t-[32px] p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-black text-lg text-[#1E1B18]">Add PDF Document</h3>
+            <p class="text-xs text-[#64748B]">Select a saved document or import a PDF file.</p>
+          </div>
+          <button onclick="closeAddPdfModal()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-base" aria-label="Close">✕</button>
+        </div>
+
+        <!-- Add From Device File Picker -->
+        <label class="p-3.5 rounded-2xl border-2 border-dashed border-[#DDD6FE] hover:border-[#8B5CF6] bg-[#EDE9FE]/20 flex items-center justify-center space-x-2 text-[#7C3AED] font-extrabold text-xs cursor-pointer active:scale-98 transition-all">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Choose PDF from Device Storage</span>
+          <input type="file" id="pdf-file-picker-input" accept="application/pdf" class="hidden" onchange="handleNativePdfFilePicked(event)">
+        </label>
+
+        <!-- Saved Library Documents List -->
+        <div class="space-y-2">
+          <h4 class="text-xs font-extrabold text-[#1E1B18] uppercase tracking-wider">From DocErena Library</h4>
+          <div id="modal-saved-docs-list" class="space-y-2 max-h-60 overflow-y-auto">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: DOCUMENT ACTION SHEET             -->
+    <!-- (19_Document_Action_Sheet.png)             -->
+    <!-- ========================================== -->
+    <div id="modal-doc-actions" class="hidden absolute inset-0 bg-black/40 z-50 flex flex-col justify-end transition-all select-none" onclick="closeDocActionsModal()">
+      <div class="bg-white rounded-t-[32px] p-6 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <!-- Handle drag bar -->
+        <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-2"></div>
+        
+        <!-- Document Header inside sheet -->
+        <div class="flex items-center space-x-3.5 pb-3 border-b border-slate-100">
+          <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center font-black text-xs shrink-0">
+            PDF
+          </div>
+          <div class="overflow-hidden">
+            <h4 id="menu-doc-title" class="font-extrabold text-base text-[#1E1B18] truncate">Document Title</h4>
+            <p id="menu-doc-meta" class="text-xs text-[#64748B]">3 pages • Just now</p>
+          </div>
+        </div>
+
+        <!-- Action Items List -->
+        <div class="space-y-1">
+          <!-- 1. Open -->
+          <button onclick="handleMenuAction('open')" class="w-full min-h-[48px] py-3 px-3 rounded-2xl hover:bg-slate-50 flex items-center space-x-3 text-left transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 text-[#1E1B18] flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <span class="font-extrabold text-sm text-[#1E1B18]">Open document</span>
+          </button>
+
+          <!-- 2. Rename -->
+          <button onclick="handleMenuAction('rename')" class="w-full min-h-[48px] py-3 px-3 rounded-2xl hover:bg-slate-50 flex items-center space-x-3 text-left transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </div>
+            <span class="font-extrabold text-sm text-[#1E1B18]">Rename</span>
+          </button>
+
+          <!-- 3. Move to folder -->
+          <button onclick="handleMenuAction('move')" class="w-full min-h-[48px] py-3 px-3 rounded-2xl hover:bg-slate-50 flex items-center space-x-3 text-left transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+            </div>
+            <span class="font-extrabold text-sm text-[#1E1B18]">Move to folder</span>
+          </button>
+
+          <!-- 4. Favorite Toggle -->
+          <button onclick="handleMenuAction('favorite')" class="w-full min-h-[48px] py-3 px-3 rounded-2xl hover:bg-slate-50 flex items-center space-x-3 text-left transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <span id="menu-action-fav-label" class="font-extrabold text-sm text-[#1E1B18]">Add to favorites</span>
+          </button>
+
+          <!-- 5. Share -->
+          <button onclick="handleMenuAction('share')" class="w-full min-h-[48px] py-3 px-3 rounded-2xl hover:bg-slate-50 flex items-center space-x-3 text-left transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </div>
+            <span class="font-extrabold text-sm text-[#1E1B18]">Share document</span>
+          </button>
+
+          <!-- 6. Move to trash -->
+          <button onclick="handleMenuAction('trash')" class="w-full min-h-[48px] py-3 px-3 rounded-2xl hover:bg-rose-50 flex items-center space-x-3 text-left transition-colors">
+            <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <span class="font-extrabold text-sm text-rose-600">Move to trash</span>
+          </button>
+        </div>
+
+        <button onclick="closeDocActionsModal()" class="w-full py-3 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: MOVE TO TRASH CONFIRMATION        -->
+    <!-- (20_Move_to_Trash_Confirmation.png)        -->
+    <!-- ========================================== -->
+    <div id="modal-delete-confirmation" class="hidden absolute inset-0 bg-[#3B0764]/25 backdrop-blur-[1px] z-50 flex items-center justify-center p-6 transition-all select-none" onclick="closeDeleteConfirmationModal()">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center" onclick="event.stopPropagation()">
+        <div class="w-14 h-14 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center mx-auto shadow-xs">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+        <div>
+          <h3 class="font-black text-xl text-[#1E1B18]">Move to trash?</h3>
+          <p id="del-doc-title" class="font-bold text-xs text-[#7C3AED] mt-1 truncate">Document Title</p>
+          <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+            You can restore this document from Recently Deleted at any time.
+          </p>
+        </div>
+        <div class="space-y-2 pt-2">
+          <button onclick="confirmMoveToTrash()" class="w-full min-h-[48px] py-3 rounded-full bg-[#1E1B18] hover:bg-black text-white font-extrabold text-xs shadow-md active:scale-95 transition-all">
+            Move to trash
+          </button>
+          <button onclick="closeDeleteConfirmationModal()" class="w-full py-2.5 rounded-full text-xs font-bold text-[#64748B] hover:text-[#1E1B18]">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 4: PERMANENT DELETE CONFIRMATION     -->
+    <!-- (22_Permanent_Delete_Confirmation.png)     -->
+    <!-- ========================================== -->
+    <!-- MODAL 4: PERMANENT DELETE CONFIRMATION     -->
+    <!-- (22_Permanent_Delete_Confirmation.png)     -->
+    <!-- ========================================== -->
+    <div id="modal-permanent-delete" class="hidden absolute inset-0 bg-[#3B0764]/20 backdrop-blur-[1px] z-50 flex items-center justify-center p-6 transition-all select-none" onclick="closePermanentDeleteModal()">
+      <div class="bg-white rounded-3xl p-6 max-w-xs sm:max-w-sm w-[90%] space-y-4 shadow-2xl text-center" onclick="event.stopPropagation()">
+        <div class="w-14 h-14 rounded-2xl bg-[#EDE9FE] text-[#DC2626] flex items-center justify-center mx-auto shadow-xs">
+          <svg class="w-7 h-7 text-[#DC2626]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </div>
+        <div>
+          <h3 class="font-black text-2xl text-[#1E1B18]">Delete permanently?</h3>
+          <p id="permanent-delete-subtext" class="text-xs font-semibold text-[#64748B] mt-1 leading-relaxed">Project Proposal will be permanently deleted and cannot be restored.</p>
+          <p class="hidden">This action cannot be undone.</p>
+        </div>
+        <div class="flex items-center space-x-3 pt-2">
+          <button onclick="closePermanentDeleteModal()" class="flex-1 min-h-[48px] py-2.5 px-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[#1E1B18] font-bold text-xs shadow-xs active:scale-95 transition-all" title="Cancel" aria-label="Cancel">
+            Cancel
+          </button>
+          <button onclick="confirmPermanentDelete()" class="flex-1 min-h-[48px] py-2.5 px-4 rounded-full bg-[#FEE2E2] hover:bg-[#FECDD3] text-[#DC2626] font-bold text-xs shadow-xs active:scale-95 transition-all" title="Delete permanently" aria-label="Delete permanently">
+            Delete permanently
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <div id="modal-rename-doc" class="hidden absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-6 transition-all select-none" onclick="closeRenameModal()">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <h3 class="font-black text-lg text-[#1E1B18]">Rename document</h3>
+        <div class="space-y-1.5">
+          <input type="text" id="rename-doc-input" class="w-full p-3.5 rounded-2xl border border-slate-200/80 font-bold text-sm text-[#1E1B18] outline-none focus:border-[#8B5CF6]">
+        </div>
+        <div class="flex items-center space-x-2 pt-2">
+          <button onclick="closeRenameModal()" class="flex-1 py-3 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs">
+            Cancel
+          </button>
+          <button onclick="submitDocRename()" class="flex-1 py-3 rounded-full bg-[#1E1B18] text-white font-extrabold text-xs shadow-md">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 5B: MOVE TO FOLDER MODAL             -->
+    <!-- ========================================== -->
+    <div id="modal-move-folder" class="hidden absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-6 transition-all select-none" onclick="closeMoveToFolderModal()">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+          <div>
+            <h3 class="font-black text-lg text-[#1E1B18]">Move to folder</h3>
+            <p id="move-folder-doc-title" class="text-xs text-[#64748B] truncate max-w-[220px]">Select a destination folder</p>
+          </div>
+          <button onclick="closeMoveToFolderModal()" class="w-12 h-12 min-h-[48px] rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm" aria-label="Close">✕</button>
+        </div>
+        <div id="move-folder-list-container" class="space-y-2 max-h-60 overflow-y-auto">
+          <!-- Populated dynamically: folders + Root/None option -->
+        </div>
+        <div class="pt-2">
+          <button onclick="closeMoveToFolderModal()" class="w-full py-2.5 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 5C: PASSWORD PROMPT MODAL (VIEW PDF) -->
+    <!-- ========================================== -->
+    <div id="modal-enter-password" class="hidden absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-6 transition-all select-none" onclick="closePasswordPromptModal()">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center mx-auto shadow-xs">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="text-center">
+          <h3 class="font-black text-lg text-[#1E1B18]">Password Protected</h3>
+          <p id="password-prompt-doc-title" class="text-xs text-[#64748B] mt-1">This document is encrypted. Enter password to view.</p>
+        </div>
+        <div class="space-y-1.5">
+          <input type="password" id="enter-doc-password-input" placeholder="Enter password..." class="w-full p-3.5 rounded-2xl border border-slate-200/80 font-bold text-sm text-[#1E1B18] outline-none focus:border-[#8B5CF6]">
+        </div>
+        <div class="flex items-center space-x-2 pt-2">
+          <button onclick="closePasswordPromptModal()" class="flex-1 py-3 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs">
+            Cancel
+          </button>
+          <button onclick="submitPasswordPrompt()" class="flex-1 py-3 rounded-full bg-[#1E1B18] text-white font-extrabold text-xs shadow-md">
+            Unlock
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 6: SIGNATURE PAD (DRAWN SIGNATURE)   -->
+    <!-- ========================================== -->
+    <div id="modal-signature-pad" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex flex-col justify-end transition-opacity" onclick="closeSignatureModal()">
+      <div class="bg-white rounded-t-[32px] p-6 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-black text-lg text-[#1E1B18]">Signature Creator</h3>
+            <p class="text-xs text-[#64748B]">Draw your signature with touch or mouse.</p>
+          </div>
+          <button onclick="closeSignatureModal()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-base" aria-label="Close">✕</button>
+        </div>
+        <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 relative overflow-hidden h-44 flex items-center justify-center">
+          <canvas id="signature-canvas" width="340" height="170" class="w-full h-full touch-none cursor-crosshair"></canvas>
+          <span class="absolute bottom-2 left-3 text-[10px] text-slate-400 pointer-events-none">Sign above the line</span>
+        </div>
+        <div class="flex items-center space-x-2 pt-1">
+          <button onclick="clearSignatureCanvas()" class="py-3 px-5 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs">
+            Clear
+          </button>
+          <button onclick="saveSignatureAndClose()" class="flex-1 py-3 px-6 rounded-full bg-[#1E1B18] text-white font-extrabold text-xs shadow-md">
+            Save Signature
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 7: OFFLINE OCR TEXT REVIEW           -->
+    <!-- ========================================== -->
+    <div id="modal-ocr-view" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex flex-col justify-end transition-opacity" onclick="closeOcrModal()">
+      <div class="bg-white rounded-t-[32px] p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-black text-lg text-[#1E1B18]">Extracted Text (OCR)</h3>
+            <p class="text-xs text-[#64748B]">Offline document text extraction</p>
+          </div>
+          <button onclick="closeOcrModal()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-base" aria-label="Close">✕</button>
+        </div>
+        <textarea id="ocr-extracted-textarea" rows="8" class="w-full p-3.5 rounded-2xl border border-slate-200 font-mono text-xs text-[#1E1B18] outline-none focus:border-[#8B5CF6] leading-relaxed" aria-label="Extracted OCR Text"></textarea>
+        <div class="flex items-center space-x-2">
+          <button onclick="copyOcrTextToClipboard()" class="flex-1 py-3 rounded-full bg-[#EDE9FE] text-[#7C3AED] font-extrabold text-xs shadow-xs">
+            Copy Text
+          </button>
+          <button onclick="shareExtractedOcrText()" class="flex-1 py-3 rounded-full bg-[#1E1B18] text-white font-extrabold text-xs shadow-md">
+            Share Text
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 8: TEXT ANNOTATION                   -->
+    <!-- ========================================== -->
+    <div id="modal-text-annotation" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex flex-col justify-end transition-opacity" onclick="closeTextAnnotationModal()">
+      <div class="bg-white rounded-t-[32px] p-6 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-black text-lg text-[#1E1B18]">Add Text Annotation</h3>
+            <p class="text-xs text-[#64748B]">Insert textual note onto document page.</p>
+          </div>
+          <button onclick="closeTextAnnotationModal()" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-base" aria-label="Close">✕</button>
+        </div>
+        <input type="text" id="annotation-text-input" placeholder="Enter text annotation..." class="w-full p-3.5 rounded-2xl border border-slate-200 font-bold text-sm text-[#1E1B18] outline-none focus:border-[#8B5CF6]">
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center space-x-1">
+            <span class="text-xs font-bold text-[#64748B]">Color:</span>
+            <button onclick="setAnnotationColor('#1E1B18')" class="w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center p-3" aria-label="Color black"><span class="w-6 h-6 rounded-full bg-[#1E1B18] border-2 border-white shadow-xs block"></span></button>
+            <button onclick="setAnnotationColor('#7C3AED')" class="w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center p-3" aria-label="Color purple"><span class="w-6 h-6 rounded-full bg-[#7C3AED] border-2 border-white shadow-xs block"></span></button>
+            <button onclick="setAnnotationColor('#DC2626')" class="w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center p-3" aria-label="Color amber"><span class="w-6 h-6 rounded-full bg-[#DC2626] border-2 border-white shadow-xs block"></span></button>
+          </div>
+          <button onclick="applyTextAnnotation()" class="py-2.5 px-6 rounded-full bg-[#1E1B18] text-white font-extrabold text-xs shadow-md">
+            Add to Page
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: CAMERA ALL FEATURES OVERLAY         -->
+    <!-- (Design matching reference images 1 & 2)   -->
+    <!-- ========================================== -->
+    <div id="modal-camera-all-features" class="hidden fixed inset-0 z-50 flex flex-col bg-[#0D0B14] text-white overflow-hidden transition-opacity duration-150 select-none safe-top safe-bottom" style="background: radial-gradient(circle at 85% 8%, rgba(139, 92, 246, 0.16) 0%, transparent 42%), radial-gradient(circle at 15% 92%, rgba(168, 85, 247, 0.12) 0%, transparent 48%), #0D0B14;">
+      <!-- Sticky / Accessible Header (solid dark background matching reference images, no border line) -->
+      <div class="px-5 pt-4 pb-3 flex items-start justify-between shrink-0 bg-[#0D0B14] z-30" style="background: radial-gradient(circle at 85% 0%, rgba(139, 92, 246, 0.18) 0%, transparent 50%), #0D0B14;">
+        <div>
+          <!-- DocErena Brand Lockup -->
+          <div class="flex items-center space-x-2">
+            <svg class="w-6 h-6" viewBox="0 0 28 28" fill="none">
+              <path d="M4.5 7.5C4.5 5.84 5.84 4.5 7.5 4.5H13.5C15.16 4.5 16.5 5.84 16.5 7.5V17.5C16.5 19.16 15.16 20.5 13.5 20.5H7.5C5.84 20.5 4.5 19.16 4.5 17.5V7.5Z" fill="#C084FC" opacity="0.85" transform="skewX(-16) translate(3, 0)"/>
+              <path d="M10.5 9.5C10.5 7.84 11.84 6.5 13.5 6.5H19.5C21.16 6.5 22.5 7.84 22.5 9.5V19.5C22.5 21.16 21.16 22.5 19.5 22.5H13.5C11.84 22.5 10.5 21.16 10.5 19.5V9.5Z" fill="#818CF8" transform="skewX(-16) translate(3, 0)"/>
+            </svg>
+            <span class="text-white font-black text-lg tracking-tight">DocErena</span>
+          </div>
+          <h1 class="text-[28px] sm:text-[32px] font-black text-white tracking-tight mt-1 leading-none">All features</h1>
+        </div>
+        <!-- Close Button (X) -->
+        <button onclick="closeCameraAllFeatures()" id="btn-close-all-features" class="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all mt-1 focus:outline-none" title="Close" aria-label="Close">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Vertically Scrollable Menu Body -->
+      <div id="all-features-scroll-container" class="flex-1 overflow-y-auto px-5 py-3 space-y-4 overscroll-contain select-none pb-28">
+        <!-- 1. Scan documents -->
+        <div>
+          <div class="flex items-center space-x-2 pb-2.5">
+            <svg class="w-5 h-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
+            </svg>
+            <h2 class="text-white font-black text-base sm:text-lg tracking-tight">Scan documents</h2>
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
+            <!-- 1. Single -->
+            <button onclick="handleAllFeaturesAction('single')" class="flex flex-col items-center group focus:outline-none" title="Single">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="8" y1="13" x2="16" y2="13"/>
+                  <line x1="8" y1="17" x2="16" y2="17"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Single</span>
+            </button>
+
+            <!-- 2. Batch -->
+            <button onclick="handleAllFeaturesAction('batch')" class="flex flex-col items-center group focus:outline-none" title="Batch">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 2h6l4 4v11a2 2 0 0 1-2 2"/>
+                  <polyline points="14 2 14 6 18 6"/>
+                  <path d="M4 6h6l4 4v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/>
+                  <polyline points="10 6 10 10 14 10"/>
+                  <line x1="5.5" y1="13.5" x2="11.5" y2="13.5"/>
+                  <line x1="5.5" y1="16.5" x2="11.5" y2="16.5"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Batch</span>
+            </button>
+
+            <!-- 3. ID Cards -->
+            <button onclick="handleAllFeaturesAction('id-card')" class="flex flex-col items-center group focus:outline-none" title="ID Cards">
+              <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2.5" y="4.5" width="19" height="15" rx="3"/>
+                  <circle cx="8" cy="9.5" r="2.2"/>
+                  <path d="M5 16c0-1.8 1.3-3 3-3s3 1.2 3 3"/>
+                  <line x1="13" y1="9" x2="18.5" y2="9"/>
+                  <line x1="13" y1="12" x2="18.5" y2="12"/>
+                  <line x1="13" y1="15" x2="18.5" y2="15"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">ID Cards</span>
+            </button>
+
+            <!-- 4. Book -->
+            <button onclick="handleAllFeaturesAction('book')" class="flex flex-col items-center group focus:outline-none" title="Book">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6.5C3 5.1 4.5 4 6.8 4C9.5 4 12 5.5 12 7.5V20C12 18 9.5 16.5 6.8 16.5C4.5 16.5 3 17.6 3 19V6.5Z"/>
+                  <path d="M21 6.5C21 5.1 19.5 4 17.2 4C14.5 4 12 5.5 12 7.5V20C12 18 14.5 16.5 17.2 16.5C19.5 16.5 21 17.6 21 19V6.5Z"/>
+                  <line x1="5.5" y1="8" x2="9.5" y2="8.5"/>
+                  <line x1="5.5" y1="11" x2="9.5" y2="11.5"/>
+                  <line x1="5.5" y1="14" x2="9.5" y2="14.5"/>
+                  <line x1="14.5" y1="8.5" x2="18.5" y2="8"/>
+                  <line x1="14.5" y1="11.5" x2="18.5" y2="11"/>
+                  <line x1="14.5" y1="14.5" x2="18.5" y2="14"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Book</span>
+            </button>
+
+            <!-- 5. Timestamp -->
+            <button onclick="handleAllFeaturesAction('timestamp')" class="flex flex-col items-center group focus:outline-none" title="Timestamp">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 4H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/>
+                  <circle cx="6.5" cy="7.5" r="1" fill="currentColor"/>
+                  <circle cx="15.5" cy="15.5" r="5.5"/>
+                  <polyline points="15.5 13 15.5 15.5 17.5 16.5"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Timestamp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider 1 -->
+        <div class="h-px bg-white/10 my-3"></div>
+
+        <!-- 2. Convert formats -->
+        <div>
+          <div class="flex items-center space-x-2 pb-2.5">
+            <svg class="w-5 h-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 8h13m0 0l-3.5-3.5M17 8l-3.5 3.5"/>
+              <path d="M20 16H7m0 0l3.5-3.5M7 16l3.5 3.5"/>
+            </svg>
+            <h2 class="text-white font-black text-base sm:text-lg tracking-tight">Convert formats</h2>
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
+            <!-- 1. To Word -->
+            <button onclick="showComingSoon('To Word', 'Convert scanned documents and PDFs into editable Microsoft Word (.docx) documents.')" class="flex flex-col items-center group focus:outline-none" title="To Word">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="m8 12 1.5 5 1.5-4 1.5 4 1.5-5" stroke-width="2.2"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">To Word</span>
+            </button>
+
+            <!-- 2. To Excel -->
+            <button onclick="showComingSoon('To Excel', 'Extract document tables and tabular data into Microsoft Excel (.xlsx) spreadsheets.')" class="flex flex-col items-center group focus:outline-none" title="To Excel">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="m9 12 4.5 5M13.5 12 9 17" stroke-width="2.2"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">To Excel</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider 2 -->
+        <div class="h-px bg-white/10 my-3"></div>
+
+        <!-- 3. Document tools -->
+        <div id="section-document-tools">
+          <div class="flex items-center space-x-2 pb-2.5">
+            <svg class="w-5 h-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 2 10 5-10 5-10-5 10-5Z"/>
+              <path d="m2 12 10 5 10-5"/>
+              <path d="m2 17 10 5 10-5"/>
+            </svg>
+            <h2 class="text-white font-black text-base sm:text-lg tracking-tight">Document tools</h2>
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
+            <!-- 1. Sign (ACTIVE WORKING FEATURE) -->
+            <button onclick="handleAllFeaturesAction('sign')" class="flex flex-col items-center group focus:outline-none" title="Sign">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 4.5c-3.2 0-6.2 2.2-8.5 6L8.8 15.2l3.8-1.2c2.5-1.8 5-4.5 6.4-7.5v-2z"/>
+                  <path d="M14.5 9.5 9 17.5"/>
+                  <line x1="13.5" y1="16" x2="19.5" y2="16"/>
+                  <line x1="6.5" y1="19.5" x2="19.5" y2="19.5"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Sign</span>
+            </button>
+
+            <!-- 2. Extract Text (ACTIVE WORKING FEATURE - OCR) -->
+            <button onclick="handleAllFeaturesAction('extract-text')" class="flex flex-col items-center group focus:outline-none" title="Extract Text">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 8V4h4M16 4h4v4M4 16v4h4M20 16v4h-4"/>
+                  <line x1="9" y1="9" x2="15" y2="9" stroke-width="2.2"/>
+                  <line x1="12" y1="9" x2="12" y2="16" stroke-width="2.2"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Extract Text</span>
+            </button>
+
+            <!-- 3. Translate -->
+            <button onclick="showComingSoon('Translate', 'Translate extracted document text across multiple languages with offline dictionary packs.')" class="flex flex-col items-center group focus:outline-none" title="Translate">
+              <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="10" height="10" rx="2"/>
+                  <path d="m5 10 2-5 2 5M5.8 8.5h2.4" stroke-width="1.6"/>
+                  <rect x="12" y="11" width="10" height="10" rx="2"/>
+                  <path d="M14.5 13.5h5M17 13.5v2.5M15 16.5c1 1.5 2 2.5 3.5 3M18.5 16.5c-.8 1.2-1.8 2.2-3.5 3" stroke-width="1.6"/>
+                  <path d="M15 4.5h2a2 2 0 0 1 2 2v2" stroke-width="1.5"/>
+                  <path d="M9 19.5H7a2 2 0 0 1-2-2v-2" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Translate</span>
+            </button>
+
+            <!-- 4. Formula -->
+            <button onclick="showComingSoon('Formula', 'Recognize mathematical formulas and LaTeX equations with high-precision computer vision.')" class="flex flex-col items-center group focus:outline-none" title="Formula">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 13.5h2.5l3 7.5L13.5 4.5H21"/>
+                  <path d="m15.5 12 4 5M19.5 12l-4 5"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Formula</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider 3 -->
+        <div class="h-px bg-white/10 my-3"></div>
+
+        <!-- 4. Enhance images -->
+        <div>
+          <div class="flex items-center space-x-2 pb-2.5">
+            <svg class="w-5 h-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="m21 15-5-5-8 8"/>
+              <path d="M19 3v4m2-2h-4"/>
+            </svg>
+            <h2 class="text-white font-black text-base sm:text-lg tracking-tight">Enhance images</h2>
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
+            <!-- 1. ID Photo Maker -->
+            <button onclick="showComingSoon('ID Photo Maker', 'Generate official passport and ID photo dimensions with automatic background cleanup.')" class="flex flex-col items-center group focus:outline-none" title="ID Photo Maker">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="3" width="16" height="18" rx="3"/>
+                  <circle cx="12" cy="9.5" r="3"/>
+                  <path d="M7 18c0-2.5 2.2-4 5-4s5 1.5 5 4"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">ID Photo Maker</span>
+            </button>
+
+            <!-- 2. Restore Photo -->
+            <button onclick="showComingSoon('Restore Photo', 'Enhance and restore aged photographs by smoothing creases and correcting lighting.')" class="flex flex-col items-center group focus:outline-none" title="Restore Photo">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4.5" width="18" height="15" rx="2.5"/>
+                  <path d="m3 16 5-5 4 4"/>
+                  <path d="M17 8c.1.9.4 1.2 1.3 1.3-.9.1-1.2.4-1.3 1.3-.1-.9-.4-1.2-1.3-1.3.9-.1 1.2-.4 1.3-1.3Z" fill="currentColor" stroke="none"/>
+                  <line x1="12" y1="2.5" x2="12" y2="21.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Restore Photo</span>
+            </button>
+
+            <!-- 3. Smart Erase -->
+            <button onclick="showComingSoon('Smart Erase', 'Seamlessly erase unwanted watermarks, shadows, and blemishes from scans.')" class="flex flex-col items-center group focus:outline-none" title="Smart Erase">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m7.5 19.5-4.2-4.2a2.4 2.4 0 0 1 0-3.4l8.8-8.8a2.4 2.4 0 0 1 3.4 0l5.1 5.1a2.4 2.4 0 0 1 0 3.4l-7.3 7.3"/>
+                  <path d="M5.5 10.5 14 19"/>
+                  <line x1="18" y1="20" x2="22" y2="20"/>
+                  <path d="M5 4.5v3M3.5 6h3" stroke-width="1.8"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Smart Erase</span>
+            </button>
+
+            <!-- 4. Scan Code -->
+            <button onclick="showComingSoon('Scan Code', 'Instantly read QR codes, barcodes, and digital links offline.')" class="flex flex-col items-center group focus:outline-none" title="Scan Code">
+              <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                  <rect x="5.5" y="5.5" width="2" height="2" fill="currentColor"/>
+                  <rect x="16.5" y="5.5" width="2" height="2" fill="currentColor"/>
+                  <rect x="5.5" y="16.5" width="2" height="2" fill="currentColor"/>
+                  <path d="M14 14h3v3h-3z" fill="currentColor"/>
+                  <path d="M18 18h3v3h-3z" fill="currentColor"/>
+                  <path d="M14 20h2"/>
+                  <path d="M20 15v2"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Scan Code</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider 4 -->
+        <div class="h-px bg-white/10 my-3"></div>
+
+        <!-- 5. Capture screens -->
+        <div>
+          <div class="flex items-center space-x-2 pb-2.5">
+            <h2 class="text-white font-black text-base sm:text-lg tracking-tight">Capture screens</h2>
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
+            <!-- 1. Slides -->
+            <button onclick="showComingSoon('Slides', 'Optimized perspective capture and contrast enhancement for projector screens.')" class="flex flex-col items-center group focus:outline-none" title="Slides">
+              <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="2.5" y1="4" x2="21.5" y2="4" stroke-width="2.5" stroke-linecap="round"/>
+                  <rect x="3.5" y="4" width="17" height="11" rx="1"/>
+                  <polygon points="10.5 7.5 14.5 9.5 10.5 11.5" fill="currentColor"/>
+                  <line x1="12" y1="15" x2="12" y2="19.5"/>
+                  <line x1="7.5" y1="19.5" x2="16.5" y2="19.5" stroke-width="2.2"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Slides</span>
+            </button>
+
+            <!-- 2. Whiteboard -->
+            <button onclick="showComingSoon('Whiteboard', 'Remove glare and enhance marker readability on dry-erase whiteboards.')" class="flex flex-col items-center group focus:outline-none" title="Whiteboard">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3.5" width="18" height="11" rx="2"/>
+                  <path d="M6 9c2-1.5 4 1 6-1s3 1 5-1"/>
+                  <line x1="4" y1="14.5" x2="20" y2="14.5" stroke-width="2.2"/>
+                  <path d="M6 14.5 4 21M18 14.5 20 21M12 14.5V21"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Whiteboard</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider 5 -->
+        <div class="h-px bg-white/10 my-3"></div>
+
+        <!-- 6. More -->
+        <div>
+          <div class="flex items-center space-x-2 pb-2.5">
+            <h2 class="text-white font-black text-base sm:text-lg tracking-tight">More</h2>
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
+            <!-- 1. CountCam -->
+            <button onclick="showComingSoon('CountCam', 'Automatically count repetitive physical items and objects in camera viewfinder.')" class="flex flex-col items-center group focus:outline-none" title="CountCam">
+              <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- Hexagon 1 (Top Center) -->
+                  <polygon points="12,2.2 15.8,4.4 15.8,8.8 12,11 8.2,8.8 8.2,4.4" fill="none"/>
+                  <text x="12" y="7.5" font-family="system-ui, sans-serif" font-size="4.8" font-weight="900" fill="currentColor" text-anchor="middle" dominant-baseline="central" stroke="none">1</text>
+                  <!-- Hexagon 2 (Bottom Left) -->
+                  <polygon points="8.2,9.8 12,12 12,16.4 8.2,18.6 4.4,16.4 4.4,12" fill="none"/>
+                  <text x="8.2" y="15.1" font-family="system-ui, sans-serif" font-size="4.8" font-weight="900" fill="currentColor" text-anchor="middle" dominant-baseline="central" stroke="none">2</text>
+                  <!-- Hexagon 3 (Bottom Right) -->
+                  <polygon points="15.8,9.8 19.6,12 19.6,16.4 15.8,18.6 12,16.4 12,12" fill="none"/>
+                  <text x="15.8" y="15.1" font-family="system-ui, sans-serif" font-size="4.8" font-weight="900" fill="currentColor" text-anchor="middle" dominant-baseline="central" stroke="none">3</text>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">CountCam</span>
+            </button>
+
+            <!-- 2. Greeting Card -->
+            <button onclick="showComingSoon('Greeting Card', 'Format two-fold and four-fold printable holiday greeting cards.')" class="flex flex-col items-center group focus:outline-none" title="Greeting Card">
+              <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v13"/>
+                  <rect x="4.5" y="5.5" width="13" height="15" rx="1.5"/>
+                  <path d="M11 10.5c-.8-.9-1.8 0-1.8.8 0 1.2 1.8 2.4 1.8 2.4s1.8-1.2 1.8-2.4c0-.8-1-1.7-1.8-.8Z" fill="currentColor"/>
+                  <line x1="8.5" y1="16.5" x2="13.5" y2="16.5"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Greeting Card</span>
+            </button>
+
+            <!-- 3. AI Chat -->
+            <button onclick="showComingSoon('AI Chat', 'Ask questions and summarize scanned documents with private local machine learning.')" class="flex flex-col items-center group focus:outline-none" title="AI Chat">
+              <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
+                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="currentColor">
+                  <!-- Main Center Star -->
+                  <path d="M10 3c.3 3.8 2 5.5 5.8 5.8-3.8.3-5.5 2-5.8 5.8-.3-3.8-2-5.5-5.8-5.8 3.8-.3 5.5-2 5.8-5.8Z"/>
+                  <!-- Top Right Accent Star -->
+                  <path d="M17.5 9c.2 2 1 2.8 3 3-2 .2-2.8 1-3 3-.2-2-1-2.8-3-3 2-.2 2.8-1 3-3Z"/>
+                </svg>
+              </div>
+              <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">AI Chat</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Coming Soon Modal Dialog (z-[60] so it appears on top of overlays) -->
+    <div id="modal-coming-soon" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-5 select-none animate-fadeIn" onclick="closeComingSoonModal()">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center space-y-4" onclick="event.stopPropagation()">
+        <div class="w-16 h-16 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs">
+          <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="space-y-1.5">
+          <div class="inline-block px-2.5 py-0.5 rounded-full bg-[#F3E8FF] text-[#7C3AED] text-[11px] font-black tracking-wider uppercase mb-1">Coming Soon</div>
+          <h3 id="coming-soon-title" class="text-xl font-black text-[#18181B]">Feature</h3>
+          <p id="coming-soon-desc" class="text-xs text-[#64748B] leading-relaxed">This tool is currently under active offline development and will arrive in an upcoming release.</p>
+        </div>
+        <button onclick="closeComingSoonModal()" class="w-full py-3 rounded-full bg-[#18181B] hover:bg-black text-white text-sm font-extrabold shadow-md active:scale-98 transition-all" title="Dismiss" aria-label="Dismiss">Got it</button>
+      </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="app-toast" class="hidden fixed top-6 inset-x-0 mx-auto max-w-xs z-50 p-3 rounded-2xl bg-[#1E1B18] text-white text-xs font-bold shadow-2xl flex items-center justify-center space-x-2 transition-all">
+      <span id="toast-message">Notification</span>
+    </div>
+
+    <!-- Simulated iOS/Android Home Indicator Bar -->
+    <div id="simulated-home-bar" class="w-full py-1.5 flex items-center justify-center shrink-0 bg-transparent pointer-events-none z-40 select-none">
+      <div class="w-32 h-1 bg-[#1E1B18]/25 rounded-full"></div>
+    </div>
+  </main>
