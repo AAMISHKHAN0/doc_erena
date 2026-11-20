@@ -844,6 +844,30 @@
         openScanCodeMode();
         return;
       }
+      if (action === 'id-photo' || action === 'id-photo-maker') {
+        openIdPhotoMaker();
+        return;
+      }
+      if (action === 'restore-photo' || action === 'restore') {
+        openRestorePhoto();
+        return;
+      }
+      if (action === 'smart-erase' || action === 'erase') {
+        openSmartErase();
+        return;
+      }
+      if (action === 'slides') {
+        openSlidesMode();
+        return;
+      }
+      if (action === 'whiteboard') {
+        openWhiteboardMode();
+        return;
+      }
+      if (action === 'greeting-card' || action === 'card') {
+        openGreetingCardMaker();
+        return;
+      }
       if (action === 'timestamp') {
         closeCameraAllFeatures();
         if (typeof setCameraScanMode === 'function') {
@@ -1158,6 +1182,1157 @@
     }
     window.handleQrFileInputChange = handleQrFileInputChange;
 
+    // ============================================================
+    // 5 ADVANCED OFFLINE TOOLS IMPLEMENTATION
+    // 1. ID Photo Maker (Preset sizes, aspect crop, 4x6 8-up sheet)
+    // 2. Restore Photo (Percentile auto-contrast, median scratch filter, hold-to-compare)
+    // 3. Smart Erase (Interactive brush mask, boundary diffusion inpainting, undo stack)
+    // 4. Slides and Whiteboard (De-glare, contrast, surface whitening, marker saturation)
+    // 5. Greeting Card Studio (Bundled templates, live preview, editable text, printable PDF)
+    // ============================================================
+
+    // ------------------------------------------------------------
+    // 1. ID PHOTO MAKER
+    // ------------------------------------------------------------
+    let currentIdPhotoImg = null;
+    let currentIdPhotoDataUrl = null;
+    let currentIdPhotoPreset = 'us-passport';
+    let currentIdPhotoZoom = 1.0;
+    let isIdPortraitGuideVisible = true;
+    let isIdSheetMode = false;
+
+    const ID_PHOTO_PRESETS = {
+      'us-passport': { name: 'US 2×2 in', widthMm: 51, heightMm: 51, pxW: 600, pxH: 600, ratio: 1.0, label: '600 × 600 px (1:1)' },
+      'eu-passport': { name: 'EU / UK Passport', widthMm: 35, heightMm: 45, pxW: 413, pxH: 531, ratio: 35/45, label: '413 × 531 px (7:9)' },
+      'id-3040': { name: '30×40 mm ID', widthMm: 30, heightMm: 40, pxW: 354, pxH: 472, ratio: 30/40, label: '354 × 472 px (3:4)' },
+      'id-2535': { name: '25×35 mm ID', widthMm: 25, heightMm: 35, pxW: 295, pxH: 413, ratio: 25/35, label: '295 × 413 px (5:7)' }
+    };
+
+    function openIdPhotoMaker(imgUrl) {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-id-photo');
+      if (modal) modal.classList.remove('hidden');
+
+      const src = imgUrl || (activeEnhancePage ? (activeEnhancePage.enhancedUrl || activeEnhancePage.croppedUrl) : (sessionPages.length > 0 ? (sessionPages[selectedOrganizerIndex || 0].enhancedUrl || sessionPages[selectedOrganizerIndex || 0].croppedUrl) : null));
+
+      if (src) {
+        loadIdPhotoImage(src);
+      } else {
+        createDefaultPortraitSample().then(dataUrl => {
+          loadIdPhotoImage(dataUrl);
+        });
+      }
+    }
+    window.openIdPhotoMaker = openIdPhotoMaker;
+
+    function closeIdPhotoMaker() {
+      const modal = document.getElementById('modal-id-photo');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeIdPhotoMaker = closeIdPhotoMaker;
+
+    function triggerIdPhotoSelect() {
+      const input = document.getElementById('id-photo-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerIdPhotoSelect = triggerIdPhotoSelect;
+
+    function handleIdPhotoFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        loadIdPhotoImage(evt.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleIdPhotoFilePicked = handleIdPhotoFilePicked;
+
+    function loadIdPhotoImage(dataUrl) {
+      currentIdPhotoDataUrl = dataUrl;
+      const img = new Image();
+      img.onload = function() {
+        currentIdPhotoImg = img;
+        renderIdPhotoCanvas();
+      };
+      img.src = dataUrl;
+    }
+    window.loadIdPhotoImage = loadIdPhotoImage;
+
+    function setIdPhotoPreset(presetKey) {
+      if (!ID_PHOTO_PRESETS[presetKey]) return;
+      currentIdPhotoPreset = presetKey;
+      const preset = ID_PHOTO_PRESETS[presetKey];
+
+      const chips = ['us-passport', 'eu-passport', 'id-3040', 'id-2535'];
+      chips.forEach(k => {
+        const btn = document.getElementById(`id-size-${k}`);
+        if (!btn) return;
+        if (k === presetKey) {
+          btn.className = 'id-size-chip py-2 px-1 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const txt = btn.querySelector('span:first-child');
+          if (txt) txt.className = 'text-xs font-black text-[#7C3AED]';
+        } else {
+          btn.className = 'id-size-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const txt = btn.querySelector('span:first-child');
+          if (txt) txt.className = 'text-xs font-black text-[#18181B]';
+        }
+      });
+
+      const cropBox = document.getElementById('id-photo-crop-box');
+      const dimBadge = document.getElementById('id-photo-dim-badge');
+      if (cropBox) {
+        const baseH = 200;
+        const baseW = Math.round(baseH * preset.ratio);
+        cropBox.style.width = `${baseW}px`;
+        cropBox.style.height = `${baseH}px`;
+      }
+      if (dimBadge) {
+        dimBadge.textContent = preset.label;
+      }
+    }
+    window.setIdPhotoPreset = setIdPhotoPreset;
+
+    function updateIdPhotoZoom(val) {
+      currentIdPhotoZoom = parseInt(val, 10) / 100;
+      renderIdPhotoCanvas();
+    }
+    window.updateIdPhotoZoom = updateIdPhotoZoom;
+
+    function toggleIdPortraitGuide() {
+      isIdPortraitGuideVisible = !isIdPortraitGuideVisible;
+      const guide = document.getElementById('id-photo-portrait-guide');
+      const btn = document.getElementById('id-guide-toggle-btn');
+      if (guide) {
+        if (isIdPortraitGuideVisible) guide.classList.remove('hidden');
+        else guide.classList.add('hidden');
+      }
+      if (btn) {
+        btn.textContent = `Guide: ${isIdPortraitGuideVisible ? 'ON' : 'OFF'}`;
+      }
+    }
+    window.toggleIdPortraitGuide = toggleIdPortraitGuide;
+
+    function toggleIdPhotoSheetMode(checked) {
+      isIdSheetMode = checked;
+      const btn = document.getElementById('id-photo-export-btn');
+      if (btn) {
+        const span = btn.querySelector('span');
+        if (span) {
+          span.textContent = isIdSheetMode ? 'Export 4×6" Sheet (8-Up)' : 'Export ID Photo';
+        }
+      }
+    }
+    window.toggleIdPhotoSheetMode = toggleIdPhotoSheetMode;
+
+    function renderIdPhotoCanvas() {
+      const canvas = document.getElementById('id-photo-canvas');
+      if (!canvas || !currentIdPhotoImg) return;
+      const ctx = canvas.getContext('2d');
+
+      const wrapper = document.getElementById('id-photo-canvas-wrapper');
+      const maxW = (wrapper ? wrapper.clientWidth : 340) || 340;
+      const maxH = (wrapper ? wrapper.clientHeight : 270) || 270;
+
+      canvas.width = maxW;
+      canvas.height = maxH;
+
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(0, 0, maxW, maxH);
+
+      const imgAspect = currentIdPhotoImg.width / currentIdPhotoImg.height;
+      let drawW, drawH;
+      if (imgAspect > (maxW / maxH)) {
+        drawW = maxW * 0.9 * currentIdPhotoZoom;
+        drawH = drawW / imgAspect;
+      } else {
+        drawH = maxH * 0.9 * currentIdPhotoZoom;
+        drawW = drawH * imgAspect;
+      }
+
+      const drawX = (maxW - drawW) / 2;
+      const drawY = (maxH - drawH) / 2;
+
+      ctx.drawImage(currentIdPhotoImg, drawX, drawY, drawW, drawH);
+    }
+
+    function exportIdPhoto() {
+      if (!currentIdPhotoImg) {
+        showToast('Please select or capture a photo first');
+        return;
+      }
+
+      const preset = ID_PHOTO_PRESETS[currentIdPhotoPreset] || ID_PHOTO_PRESETS['us-passport'];
+
+      if (!isIdSheetMode) {
+        const outCanvas = document.createElement('canvas');
+        outCanvas.width = preset.pxW;
+        outCanvas.height = preset.pxH;
+        const outCtx = outCanvas.getContext('2d');
+
+        const imgAspect = currentIdPhotoImg.width / currentIdPhotoImg.height;
+        let cropW, cropH;
+        if (imgAspect > preset.ratio) {
+          cropH = currentIdPhotoImg.height;
+          cropW = cropH * preset.ratio;
+        } else {
+          cropW = currentIdPhotoImg.width;
+          cropH = cropW / preset.ratio;
+        }
+
+        cropW /= currentIdPhotoZoom;
+        cropH /= currentIdPhotoZoom;
+        const cropX = Math.max(0, (currentIdPhotoImg.width - cropW) / 2);
+        const cropY = Math.max(0, (currentIdPhotoImg.height - cropH) / 2);
+
+        outCtx.drawImage(currentIdPhotoImg, cropX, cropY, cropW, cropH, 0, 0, preset.pxW, preset.pxH);
+
+        const exportedUrl = outCanvas.toDataURL('image/jpeg', 0.95);
+        saveExportedToolImage(exportedUrl, `ID_Photo_${preset.name.replace(/\s+/g, '_')}`);
+        showToast(`Exported ID Photo: ${preset.pxW}×${preset.pxH} px`);
+        closeIdPhotoMaker();
+      } else {
+        const sheetCanvas = document.createElement('canvas');
+        sheetCanvas.width = 1800;
+        sheetCanvas.height = 1200;
+        const sheetCtx = sheetCanvas.getContext('2d');
+
+        sheetCtx.fillStyle = '#FFFFFF';
+        sheetCtx.fillRect(0, 0, 1800, 1200);
+
+        sheetCtx.fillStyle = '#64748B';
+        sheetCtx.font = 'bold 24px system-ui, sans-serif';
+        sheetCtx.fillText(`DocErena 4×6" Print Sheet • ${preset.name} (${preset.widthMm}×${preset.heightMm} mm)`, 60, 48);
+
+        const singleC = document.createElement('canvas');
+        singleC.width = preset.pxW;
+        singleC.height = preset.pxH;
+        const sCtx = singleC.getContext('2d');
+        const imgAspect = currentIdPhotoImg.width / currentIdPhotoImg.height;
+        let cropW = (imgAspect > preset.ratio) ? currentIdPhotoImg.height * preset.ratio : currentIdPhotoImg.width;
+        let cropH = (imgAspect > preset.ratio) ? currentIdPhotoImg.height : currentIdPhotoImg.width / preset.ratio;
+        cropW /= currentIdPhotoZoom;
+        cropH /= currentIdPhotoZoom;
+        let cropX = Math.max(0, (currentIdPhotoImg.width - cropW) / 2);
+        let cropY = Math.max(0, (currentIdPhotoImg.height - cropH) / 2);
+        sCtx.drawImage(currentIdPhotoImg, cropX, cropY, cropW, cropH, 0, 0, preset.pxW, preset.pxH);
+
+        const cols = 4;
+        const rows = 2;
+        const cellW = 380;
+        const cellH = Math.round(cellW / preset.ratio);
+        const marginX = (1800 - (cols * cellW)) / (cols + 1);
+        const marginY = 80 + (1120 - (rows * cellH)) / (rows + 1);
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = Math.round(marginX + c * (cellW + marginX));
+            const y = Math.round(marginY + r * (cellH + marginY));
+
+            sheetCtx.drawImage(singleC, 0, 0, preset.pxW, preset.pxH, x, y, cellW, cellH);
+
+            sheetCtx.strokeStyle = '#CBD5E1';
+            sheetCtx.lineWidth = 1.5;
+            sheetCtx.setLineDash([8, 6]);
+            sheetCtx.strokeRect(x - 2, y - 2, cellW + 4, cellH + 4);
+            sheetCtx.setLineDash([]);
+          }
+        }
+
+        const exportedUrl = sheetCanvas.toDataURL('image/jpeg', 0.95);
+        saveExportedToolImage(exportedUrl, `ID_Photo_Sheet_4x6_${preset.name.replace(/\s+/g, '_')}`);
+        showToast('Exported 4×6" 8-Photo Printable Sheet (1800×1200 px)');
+        closeIdPhotoMaker();
+      }
+    }
+    window.exportIdPhoto = exportIdPhoto;
+
+    function createDefaultPortraitSample() {
+      return new Promise(resolve => {
+        const c = document.createElement('canvas');
+        c.width = 600;
+        c.height = 750;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 600, 750);
+        grad.addColorStop(0, '#E2E8F0');
+        grad.addColorStop(1, '#CBD5E1');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 600, 750);
+
+        ctx.fillStyle = '#64748B';
+        ctx.beginPath();
+        ctx.arc(300, 310, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(300, 640, 240, 160, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 28px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sample Portrait', 300, 315);
+        resolve(c.toDataURL('image/jpeg', 0.92));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // 2. RESTORE PHOTO
+    // ------------------------------------------------------------
+    let restoreOriginalUrl = null;
+    let restoreRestoredUrl = null;
+    let currentRestoreIntensity = 80;
+    let isHoldingCompare = false;
+
+    function openRestorePhoto(imgUrl) {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-restore-photo');
+      if (modal) modal.classList.remove('hidden');
+
+      const src = imgUrl || (activeEnhancePage ? (activeEnhancePage.enhancedUrl || activeEnhancePage.croppedUrl) : (sessionPages.length > 0 ? (sessionPages[selectedOrganizerIndex || 0].enhancedUrl || sessionPages[selectedOrganizerIndex || 0].croppedUrl) : null));
+
+      if (src) {
+        initRestoreWithImage(src);
+      } else {
+        createDefaultFadedPhotoSample().then(dataUrl => {
+          initRestoreWithImage(dataUrl);
+        });
+      }
+
+      setupRestoreHoldListeners();
+    }
+    window.openRestorePhoto = openRestorePhoto;
+
+    function closeRestorePhoto() {
+      const modal = document.getElementById('modal-restore-photo');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeRestorePhoto = closeRestorePhoto;
+
+    function triggerRestorePhotoSelect() {
+      const input = document.getElementById('restore-photo-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerRestorePhotoSelect = triggerRestorePhotoSelect;
+
+    function handleRestorePhotoFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        initRestoreWithImage(evt.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleRestorePhotoFilePicked = handleRestorePhotoFilePicked;
+
+    function initRestoreWithImage(dataUrl) {
+      restoreOriginalUrl = dataUrl;
+      applyLocalPhotoRestoration(dataUrl, currentRestoreIntensity);
+    }
+    window.initRestoreWithImage = initRestoreWithImage;
+
+    function handleRestoreIntensityChange(val) {
+      currentRestoreIntensity = parseInt(val, 10);
+      const lbl = document.getElementById('restore-intensity-label');
+      if (lbl) lbl.textContent = `${currentRestoreIntensity}%`;
+      if (restoreOriginalUrl) {
+        applyLocalPhotoRestoration(restoreOriginalUrl, currentRestoreIntensity);
+      }
+    }
+    window.handleRestoreIntensityChange = handleRestoreIntensityChange;
+
+    function applyLocalPhotoRestoration(dataUrl, intensity) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.getElementById('restore-photo-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        const n = data.length;
+
+        const hist = new Uint32Array(256);
+        for (let i = 0; i < n; i += 4) {
+          const lum = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+          hist[lum]++;
+        }
+
+        const totalPixels = n / 4;
+        const p02 = totalPixels * 0.02;
+        const p98 = totalPixels * 0.98;
+
+        let count = 0;
+        let minLum = 0;
+        for (let l = 0; l < 256; l++) {
+          count += hist[l];
+          if (count >= p02) { minLum = l; break; }
+        }
+
+        count = 0;
+        let maxLum = 255;
+        for (let l = 255; l >= 0; l--) {
+          count += hist[l];
+          if (count >= totalPixels - p98) { maxLum = l; break; }
+        }
+
+        const lumRange = Math.max(1, maxLum - minLum);
+        const factor = intensity / 100;
+        const chromaFactor = 1.0 + (0.35 * factor);
+
+        for (let i = 0; i < n; i += 4) {
+          const origR = data[i];
+          const origG = data[i + 1];
+          const origB = data[i + 2];
+
+          let r = Math.min(255, Math.max(0, ((origR - minLum) / lumRange) * 255));
+          let g = Math.min(255, Math.max(0, ((origG - minLum) / lumRange) * 255));
+          let b = Math.min(255, Math.max(0, ((origB - minLum) / lumRange) * 255));
+
+          const curLum = 0.299 * r + 0.587 * g + 0.114 * b;
+          r = Math.min(255, Math.max(0, curLum + (r - curLum) * chromaFactor));
+          g = Math.min(255, Math.max(0, curLum + (g - curLum) * chromaFactor));
+          b = Math.min(255, Math.max(0, curLum + (b - curLum) * chromaFactor));
+
+          data[i] = Math.round(origR * (1 - factor) + r * factor);
+          data[i + 1] = Math.round(origG * (1 - factor) + g * factor);
+          data[i + 2] = Math.round(origB * (1 - factor) + b * factor);
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        restoreRestoredUrl = canvas.toDataURL('image/jpeg', 0.95);
+        updateRestoreBadge(false);
+      };
+      img.src = dataUrl;
+    }
+
+    function setupRestoreHoldListeners() {
+      const btn = document.getElementById('restore-hold-compare-btn');
+      if (!btn || btn._hasHoldListeners) return;
+      btn._hasHoldListeners = true;
+
+      const startHold = (e) => {
+        if (e) e.preventDefault();
+        isHoldingCompare = true;
+        renderRestoreCanvasState(restoreOriginalUrl);
+        updateRestoreBadge(true);
+      };
+
+      const stopHold = (e) => {
+        if (e) e.preventDefault();
+        isHoldingCompare = false;
+        renderRestoreCanvasState(restoreRestoredUrl);
+        updateRestoreBadge(false);
+      };
+
+      btn.addEventListener('mousedown', startHold);
+      btn.addEventListener('mouseup', stopHold);
+      btn.addEventListener('mouseleave', stopHold);
+      btn.addEventListener('touchstart', startHold, { passive: false });
+      btn.addEventListener('touchend', stopHold, { passive: false });
+      btn.addEventListener('touchcancel', stopHold, { passive: false });
+    }
+
+    function renderRestoreCanvasState(srcUrl) {
+      if (!srcUrl) return;
+      const canvas = document.getElementById('restore-photo-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = srcUrl;
+    }
+
+    function updateRestoreBadge(holdingOriginal) {
+      const badge = document.getElementById('restore-state-badge');
+      if (!badge) return;
+      if (holdingOriginal) {
+        badge.className = 'px-2.5 py-1 rounded-full bg-[#D97706] text-white text-[10px] font-black tracking-wider uppercase shadow-md flex items-center space-x-1';
+        badge.textContent = 'Original (Holding)';
+      } else {
+        badge.className = 'px-2.5 py-1 rounded-full bg-[#10B981] text-white text-[10px] font-black tracking-wider uppercase shadow-md flex items-center space-x-1';
+        badge.textContent = 'Restored';
+      }
+    }
+
+    function saveRestoredPhoto() {
+      if (!restoreRestoredUrl) {
+        showToast('No restored image to save');
+        return;
+      }
+      saveExportedToolImage(restoreRestoredUrl, 'Restored_Photo');
+      showToast('Restored photo saved to documents (Original preserved)');
+      closeRestorePhoto();
+    }
+    window.saveRestoredPhoto = saveRestoredPhoto;
+
+    function createDefaultFadedPhotoSample() {
+      return new Promise(resolve => {
+        const c = document.createElement('canvas');
+        c.width = 600;
+        c.height = 450;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#9C9588';
+        ctx.fillRect(0, 0, 600, 450);
+
+        ctx.fillStyle = '#827B6E';
+        ctx.beginPath();
+        ctx.moveTo(0, 450);
+        ctx.lineTo(150, 280);
+        ctx.lineTo(350, 340);
+        ctx.lineTo(500, 260);
+        ctx.lineTo(600, 450);
+        ctx.fill();
+
+        ctx.strokeStyle = '#D6D3CD';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(80, 50); ctx.lineTo(130, 220);
+        ctx.moveTo(420, 70); ctx.lineTo(390, 310);
+        ctx.stroke();
+
+        ctx.fillStyle = '#5A544A';
+        ctx.font = 'bold 24px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Faded Vintage Photograph', 300, 180);
+        resolve(c.toDataURL('image/jpeg', 0.90));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // 3. SMART ERASE
+    // ------------------------------------------------------------
+    let smartEraseBaseImg = null;
+    let smartEraseBrushSize = 24;
+    let smartEraseUndoStack = [];
+    let isSmartErasePainting = false;
+    let smartEraseLastPt = null;
+
+    function openSmartErase(imgUrl) {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-smart-erase');
+      if (modal) modal.classList.remove('hidden');
+
+      const src = imgUrl || (activeEnhancePage ? (activeEnhancePage.enhancedUrl || activeEnhancePage.croppedUrl) : (sessionPages.length > 0 ? (sessionPages[selectedOrganizerIndex || 0].enhancedUrl || sessionPages[selectedOrganizerIndex || 0].croppedUrl) : null));
+
+      smartEraseUndoStack = [];
+      updateSmartEraseUndoButton();
+
+      if (src) {
+        initSmartEraseImage(src);
+      } else {
+        createDefaultBlemishSample().then(dataUrl => {
+          initSmartEraseImage(dataUrl);
+        });
+      }
+
+      setupSmartEraseDrawing();
+    }
+    window.openSmartErase = openSmartErase;
+
+    function closeSmartErase() {
+      const modal = document.getElementById('modal-smart-erase');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeSmartErase = closeSmartErase;
+
+    function triggerSmartErasePhotoSelect() {
+      const input = document.getElementById('smart-erase-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerSmartErasePhotoSelect = triggerSmartErasePhotoSelect;
+
+    function handleSmartEraseFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        initSmartEraseImage(evt.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleSmartEraseFilePicked = handleSmartEraseFilePicked;
+
+    function initSmartEraseImage(dataUrl) {
+      const img = new Image();
+      img.onload = function() {
+        smartEraseBaseImg = img;
+        const baseCanvas = document.getElementById('smart-erase-base-canvas');
+        const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+        if (!baseCanvas || !maskCanvas) return;
+
+        baseCanvas.width = img.width;
+        baseCanvas.height = img.height;
+        const bCtx = baseCanvas.getContext('2d');
+        bCtx.drawImage(img, 0, 0);
+
+        maskCanvas.width = img.width;
+        maskCanvas.height = img.height;
+        const mCtx = maskCanvas.getContext('2d');
+        mCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+        smartEraseUndoStack = [];
+        updateSmartEraseUndoButton();
+      };
+      img.src = dataUrl;
+    }
+    window.initSmartEraseImage = initSmartEraseImage;
+
+    function setSmartEraseBrushSize(size) {
+      smartEraseBrushSize = size;
+      [12, 24, 42].forEach(s => {
+        const btn = document.getElementById(`brush-size-${s}`);
+        if (!btn) return;
+        if (s === size) {
+          btn.className = 'w-8 h-8 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] flex items-center justify-center transition-all cursor-pointer';
+          const dot = btn.querySelector('div');
+          if (dot) dot.className = dot.className.replace('bg-[#18181B]', 'bg-[#7C3AED]');
+        } else {
+          btn.className = 'w-8 h-8 rounded-xl border-2 border-slate-200 hover:border-[#7C3AED] bg-white flex items-center justify-center transition-all cursor-pointer';
+          const dot = btn.querySelector('div');
+          if (dot) dot.className = dot.className.replace('bg-[#7C3AED]', 'bg-[#18181B]');
+        }
+      });
+    }
+    window.setSmartEraseBrushSize = setSmartEraseBrushSize;
+
+    function clearSmartEraseMask() {
+      const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+      if (maskCanvas) {
+        const ctx = maskCanvas.getContext('2d');
+        ctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      }
+    }
+    window.clearSmartEraseMask = clearSmartEraseMask;
+
+    function setupSmartEraseDrawing() {
+      const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+      if (!maskCanvas || maskCanvas._hasDrawListeners) return;
+      maskCanvas._hasDrawListeners = true;
+
+      function getPos(e) {
+        const rect = maskCanvas.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        const scaleX = maskCanvas.width / (rect.width || 1);
+        const scaleY = maskCanvas.height / (rect.height || 1);
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      }
+
+      function drawLine(p1, p2) {
+        const ctx = maskCanvas.getContext('2d');
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.55)';
+        ctx.lineWidth = smartEraseBrushSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+
+      const onStart = (e) => {
+        e.preventDefault();
+        isSmartErasePainting = true;
+        smartEraseLastPt = getPos(e);
+        const ctx = maskCanvas.getContext('2d');
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.55)';
+        ctx.beginPath();
+        ctx.arc(smartEraseLastPt.x, smartEraseLastPt.y, smartEraseBrushSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      const onMove = (e) => {
+        if (!isSmartErasePainting) return;
+        e.preventDefault();
+        const curPt = getPos(e);
+        drawLine(smartEraseLastPt, curPt);
+        smartEraseLastPt = curPt;
+      };
+
+      const onEnd = (e) => {
+        if (!isSmartErasePainting) return;
+        isSmartErasePainting = false;
+        smartEraseLastPt = null;
+      };
+
+      maskCanvas.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+
+      maskCanvas.addEventListener('touchstart', onStart, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd, { passive: false });
+    }
+
+    function applySmartErase() {
+      const baseCanvas = document.getElementById('smart-erase-base-canvas');
+      const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+      if (!baseCanvas || !maskCanvas) return;
+
+      const bCtx = baseCanvas.getContext('2d');
+      const mCtx = maskCanvas.getContext('2d');
+      const w = baseCanvas.width;
+      const h = baseCanvas.height;
+
+      const baseImgData = bCtx.getImageData(0, 0, w, h);
+      const maskImgData = mCtx.getImageData(0, 0, w, h);
+
+      let hasMask = false;
+      const mData = maskImgData.data;
+      for (let i = 3; i < mData.length; i += 4) {
+        if (mData[i] > 20) { hasMask = true; break; }
+      }
+      if (!hasMask) {
+        showToast('Draw over an object or mark with the brush first');
+        return;
+      }
+
+      smartEraseUndoStack.push(bCtx.getImageData(0, 0, w, h));
+      updateSmartEraseUndoButton();
+
+      const bData = baseImgData.data;
+      const maskArr = new Uint8Array(w * h);
+      let maskedCount = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          if (mData[idx * 4 + 3] > 20) {
+            maskArr[idx] = 1;
+            maskedCount++;
+          }
+        }
+      }
+
+      // Collect perimeter boundary pixels (unmasked pixels adjacent to masked pixels)
+      const boundarySamples = [];
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const idx = y * w + x;
+          if (maskArr[idx] === 0) {
+            if (maskArr[idx - 1] === 1 || maskArr[idx + 1] === 1 ||
+                maskArr[idx - w] === 1 || maskArr[idx + w] === 1) {
+              const p = idx * 4;
+              boundarySamples.push({ x, y, r: bData[p], g: bData[p+1], b: bData[p+2] });
+            }
+          }
+        }
+      }
+
+      if (boundarySamples.length > 0) {
+        // Subsample boundary to max 64 points for fast smooth interpolation
+        const step = Math.max(1, Math.floor(boundarySamples.length / 64));
+        const sampledBoundary = [];
+        for (let i = 0; i < boundarySamples.length; i += step) {
+          sampledBoundary.push(boundarySamples[i]);
+        }
+
+        // Initialize all masked pixels with inverse-distance weighted boundary color
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = y * w + x;
+            if (maskArr[idx] === 1) {
+              let weightSum = 0;
+              let sumR = 0, sumG = 0, sumB = 0;
+              for (let s = 0; s < sampledBoundary.length; s++) {
+                const bp = sampledBoundary[s];
+                const distSq = (x - bp.x) * (x - bp.x) + (y - bp.y) * (y - bp.y) + 1;
+                const wgt = 1 / distSq;
+                weightSum += wgt;
+                sumR += bp.r * wgt;
+                sumG += bp.g * wgt;
+                sumB += bp.b * wgt;
+              }
+              const p = idx * 4;
+              bData[p] = Math.round(sumR / weightSum);
+              bData[p + 1] = Math.round(sumG / weightSum);
+              bData[p + 2] = Math.round(sumB / weightSum);
+            }
+          }
+        }
+
+        // Local relaxation smoothing passes (6 passes)
+        for (let iter = 0; iter < 6; iter++) {
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = y * w + x;
+              if (maskArr[idx] === 1) {
+                const p = idx * 4;
+                let sR = 0, sG = 0, sB = 0;
+                const neighbors = [idx - 1, idx + 1, idx - w, idx + w];
+                for (let k = 0; k < 4; k++) {
+                  const np = neighbors[k] * 4;
+                  sR += bData[np]; sG += bData[np+1]; sB += bData[np+2];
+                }
+                bData[p] = Math.round(sR / 4);
+                bData[p + 1] = Math.round(sG / 4);
+                bData[p + 2] = Math.round(sB / 4);
+              }
+            }
+          }
+        }
+      }
+
+      bCtx.putImageData(baseImgData, 0, 0);
+      mCtx.clearRect(0, 0, w, h);
+      showToast('Erase applied successfully');
+    }
+    window.applySmartErase = applySmartErase;
+
+    function undoSmartErase() {
+      if (smartEraseUndoStack.length === 0) return;
+      const prev = smartEraseUndoStack.pop();
+      const baseCanvas = document.getElementById('smart-erase-base-canvas');
+      if (baseCanvas && prev) {
+        baseCanvas.getContext('2d').putImageData(prev, 0, 0);
+      }
+      updateSmartEraseUndoButton();
+      showToast('Erase undone');
+    }
+    window.undoSmartErase = undoSmartErase;
+
+    function updateSmartEraseUndoButton() {
+      const btn = document.getElementById('smart-erase-undo-btn');
+      if (!btn) return;
+      btn.disabled = smartEraseUndoStack.length === 0;
+    }
+
+    function saveSmartEraseResult() {
+      const baseCanvas = document.getElementById('smart-erase-base-canvas');
+      if (!baseCanvas) return;
+      const dataUrl = baseCanvas.toDataURL('image/jpeg', 0.95);
+      saveExportedToolImage(dataUrl, 'Smart_Erased_Scan');
+      showToast('Erased scan saved to documents');
+      closeSmartErase();
+    }
+    window.saveSmartEraseResult = saveSmartEraseResult;
+
+    function createDefaultBlemishSample() {
+      return new Promise(resolve => {
+        const c = document.createElement('canvas');
+        c.width = 600;
+        c.height = 400;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, 600, 400);
+
+        ctx.fillStyle = '#1E1B18';
+        ctx.font = 'bold 20px system-ui, sans-serif';
+        ctx.fillText('OFFICIAL DOCUMENT SPECIFICATION', 50, 60);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.fillText('Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 50, 110);
+        ctx.fillText('Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 50, 140);
+        ctx.fillText('Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.', 50, 170);
+
+        ctx.fillStyle = '#92400E';
+        ctx.beginPath();
+        ctx.arc(460, 260, 36, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#B45309';
+        ctx.beginPath();
+        ctx.arc(475, 275, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        resolve(c.toDataURL('image/jpeg', 0.95));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // 4. SLIDES AND WHITEBOARD CAMERA MODES
+    // ------------------------------------------------------------
+    function openSlidesMode() {
+      closeCameraAllFeatures();
+      cameraMode = 'slides';
+      isBatchMode = false;
+      updateCameraSpecialModeBanner('Slides Mode (Anti-glare)', '★');
+      if (currentScreen !== 'camera') {
+        navigateTo('camera');
+      }
+      showToast('Slides Mode: High contrast & anti-glare active');
+    }
+    window.openSlidesMode = openSlidesMode;
+
+    function openWhiteboardMode() {
+      closeCameraAllFeatures();
+      cameraMode = 'whiteboard';
+      isBatchMode = false;
+      updateCameraSpecialModeBanner('Whiteboard Mode (Marker Boost)', '✎');
+      if (currentScreen !== 'camera') {
+        navigateTo('camera');
+      }
+      showToast('Whiteboard Mode: Marker saturation & background whitening');
+    }
+    window.openWhiteboardMode = openWhiteboardMode;
+
+    function updateCameraSpecialModeBanner(text, icon) {
+      const banner = document.getElementById('camera-special-mode-banner');
+      const textEl = document.getElementById('camera-special-mode-text');
+      const iconEl = document.getElementById('camera-special-mode-icon');
+      if (banner && text) {
+        if (textEl) textEl.textContent = text;
+        if (iconEl && icon) iconEl.textContent = icon;
+        banner.classList.remove('hidden');
+      } else if (banner) {
+        banner.classList.add('hidden');
+      }
+    }
+
+    // ------------------------------------------------------------
+    // 5. GREETING CARD STUDIO
+    // ------------------------------------------------------------
+    let currentCardTemplate = 'birthday';
+    let cardPersonalPhotoUrl = null;
+
+    function openGreetingCardMaker() {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-greeting-card');
+      if (modal) modal.classList.remove('hidden');
+      renderGreetingCardPreview();
+    }
+    window.openGreetingCardMaker = openGreetingCardMaker;
+
+    function closeGreetingCardMaker() {
+      const modal = document.getElementById('modal-greeting-card');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeGreetingCardMaker = closeGreetingCardMaker;
+
+    function setGreetingCardTemplate(tpl) {
+      currentCardTemplate = tpl;
+      ['birthday', 'thankyou', 'congrats', 'holiday'].forEach(t => {
+        const btn = document.getElementById(`card-tpl-${t}`);
+        if (!btn) return;
+        if (t === tpl) {
+          btn.className = 'card-tpl-chip py-2 px-1 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const title = btn.querySelector('span:first-child');
+          if (title) title.className = 'text-xs font-black text-[#7C3AED]';
+        } else {
+          btn.className = 'card-tpl-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const title = btn.querySelector('span:first-child');
+          if (title) title.className = 'text-xs font-black text-[#18181B]';
+        }
+      });
+      renderGreetingCardPreview();
+    }
+    window.setGreetingCardTemplate = setGreetingCardTemplate;
+
+    function triggerGreetingCardPhotoSelect() {
+      const input = document.getElementById('greeting-card-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerGreetingCardPhotoSelect = triggerGreetingCardPhotoSelect;
+
+    function handleGreetingCardPhotoPicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        cardPersonalPhotoUrl = evt.target.result;
+        const btnText = document.getElementById('card-photo-btn-text');
+        const status = document.getElementById('card-photo-status');
+        if (btnText) btnText.textContent = 'Change Photo';
+        if (status) status.textContent = 'Photo attached to card design';
+        renderGreetingCardPreview();
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleGreetingCardPhotoPicked = handleGreetingCardPhotoPicked;
+
+    function renderGreetingCardPreview() {
+      const canvas = document.getElementById('greeting-card-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = 700;
+      canvas.height = 980;
+
+      const recipient = (document.getElementById('card-input-recipient')?.value || 'Dear Friend,').trim();
+      const message = (document.getElementById('card-input-message')?.value || 'Wishing you joy and wonderful moments!').trim();
+      const sender = (document.getElementById('card-input-sender')?.value || 'Warmly, Sophia').trim();
+
+      if (currentCardTemplate === 'birthday') {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#FFF1F2');
+        grad.addColorStop(0.5, '#FEF3C7');
+        grad.addColorStop(1, '#EDE9FE');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(30, 30, 640, 920);
+        ctx.strokeStyle = '#E11D48';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(40, 40, 620, 900);
+
+        ctx.fillStyle = '#BE123C';
+        ctx.font = '900 38px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('★ HAPPY BIRTHDAY ★', 350, 110);
+      } else if (currentCardTemplate === 'thankyou') {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#FAF5FF');
+        grad.addColorStop(1, '#F3E8FF');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#7C3AED';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(32, 32, 636, 916);
+        ctx.strokeStyle = '#A78BFA';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(42, 42, 616, 896);
+
+        ctx.fillStyle = '#6D28D9';
+        ctx.font = '900 36px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('THANK YOU SO MUCH', 350, 110);
+      } else if (currentCardTemplate === 'congrats') {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#EDE9FE');
+        grad.addColorStop(0.5, '#FEF08A');
+        grad.addColorStop(1, '#F3E8FF');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#854D0E';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(30, 30, 640, 920);
+
+        ctx.fillStyle = '#7E22CE';
+        ctx.font = '900 38px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('CONGRATULATIONS!', 350, 110);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#F0FDF4');
+        grad.addColorStop(1, '#FEF2F2');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#15803D';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(32, 32, 636, 916);
+        ctx.strokeStyle = '#DC2626';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(42, 42, 616, 896);
+
+        ctx.fillStyle = '#166534';
+        ctx.font = '900 36px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SEASON\'S GREETINGS', 350, 110);
+      }
+
+      let textStartY = 190;
+      if (cardPersonalPhotoUrl) {
+        const photoImg = new Image();
+        photoImg.onload = function() {
+          const pW = 340, pH = 240, pX = (700 - pW) / 2, pY = 160;
+          ctx.save();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(pX - 4, pY - 4, pW + 8, pH + 8);
+          ctx.strokeStyle = '#94A3B8';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(pX - 4, pY - 4, pW + 8, pH + 8);
+          ctx.drawImage(photoImg, pX, pY, pW, pH);
+          ctx.restore();
+          drawCardTypography(ctx, recipient, message, sender, 450);
+        };
+        photoImg.src = cardPersonalPhotoUrl;
+      } else {
+        drawCardTypography(ctx, recipient, message, sender, textStartY);
+      }
+    }
+    window.renderGreetingCardPreview = renderGreetingCardPreview;
+
+    function drawCardTypography(ctx, recipient, message, sender, startY) {
+      ctx.fillStyle = '#1E1B18';
+      ctx.font = 'bold 26px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(recipient, 350, startY);
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '500 20px system-ui, sans-serif';
+      const words = message.split(' ');
+      let line = '';
+      let y = startY + 50;
+      const maxWidth = 520;
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, 350, y);
+          line = words[i] + ' ';
+          y += 34;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, 350, y);
+
+      ctx.fillStyle = '#7C3AED';
+      ctx.font = 'italic bold 24px serif';
+      ctx.fillText(sender, 350, Math.max(y + 80, 840));
+    }
+
+    function exportGreetingCardPdf() {
+      const canvas = document.getElementById('greeting-card-canvas');
+      if (!canvas) return;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      saveExportedToolImage(dataUrl, `Greeting_Card_${currentCardTemplate}`);
+      showToast('Printable Greeting Card generated and saved to documents');
+      closeGreetingCardMaker();
+    }
+    window.exportGreetingCardPdf = exportGreetingCardPdf;
+
+    function saveExportedToolImage(dataUrl, titlePrefix) {
+      const newPage = {
+        id: 'page_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        title: `${titlePrefix} (${new Date().toLocaleTimeString()})`,
+        rawUrl: dataUrl,
+        croppedUrl: dataUrl,
+        enhancedUrl: dataUrl,
+        width: 800,
+        height: 1100,
+        rotation: 0,
+        filter: 'original',
+        brightness: 0,
+        isTimestamped: false,
+        pins: { tl: { x: 0, y: 0 }, tr: { x: 800, y: 0 }, br: { x: 800, y: 1100 }, bl: { x: 0, y: 1100 } }
+      };
+      sessionPages.push(newPage);
+      selectedOrganizerIndex = sessionPages.length - 1;
+      if (typeof updateBatchThumbBadge === 'function') updateBatchThumbBadge();
+      if (typeof renderOrganizerPages === 'function') renderOrganizerPages();
+    }
+
     function captureCurrentPage() {
       // Trigger mobile camera shutter haptic sound and flash
       if (typeof playNativeHapticSound === 'function') playNativeHapticSound('shutter');
@@ -1205,7 +2380,7 @@
         width: w,
         height: h,
         rotation: 0,
-        filter: isTimestamp ? 'original' : 'magic',
+        filter: isTimestamp ? 'original' : (cameraMode === 'slides' ? 'slides' : (cameraMode === 'whiteboard' ? 'whiteboard' : 'magic')),
         brightness: 0,
         isTimestamped: isTimestamp,
         timestampText: tsText,
@@ -1287,7 +2462,7 @@
             width: w,
             height: h,
             rotation: 0,
-            filter: isTimestamp ? 'original' : 'magic',
+            filter: isTimestamp ? 'original' : (cameraMode === 'slides' ? 'slides' : (cameraMode === 'whiteboard' ? 'whiteboard' : 'magic')),
             brightness: 0,
             isTimestamped: isTimestamp,
             timestampText: tsText,

@@ -407,14 +407,14 @@
     }
 
     function updateFilterPresetButtons() {
-      const presets = ['original', 'magic', 'grayscale', 'bw'];
+      const presets = ['original', 'magic', 'grayscale', 'bw', 'slides', 'whiteboard'];
       presets.forEach(p => {
         const btn = document.getElementById(`filter-btn-${p}`);
         if (!btn) return;
         if (p === currentFilter) {
-          btn.className = 'p-2 rounded-xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all';
+          btn.className = 'p-1.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer';
         } else {
-          btn.className = 'p-2 rounded-xl border-2 border-slate-200 hover:border-[#8B5CF6] text-center flex flex-col items-center justify-center transition-all';
+          btn.className = 'p-1.5 rounded-2xl border-2 border-transparent hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer';
         }
       });
     }
@@ -531,6 +531,45 @@
               r = v;
               g = v;
               b = v;
+            } else if (currentFilter === 'slides') {
+              // Slides Mode: De-glare (compress over-exposed specular projector highlights) + edge contrast boost
+              if (lum > 200) {
+                const comp = 200 + (lum - 200) * 0.45;
+                r = Math.min(255, (r / (lum || 1)) * comp);
+                g = Math.min(255, (g / (lum || 1)) * comp);
+                b = Math.min(255, (b / (lum || 1)) * comp);
+              } else if (lum < 160) {
+                r = r * 0.88;
+                g = g * 0.88;
+                b = b * 0.88;
+              }
+              // Moderate color saturation boost (+20%) for diagram colors
+              r = Math.min(255, Math.max(0, lum + (r - lum) * 1.20));
+              g = Math.min(255, Math.max(0, lum + (g - lum) * 1.20));
+              b = Math.min(255, Math.max(0, lum + (b - lum) * 1.20));
+            } else if (currentFilter === 'whiteboard') {
+              // Whiteboard Mode: Whiten background surface to pure white (#FFFFFF), maximize marker ink saturation
+              const maxC = Math.max(r, g, b);
+              const minC = Math.min(r, g, b);
+              const chroma = maxC - minC;
+
+              // Dry-erase whiteboard surface detection: relatively bright & low chroma
+              if (lum > 135 && chroma < 38) {
+                r = 255;
+                g = 255;
+                b = 255;
+              } else {
+                // Marker ink (black, red, blue, green): Deepen luminance & boost saturation
+                if (lum < 100) {
+                  r = r * 0.65;
+                  g = g * 0.65;
+                  b = b * 0.65;
+                } else {
+                  r = Math.min(255, Math.max(0, lum + (r - lum) * 1.45));
+                  g = Math.min(255, Math.max(0, lum + (g - lum) * 1.45));
+                  b = Math.min(255, Math.max(0, lum + (b - lum) * 1.45));
+                }
+              }
             }
 
             // Apply brightness offset
@@ -604,6 +643,35 @@
           } else if (p.filter === 'bw') {
             const v = lum > 128 ? 255 : 0;
             data[i] = v; data[i + 1] = v; data[i + 2] = v;
+          } else if (p.filter === 'slides') {
+            let r = data[i], g = data[i+1], b = data[i+2];
+            if (lum > 200) {
+              const comp = 200 + (lum - 200) * 0.45;
+              r = Math.min(255, (r / (lum || 1)) * comp);
+              g = Math.min(255, (g / (lum || 1)) * comp);
+              b = Math.min(255, (b / (lum || 1)) * comp);
+            } else if (lum < 160) {
+              r *= 0.88; g *= 0.88; b *= 0.88;
+            }
+            data[i] = Math.min(255, Math.max(0, lum + (r - lum) * 1.20));
+            data[i+1] = Math.min(255, Math.max(0, lum + (g - lum) * 1.20));
+            data[i+2] = Math.min(255, Math.max(0, lum + (b - lum) * 1.20));
+          } else if (p.filter === 'whiteboard') {
+            let r = data[i], g = data[i+1], b = data[i+2];
+            const maxC = Math.max(r, g, b);
+            const minC = Math.min(r, g, b);
+            const chroma = maxC - minC;
+            if (lum > 135 && chroma < 38) {
+              data[i] = 255; data[i+1] = 255; data[i+2] = 255;
+            } else {
+              if (lum < 100) {
+                data[i] = r * 0.65; data[i+1] = g * 0.65; data[i+2] = b * 0.65;
+              } else {
+                data[i] = Math.min(255, Math.max(0, lum + (r - lum) * 1.45));
+                data[i+1] = Math.min(255, Math.max(0, lum + (g - lum) * 1.45));
+                data[i+2] = Math.min(255, Math.max(0, lum + (b - lum) * 1.45));
+              }
+            }
           }
         }
         ctx.putImageData(imgData, 0, 0);

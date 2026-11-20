@@ -182,6 +182,14 @@
           <span id="camera-timestamp-clock" class="text-white font-mono text-xs font-semibold">2026-11-19 12:00:00 UTC</span>
         </div>
       </div>
+
+      <!-- Live Slides / Whiteboard Special Mode Viewfinder Banner -->
+      <div id="camera-special-mode-banner" class="hidden mt-2 pointer-events-none z-20">
+        <div class="px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#A855F7]/60 text-white text-xs font-bold shadow-xl flex items-center space-x-2">
+          <span id="camera-special-mode-icon" class="text-[#C084FC]">★</span>
+          <span id="camera-special-mode-text">Slides Mode (Anti-glare)</span>
+        </div>
+      </div>
     </div>
 
     <!-- Dedicated QR / Code Scanning Viewfinder Overlay -->
@@ -447,38 +455,54 @@
 
   <!-- Filter Controls Section -->
   <div class="px-5 pt-3 pb-5 bg-white border-t border-slate-200/80 space-y-3.5 shrink-0">
-    <!-- 4 Presets Row: Original, Color, Gray, B&W -->
-    <div class="grid grid-cols-4 gap-3">
+    <!-- 6 Presets Row: Original, Color, Gray, B&W, Slides, Whiteboard -->
+    <div class="grid grid-cols-6 gap-2">
       <!-- Preset 1: Original (Selected Purple) -->
-      <button onclick="applyFilter('original')" id="filter-btn-original" class="p-2.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
+      <button onclick="applyFilter('original')" id="filter-btn-original" class="p-1.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
           <img src="sample_thumb_proposal.png" alt="Original" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">Original</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">Original</span>
       </button>
 
       <!-- Preset 2: Color (Pale Yellow) -->
-      <button onclick="applyFilter('magic')" id="filter-btn-magic" class="p-2.5 rounded-2xl border-2 border-transparent bg-[#FEF3C7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
+      <button onclick="applyFilter('magic')" id="filter-btn-magic" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#FEF3C7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
           <img src="sample_thumb_proposal.png" alt="Color" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">Color</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">Color</span>
       </button>
 
       <!-- Preset 3: Gray (Pale Blue) -->
-      <button onclick="applyFilter('grayscale')" id="filter-btn-grayscale" class="p-2.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs grayscale">
+      <button onclick="applyFilter('grayscale')" id="filter-btn-grayscale" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs grayscale">
           <img src="sample_thumb_proposal.png" alt="Gray" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">Gray</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">Gray</span>
       </button>
 
       <!-- Preset 4: B&W -->
-      <button onclick="applyFilter('bw')" id="filter-btn-bw" class="p-2.5 rounded-2xl border-2 border-transparent bg-slate-100 hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs contrast-200 grayscale">
+      <button onclick="applyFilter('bw')" id="filter-btn-bw" class="p-1.5 rounded-2xl border-2 border-transparent bg-slate-100 hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs contrast-200 grayscale">
           <img src="sample_thumb_proposal.png" alt="B&W" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">B&amp;W</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">B&amp;W</span>
+      </button>
+
+      <!-- Preset 5: Slides -->
+      <button onclick="applyFilter('slides')" id="filter-btn-slides" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-[#38BDF8]/20 flex items-center justify-center mb-1 shadow-xs text-[#0284C7]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="4" x2="21" y2="4"/><rect x="4" y="4" width="16" height="10" rx="1"/><polygon points="10 7 14 9 10 11" fill="currentColor"/><line x1="12" y1="14" x2="12" y2="18"/></svg>
+        </div>
+        <span class="text-[10px] font-black text-[#1E1B18]">Slides</span>
+      </button>
+
+      <!-- Preset 6: Whiteboard -->
+      <button onclick="applyFilter('whiteboard')" id="filter-btn-whiteboard" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#DCFCE7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-[#22C55E]/20 flex items-center justify-center mb-1 shadow-xs text-[#15803D]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="11" rx="2"/><path d="M6 15l-2 5M18 15l2 5M12 15v5"/></svg>
+        </div>
+        <span class="text-[10px] font-black text-[#1E1B18]">Board</span>
       </button>
     </div>
 

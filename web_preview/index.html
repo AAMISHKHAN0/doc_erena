@@ -816,6 +816,14 @@
           <span id="camera-timestamp-clock" class="text-white font-mono text-xs font-semibold">2026-11-19 12:00:00 UTC</span>
         </div>
       </div>
+
+      <!-- Live Slides / Whiteboard Special Mode Viewfinder Banner -->
+      <div id="camera-special-mode-banner" class="hidden mt-2 pointer-events-none z-20">
+        <div class="px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#A855F7]/60 text-white text-xs font-bold shadow-xl flex items-center space-x-2">
+          <span id="camera-special-mode-icon" class="text-[#C084FC]">★</span>
+          <span id="camera-special-mode-text">Slides Mode (Anti-glare)</span>
+        </div>
+      </div>
     </div>
 
     <!-- Dedicated QR / Code Scanning Viewfinder Overlay -->
@@ -1081,38 +1089,54 @@
 
   <!-- Filter Controls Section -->
   <div class="px-5 pt-3 pb-5 bg-white border-t border-slate-200/80 space-y-3.5 shrink-0">
-    <!-- 4 Presets Row: Original, Color, Gray, B&W -->
-    <div class="grid grid-cols-4 gap-3">
+    <!-- 6 Presets Row: Original, Color, Gray, B&W, Slides, Whiteboard -->
+    <div class="grid grid-cols-6 gap-2">
       <!-- Preset 1: Original (Selected Purple) -->
-      <button onclick="applyFilter('original')" id="filter-btn-original" class="p-2.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
+      <button onclick="applyFilter('original')" id="filter-btn-original" class="p-1.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
           <img src="sample_thumb_proposal.png" alt="Original" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">Original</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">Original</span>
       </button>
 
       <!-- Preset 2: Color (Pale Yellow) -->
-      <button onclick="applyFilter('magic')" id="filter-btn-magic" class="p-2.5 rounded-2xl border-2 border-transparent bg-[#FEF3C7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
+      <button onclick="applyFilter('magic')" id="filter-btn-magic" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#FEF3C7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs">
           <img src="sample_thumb_proposal.png" alt="Color" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">Color</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">Color</span>
       </button>
 
       <!-- Preset 3: Gray (Pale Blue) -->
-      <button onclick="applyFilter('grayscale')" id="filter-btn-grayscale" class="p-2.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs grayscale">
+      <button onclick="applyFilter('grayscale')" id="filter-btn-grayscale" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs grayscale">
           <img src="sample_thumb_proposal.png" alt="Gray" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">Gray</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">Gray</span>
       </button>
 
       <!-- Preset 4: B&W -->
-      <button onclick="applyFilter('bw')" id="filter-btn-bw" class="p-2.5 rounded-2xl border-2 border-transparent bg-slate-100 hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs">
-        <div class="w-13 h-15 rounded-xl bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs contrast-200 grayscale">
+      <button onclick="applyFilter('bw')" id="filter-btn-bw" class="p-1.5 rounded-2xl border-2 border-transparent bg-slate-100 hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-white border border-slate-200/80 overflow-hidden mb-1 shadow-xs contrast-200 grayscale">
           <img src="sample_thumb_proposal.png" alt="B&W" class="w-full h-full object-cover">
         </div>
-        <span class="text-xs font-black text-[#1E1B18]">B&amp;W</span>
+        <span class="text-[10px] font-black text-[#1E1B18]">B&amp;W</span>
+      </button>
+
+      <!-- Preset 5: Slides -->
+      <button onclick="applyFilter('slides')" id="filter-btn-slides" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#E0F2FE] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-[#38BDF8]/20 flex items-center justify-center mb-1 shadow-xs text-[#0284C7]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="4" x2="21" y2="4"/><rect x="4" y="4" width="16" height="10" rx="1"/><polygon points="10 7 14 9 10 11" fill="currentColor"/><line x1="12" y1="14" x2="12" y2="18"/></svg>
+        </div>
+        <span class="text-[10px] font-black text-[#1E1B18]">Slides</span>
+      </button>
+
+      <!-- Preset 6: Whiteboard -->
+      <button onclick="applyFilter('whiteboard')" id="filter-btn-whiteboard" class="p-1.5 rounded-2xl border-2 border-transparent bg-[#DCFCE7] hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer">
+        <div class="w-10 h-11 rounded-lg bg-[#22C55E]/20 flex items-center justify-center mb-1 shadow-xs text-[#15803D]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="11" rx="2"/><path d="M6 15l-2 5M18 15l2 5M12 15v5"/></svg>
+        </div>
+        <span class="text-[10px] font-black text-[#1E1B18]">Board</span>
       </button>
     </div>
 
@@ -2260,10 +2284,9 @@
               <span class="block text-center text-[12px] font-bold text-[#18181B] mt-1.5 leading-tight">Add Watermark</span>
             </button>
 
-            <!-- Tool: Smart Erase (Soon) -->
-            <button onclick="showComingSoon('Smart Erase', 'AI-driven object removal and document background healing.')" data-tool-name="Smart Erase" class="tool-card flex flex-col items-center group cursor-pointer focus:outline-none" title="Smart Erase">
+            <!-- Tool: Smart Erase (Offline Healing) -->
+            <button onclick="openSmartErase()" data-tool-name="Smart Erase" class="tool-card flex flex-col items-center group cursor-pointer focus:outline-none" title="Smart Erase">
               <div class="w-[62px] h-[62px] sm:w-[68px] sm:h-[68px] rounded-[22px] bg-[#FEF9C3] flex items-center justify-center relative shadow-xs group-hover:scale-105 active:scale-95 transition-transform">
-                <span class="absolute -top-1.5 -right-1 px-1.5 py-0.5 rounded-full bg-[#E9D5FF] text-[#6B21A8] font-black text-[9px] border border-white shadow-xs">Soon</span>
                 <svg class="w-7 h-7 text-[#4C1D95]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
                   <path d="M22 21H7"/>
@@ -4990,9 +5013,8 @@
           </div>
           <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
             <!-- 1. ID Photo Maker -->
-            <button onclick="showComingSoon('ID Photo Maker', 'Generate official passport and ID photo dimensions with automatic background cleanup.')" class="flex flex-col items-center group focus:outline-none" title="ID Photo Maker">
+            <button onclick="openIdPhotoMaker()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="ID Photo Maker">
               <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="4" y="3" width="16" height="18" rx="3"/>
                   <circle cx="12" cy="9.5" r="3"/>
@@ -5003,9 +5025,8 @@
             </button>
 
             <!-- 2. Restore Photo -->
-            <button onclick="showComingSoon('Restore Photo', 'Enhance and restore aged photographs by smoothing creases and correcting lighting.')" class="flex flex-col items-center group focus:outline-none" title="Restore Photo">
+            <button onclick="openRestorePhoto()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="Restore Photo">
               <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4.5" width="18" height="15" rx="2.5"/>
                   <path d="m3 16 5-5 4 4"/>
@@ -5017,9 +5038,8 @@
             </button>
 
             <!-- 3. Smart Erase -->
-            <button onclick="showComingSoon('Smart Erase', 'Seamlessly erase unwanted watermarks, shadows, and blemishes from scans.')" class="flex flex-col items-center group focus:outline-none" title="Smart Erase">
+            <button onclick="openSmartErase()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="Smart Erase">
               <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="m7.5 19.5-4.2-4.2a2.4 2.4 0 0 1 0-3.4l8.8-8.8a2.4 2.4 0 0 1 3.4 0l5.1 5.1a2.4 2.4 0 0 1 0 3.4l-7.3 7.3"/>
                   <path d="M5.5 10.5 14 19"/>
@@ -5061,9 +5081,8 @@
           </div>
           <div class="grid grid-cols-4 gap-2.5 sm:gap-3.5">
             <!-- 1. Slides -->
-            <button onclick="showComingSoon('Slides', 'Optimized perspective capture and contrast enhancement for projector screens.')" class="flex flex-col items-center group focus:outline-none" title="Slides">
+            <button onclick="openSlidesMode()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="Slides">
               <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="2.5" y1="4" x2="21.5" y2="4" stroke-width="2.5" stroke-linecap="round"/>
                   <rect x="3.5" y="4" width="17" height="11" rx="1"/>
@@ -5076,9 +5095,8 @@
             </button>
 
             <!-- 2. Whiteboard -->
-            <button onclick="showComingSoon('Whiteboard', 'Remove glare and enhance marker readability on dry-erase whiteboards.')" class="flex flex-col items-center group focus:outline-none" title="Whiteboard">
+            <button onclick="openWhiteboardMode()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="Whiteboard">
               <div class="w-full aspect-square rounded-[20px] bg-[#DDD6FE] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3.5" width="18" height="11" rx="2"/>
                   <path d="M6 9c2-1.5 4 1 6-1s3 1 5-1"/>
@@ -5120,9 +5138,8 @@
             </button>
 
             <!-- 2. Greeting Card -->
-            <button onclick="showComingSoon('Greeting Card', 'Format two-fold and four-fold printable holiday greeting cards.')" class="flex flex-col items-center group focus:outline-none" title="Greeting Card">
+            <button onclick="openGreetingCardMaker()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="Greeting Card">
               <div class="w-full aspect-square rounded-[20px] bg-[#BAE6FD] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v13"/>
                   <rect x="4.5" y="5.5" width="13" height="15" rx="1.5"/>
@@ -5199,6 +5216,381 @@
           <!-- Done / Scan Another Button -->
           <button onclick="closeQrResultModal()" class="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold active:scale-98 transition-all cursor-pointer">
             Scan Another / Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file inputs for Advanced Offline Tools -->
+    <input type="file" id="id-photo-file-input" accept="image/*" class="hidden" onchange="handleIdPhotoFilePicked(event)">
+    <input type="file" id="restore-photo-file-input" accept="image/*" class="hidden" onchange="handleRestorePhotoFilePicked(event)">
+    <input type="file" id="smart-erase-file-input" accept="image/*" class="hidden" onchange="handleSmartEraseFilePicked(event)">
+    <input type="file" id="greeting-card-file-input" accept="image/*" class="hidden" onchange="handleGreetingCardPhotoPicked(event)">
+
+    <!-- ========================================== -->
+    <!-- MODAL: ID PHOTO MAKER                      -->
+    <!-- ========================================== -->
+    <div id="modal-id-photo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-end sm:justify-center p-0 sm:p-4 select-none animate-fadeIn" onclick="closeIdPhotoMaker()">
+      <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="9.5" r="3"/><path d="M7 18c0-2.5 2.2-4 5-4s5 1.5 5 4"/></svg>
+            </div>
+            <div>
+              <h3 class="text-base font-black text-[#18181B] tracking-tight">ID Photo Maker</h3>
+              <p class="text-[11px] font-semibold text-[#64748B]">Passport, visa &amp; official photo cropper</p>
+            </div>
+          </div>
+          <button onclick="closeIdPhotoMaker()" class="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm active:scale-95 transition-all" title="Close" aria-label="Close">✕</button>
+        </div>
+
+        <!-- Scrollable Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3.5">
+          <!-- Preset Sizes Chips -->
+          <div>
+            <label class="block text-[11px] font-black text-[#64748B] uppercase tracking-wider mb-1.5">Preset Dimensions</label>
+            <div class="grid grid-cols-4 gap-1.5" id="id-photo-size-chips">
+              <button onclick="setIdPhotoPreset('us-passport')" id="id-size-us-passport" class="id-size-chip py-2 px-1 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#7C3AED]">US 2×2 in</span>
+                <span class="text-[9px] font-bold text-[#64748B]">51×51 mm</span>
+              </button>
+              <button onclick="setIdPhotoPreset('eu-passport')" id="id-size-eu-passport" class="id-size-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#18181B]">EU / UK</span>
+                <span class="text-[9px] font-bold text-[#64748B]">35×45 mm</span>
+              </button>
+              <button onclick="setIdPhotoPreset('id-3040')" id="id-size-id-3040" class="id-size-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#18181B]">30×40 mm</span>
+                <span class="text-[9px] font-bold text-[#64748B]">Standard</span>
+              </button>
+              <button onclick="setIdPhotoPreset('id-2535')" id="id-size-id-2535" class="id-size-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#18181B]">25×35 mm</span>
+                <span class="text-[9px] font-bold text-[#64748B]">Driver ID</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Crop Viewport Container -->
+          <div class="relative bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-inner" style="height: 270px;" id="id-photo-canvas-wrapper">
+            <canvas id="id-photo-canvas" class="max-w-full max-h-full object-contain"></canvas>
+            
+            <!-- Draggable / Resizable Crop Overlay with Portrait Guide -->
+            <div id="id-photo-crop-overlay" class="absolute pointer-events-none inset-0 flex items-center justify-center">
+              <div id="id-photo-crop-box" class="relative border-2 border-[#7C3AED] shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all pointer-events-auto" style="width: 190px; height: 190px;">
+                <!-- Head / Oval Guide Overlay -->
+                <div id="id-photo-portrait-guide" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+                  <!-- Head Oval -->
+                  <div class="w-[62%] h-[68%] rounded-full border border-dashed border-white/70"></div>
+                  <!-- Chin Line -->
+                  <div class="w-[45%] h-px bg-white/60 -mt-1"></div>
+                  <!-- Eye Level Line -->
+                  <div class="absolute top-[38%] w-full h-px border-t border-dashed border-white/40"></div>
+                </div>
+
+                <!-- Aspect Ratio & Dimensions Tag -->
+                <div id="id-photo-dim-badge" class="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#7C3AED] text-white text-[10px] font-mono font-bold whitespace-nowrap shadow-xs">
+                  600 × 600 px (1:1)
+                </div>
+
+                <!-- Corner Handles -->
+                <div class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-[#7C3AED] rounded-xs shadow-xs"></div>
+                <div class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-[#7C3AED] rounded-xs shadow-xs"></div>
+                <div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-[#7C3AED] rounded-xs shadow-xs"></div>
+                <div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-[#7C3AED] rounded-xs shadow-xs"></div>
+              </div>
+            </div>
+
+            <!-- Empty State Prompt if no image loaded -->
+            <div id="id-photo-empty-state" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center p-6 text-center space-y-3">
+              <div class="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <p class="text-xs text-white/80 font-bold">Select a portrait photo to crop</p>
+              <button onclick="triggerIdPhotoSelect()" class="px-4 py-2 rounded-xl bg-[#7C3AED] text-white text-xs font-black shadow-md hover:bg-[#6D28D9] active:scale-95 transition-all">Choose Photo</button>
+            </div>
+          </div>
+
+          <!-- Adjusters: Zoom & Guide Toggle -->
+          <div class="flex items-center justify-between text-xs font-bold text-[#18181B] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+            <div class="flex items-center space-x-2 flex-1 mr-3">
+              <span class="text-[11px] text-[#64748B] shrink-0">Scale:</span>
+              <input id="id-photo-zoom-slider" type="range" min="50" max="200" value="100" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#7C3AED]" oninput="updateIdPhotoZoom(this.value)">
+            </div>
+            <button onclick="toggleIdPortraitGuide()" id="id-guide-toggle-btn" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-[#7C3AED] hover:bg-purple-50 transition-colors shadow-xs">
+              Guide: ON
+            </button>
+          </div>
+
+          <!-- Printable Sheet Mode Selector -->
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-[#EDE9FE]/50 border border-[#DDD6FE]/60">
+            <div class="space-y-0.5">
+              <span class="text-xs font-black text-[#18181B] block">4×6" Printable Sheet</span>
+              <span class="text-[10px] font-semibold text-[#64748B] block">Generates 8-photo grid with cutting guidelines</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="id-photo-sheet-toggle" class="sr-only peer" onchange="toggleIdPhotoSheetMode(this.checked)">
+              <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#7C3AED]"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center space-x-2.5 shrink-0">
+          <button onclick="triggerIdPhotoSelect()" class="px-3.5 py-3 rounded-2xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-extrabold text-xs active:scale-95 transition-all shadow-xs flex items-center space-x-1.5" title="Change Photo">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Photo</span>
+          </button>
+          <button onclick="closeIdPhotoMaker()" class="flex-1 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-xs active:scale-95 transition-all">Cancel</button>
+          <button onclick="exportIdPhoto()" id="id-photo-export-btn" class="flex-2 py-3 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs sm:text-sm shadow-md shadow-purple-500/25 active:scale-95 transition-all flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Export ID Photo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: RESTORE PHOTO                       -->
+    <!-- ========================================== -->
+    <div id="modal-restore-photo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-end sm:justify-center p-0 sm:p-4 select-none animate-fadeIn" onclick="closeRestorePhoto()">
+      <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#DDD6FE] text-[#7C3AED] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="m3 16 5-5 4 4"/><line x1="12" y1="2.5" x2="12" y2="21.5" stroke-width="2"/></svg>
+            </div>
+            <div>
+              <h3 class="text-base font-black text-[#18181B] tracking-tight">Restore Photo</h3>
+              <p class="text-[11px] font-semibold text-[#64748B]">Fix faded contrast, scratches &amp; desaturated color</p>
+            </div>
+          </div>
+          <button onclick="closeRestorePhoto()" class="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm active:scale-95 transition-all" title="Close" aria-label="Close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3.5">
+          <!-- Canvas Display Viewport with State Badge -->
+          <div class="relative bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-inner" style="height: 280px;">
+            <canvas id="restore-photo-canvas" class="max-w-full max-h-full object-contain"></canvas>
+
+            <!-- State Badge: "Restored" vs "Original (Hold)" -->
+            <div class="absolute top-3 left-3">
+              <span id="restore-state-badge" class="px-2.5 py-1 rounded-full bg-[#10B981] text-white text-[10px] font-black tracking-wider uppercase shadow-md flex items-center space-x-1">
+                <span>Restored</span>
+              </span>
+            </div>
+
+            <!-- Hold to compare instruction hint -->
+            <div class="absolute bottom-3 inset-x-0 mx-auto max-w-[210px] text-center pointer-events-none">
+              <span class="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white/90 text-[10px] font-bold shadow-md">
+                Hold button below to see Original
+              </span>
+            </div>
+          </div>
+
+          <!-- Interactive Hold To Compare Button -->
+          <div>
+            <button id="restore-hold-compare-btn" class="w-full py-3 rounded-2xl bg-[#EDE9FE] hover:bg-[#DDD6FE] active:bg-[#C4B5FD] text-[#5B21B6] font-black text-xs flex items-center justify-center space-x-2 border border-[#C4B5FD]/50 transition-all select-none shadow-xs cursor-pointer">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>HOLD TO COMPARE WITH ORIGINAL</span>
+            </button>
+          </div>
+
+          <!-- Enhancement Intensity Controls -->
+          <div class="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-[#18181B]">Restoration Strength</span>
+              <span id="restore-intensity-label" class="text-xs font-black text-[#7C3AED]">80%</span>
+            </div>
+            <input id="restore-intensity-slider" type="range" min="10" max="100" value="80" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#7C3AED]" oninput="handleRestoreIntensityChange(this.value)">
+            <div class="flex items-center justify-between text-[10px] font-bold text-[#64748B]">
+              <span>Subtle</span>
+              <span>Balanced</span>
+              <span>Maximum</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center space-x-2.5 shrink-0">
+          <button onclick="triggerRestorePhotoSelect()" class="px-3.5 py-3 rounded-2xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-extrabold text-xs active:scale-95 transition-all shadow-xs flex items-center space-x-1.5" title="Pick another photo">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Photo</span>
+          </button>
+          <button onclick="closeRestorePhoto()" class="flex-1 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-xs active:scale-95 transition-all">Cancel</button>
+          <button onclick="saveRestoredPhoto()" class="flex-2 py-3 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs sm:text-sm shadow-md shadow-purple-500/25 active:scale-95 transition-all flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Save Restored Photo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: SMART ERASE                         -->
+    <!-- ========================================== -->
+    <div id="modal-smart-erase" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-end sm:justify-center p-0 sm:p-4 select-none animate-fadeIn" onclick="closeSmartErase()">
+      <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#FEF9C3] text-[#A16207] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg>
+            </div>
+            <div>
+              <h3 class="text-base font-black text-[#18181B] tracking-tight">Smart Erase</h3>
+              <p class="text-[11px] font-semibold text-[#64748B]">Brush over marks, blemishes or unwanted items</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <!-- Undo Button in Header -->
+            <button onclick="undoSmartErase()" id="smart-erase-undo-btn" disabled class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 text-xs font-bold flex items-center space-x-1 transition-all" title="Undo Erase">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+              <span>Undo</span>
+            </button>
+            <button onclick="closeSmartErase()" class="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm active:scale-95 transition-all" title="Close" aria-label="Close">✕</button>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3.5">
+          <!-- Canvas Container -->
+          <div class="relative bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-inner touch-none cursor-crosshair" style="height: 290px;" id="smart-erase-canvas-wrapper">
+            <!-- Base Image Canvas -->
+            <canvas id="smart-erase-base-canvas" class="max-w-full max-h-full object-contain"></canvas>
+            <!-- Mask Drawing Overlay Canvas (Absolute on top of base canvas) -->
+            <canvas id="smart-erase-mask-canvas" class="absolute max-w-full max-h-full object-contain pointer-events-auto"></canvas>
+
+            <div id="smart-erase-status-badge" class="hidden absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold">
+              Processing...
+            </div>
+          </div>
+
+          <!-- Brush Size & Mask Tool Controls -->
+          <div class="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-black text-[#18181B] mr-1">Brush:</span>
+              <button onclick="setSmartEraseBrushSize(12)" id="brush-size-12" class="w-8 h-8 rounded-xl border-2 border-slate-200 hover:border-[#7C3AED] bg-white flex items-center justify-center transition-all cursor-pointer">
+                <div class="w-2 h-2 rounded-full bg-[#18181B]"></div>
+              </button>
+              <button onclick="setSmartEraseBrushSize(24)" id="brush-size-24" class="w-8 h-8 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] flex items-center justify-center transition-all cursor-pointer">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#7C3AED]"></div>
+              </button>
+              <button onclick="setSmartEraseBrushSize(42)" id="brush-size-42" class="w-8 h-8 rounded-xl border-2 border-slate-200 hover:border-[#7C3AED] bg-white flex items-center justify-center transition-all cursor-pointer">
+                <div class="w-5 h-5 rounded-full bg-[#18181B]"></div>
+              </button>
+            </div>
+            
+            <div class="flex items-center space-x-1.5">
+              <button onclick="clearSmartEraseMask()" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-100 active:scale-95 transition-all">Clear Mask</button>
+              <button onclick="applySmartErase()" id="smart-erase-apply-btn" class="px-3.5 py-1.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black shadow-sm active:scale-95 transition-all flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg>
+                <span>Erase</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center space-x-2.5 shrink-0">
+          <button onclick="triggerSmartErasePhotoSelect()" class="px-3.5 py-3 rounded-2xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-extrabold text-xs active:scale-95 transition-all shadow-xs flex items-center space-x-1.5" title="Change photo">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Photo</span>
+          </button>
+          <button onclick="closeSmartErase()" class="flex-1 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-xs active:scale-95 transition-all">Cancel</button>
+          <button onclick="saveSmartEraseResult()" class="flex-2 py-3 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs sm:text-sm shadow-md shadow-purple-500/25 active:scale-95 transition-all flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Save Result</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: GREETING CARD STUDIO                -->
+    <!-- ========================================== -->
+    <div id="modal-greeting-card" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-end sm:justify-center p-0 sm:p-4 select-none animate-fadeIn" onclick="closeGreetingCardMaker()">
+      <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[94vh] overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#BAE6FD] text-[#0284C7] flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v13"/><rect x="4.5" y="5.5" width="13" height="15" rx="1.5"/><path d="M11 10.5c-.8-.9-1.8 0-1.8.8 0 1.2 1.8 2.4 1.8 2.4s1.8-1.2 1.8-2.4c0-.8-1-1.7-1.8-.8Z" fill="currentColor"/></svg>
+            </div>
+            <div>
+              <h3 class="text-base font-black text-[#18181B] tracking-tight">Greeting Card Studio</h3>
+              <p class="text-[11px] font-semibold text-[#64748B]">Personalized cards with bundled offline templates</p>
+            </div>
+          </div>
+          <button onclick="closeGreetingCardMaker()" class="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm active:scale-95 transition-all" title="Close" aria-label="Close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3.5">
+          <!-- Template Selector Chips -->
+          <div>
+            <label class="block text-[11px] font-black text-[#64748B] uppercase tracking-wider mb-1.5">Select Template</label>
+            <div class="grid grid-cols-4 gap-1.5" id="card-template-chips">
+              <button onclick="setGreetingCardTemplate('birthday')" id="card-tpl-birthday" class="card-tpl-chip py-2 px-1 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#7C3AED]">Birthday</span>
+                <span class="text-[9px] font-bold text-[#64748B]">Festive</span>
+              </button>
+              <button onclick="setGreetingCardTemplate('thankyou')" id="card-tpl-thankyou" class="card-tpl-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#18181B]">Thank You</span>
+                <span class="text-[9px] font-bold text-[#64748B]">Floral</span>
+              </button>
+              <button onclick="setGreetingCardTemplate('congrats')" id="card-tpl-congrats" class="card-tpl-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#18181B]">Congrats</span>
+                <span class="text-[9px] font-bold text-[#64748B]">Celebration</span>
+              </button>
+              <button onclick="setGreetingCardTemplate('holiday')" id="card-tpl-holiday" class="card-tpl-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer">
+                <span class="text-xs font-black text-[#18181B]">Holidays</span>
+                <span class="text-[9px] font-bold text-[#64748B]">Winter</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Card Canvas Preview (5x7 standard printable ratio) -->
+          <div class="relative bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center p-2 shadow-inner border border-slate-200/80" style="height: 250px;">
+            <canvas id="greeting-card-canvas" class="max-w-full max-h-full object-contain rounded-lg shadow-md"></canvas>
+          </div>
+
+          <!-- Editable Text Inputs -->
+          <div class="space-y-2.5">
+            <div>
+              <label for="card-input-recipient" class="block text-[11px] font-bold text-[#18181B] mb-1">To / Recipient</label>
+              <input type="text" id="card-input-recipient" value="Dear Friend," class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#18181B] outline-none focus:border-[#7C3AED]" oninput="renderGreetingCardPreview()">
+            </div>
+            <div>
+              <label for="card-input-message" class="block text-[11px] font-bold text-[#18181B] mb-1">Card Message</label>
+              <textarea id="card-input-message" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-[#18181B] outline-none focus:border-[#7C3AED] resize-none" oninput="renderGreetingCardPreview()">Wishing you joy, good health, and wonderful moments every day!</textarea>
+            </div>
+            <div>
+              <label for="card-input-sender" class="block text-[11px] font-bold text-[#18181B] mb-1">From / Sign-off</label>
+              <input type="text" id="card-input-sender" value="Warmly, Sophia" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#18181B] outline-none focus:border-[#7C3AED]" oninput="renderGreetingCardPreview()">
+            </div>
+          </div>
+
+          <!-- Optional Photo In Card -->
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <div class="space-y-0.5">
+              <span class="text-xs font-black text-[#18181B] block">Personal Photo Insert</span>
+              <span id="card-photo-status" class="text-[10px] font-semibold text-[#64748B] block">Include your own photo in the card design</span>
+            </div>
+            <button onclick="triggerGreetingCardPhotoSelect()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-[#7C3AED] hover:bg-purple-50 active:scale-95 transition-all shadow-xs">
+              <span id="card-photo-btn-text">Add Photo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center space-x-2.5 shrink-0">
+          <button onclick="closeGreetingCardMaker()" class="flex-1 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-xs active:scale-95 transition-all">Cancel</button>
+          <button onclick="exportGreetingCardPdf()" class="flex-2 py-3 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs sm:text-sm shadow-md shadow-purple-500/25 active:scale-95 transition-all flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Export Printable Card PDF</span>
           </button>
         </div>
       </div>
@@ -6078,6 +6470,30 @@
         openScanCodeMode();
         return;
       }
+      if (action === 'id-photo' || action === 'id-photo-maker') {
+        openIdPhotoMaker();
+        return;
+      }
+      if (action === 'restore-photo' || action === 'restore') {
+        openRestorePhoto();
+        return;
+      }
+      if (action === 'smart-erase' || action === 'erase') {
+        openSmartErase();
+        return;
+      }
+      if (action === 'slides') {
+        openSlidesMode();
+        return;
+      }
+      if (action === 'whiteboard') {
+        openWhiteboardMode();
+        return;
+      }
+      if (action === 'greeting-card' || action === 'card') {
+        openGreetingCardMaker();
+        return;
+      }
       if (action === 'timestamp') {
         closeCameraAllFeatures();
         if (typeof setCameraScanMode === 'function') {
@@ -6392,6 +6808,1157 @@
     }
     window.handleQrFileInputChange = handleQrFileInputChange;
 
+    // ============================================================
+    // 5 ADVANCED OFFLINE TOOLS IMPLEMENTATION
+    // 1. ID Photo Maker (Preset sizes, aspect crop, 4x6 8-up sheet)
+    // 2. Restore Photo (Percentile auto-contrast, median scratch filter, hold-to-compare)
+    // 3. Smart Erase (Interactive brush mask, boundary diffusion inpainting, undo stack)
+    // 4. Slides and Whiteboard (De-glare, contrast, surface whitening, marker saturation)
+    // 5. Greeting Card Studio (Bundled templates, live preview, editable text, printable PDF)
+    // ============================================================
+
+    // ------------------------------------------------------------
+    // 1. ID PHOTO MAKER
+    // ------------------------------------------------------------
+    let currentIdPhotoImg = null;
+    let currentIdPhotoDataUrl = null;
+    let currentIdPhotoPreset = 'us-passport';
+    let currentIdPhotoZoom = 1.0;
+    let isIdPortraitGuideVisible = true;
+    let isIdSheetMode = false;
+
+    const ID_PHOTO_PRESETS = {
+      'us-passport': { name: 'US 2×2 in', widthMm: 51, heightMm: 51, pxW: 600, pxH: 600, ratio: 1.0, label: '600 × 600 px (1:1)' },
+      'eu-passport': { name: 'EU / UK Passport', widthMm: 35, heightMm: 45, pxW: 413, pxH: 531, ratio: 35/45, label: '413 × 531 px (7:9)' },
+      'id-3040': { name: '30×40 mm ID', widthMm: 30, heightMm: 40, pxW: 354, pxH: 472, ratio: 30/40, label: '354 × 472 px (3:4)' },
+      'id-2535': { name: '25×35 mm ID', widthMm: 25, heightMm: 35, pxW: 295, pxH: 413, ratio: 25/35, label: '295 × 413 px (5:7)' }
+    };
+
+    function openIdPhotoMaker(imgUrl) {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-id-photo');
+      if (modal) modal.classList.remove('hidden');
+
+      const src = imgUrl || (activeEnhancePage ? (activeEnhancePage.enhancedUrl || activeEnhancePage.croppedUrl) : (sessionPages.length > 0 ? (sessionPages[selectedOrganizerIndex || 0].enhancedUrl || sessionPages[selectedOrganizerIndex || 0].croppedUrl) : null));
+
+      if (src) {
+        loadIdPhotoImage(src);
+      } else {
+        createDefaultPortraitSample().then(dataUrl => {
+          loadIdPhotoImage(dataUrl);
+        });
+      }
+    }
+    window.openIdPhotoMaker = openIdPhotoMaker;
+
+    function closeIdPhotoMaker() {
+      const modal = document.getElementById('modal-id-photo');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeIdPhotoMaker = closeIdPhotoMaker;
+
+    function triggerIdPhotoSelect() {
+      const input = document.getElementById('id-photo-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerIdPhotoSelect = triggerIdPhotoSelect;
+
+    function handleIdPhotoFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        loadIdPhotoImage(evt.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleIdPhotoFilePicked = handleIdPhotoFilePicked;
+
+    function loadIdPhotoImage(dataUrl) {
+      currentIdPhotoDataUrl = dataUrl;
+      const img = new Image();
+      img.onload = function() {
+        currentIdPhotoImg = img;
+        renderIdPhotoCanvas();
+      };
+      img.src = dataUrl;
+    }
+    window.loadIdPhotoImage = loadIdPhotoImage;
+
+    function setIdPhotoPreset(presetKey) {
+      if (!ID_PHOTO_PRESETS[presetKey]) return;
+      currentIdPhotoPreset = presetKey;
+      const preset = ID_PHOTO_PRESETS[presetKey];
+
+      const chips = ['us-passport', 'eu-passport', 'id-3040', 'id-2535'];
+      chips.forEach(k => {
+        const btn = document.getElementById(`id-size-${k}`);
+        if (!btn) return;
+        if (k === presetKey) {
+          btn.className = 'id-size-chip py-2 px-1 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const txt = btn.querySelector('span:first-child');
+          if (txt) txt.className = 'text-xs font-black text-[#7C3AED]';
+        } else {
+          btn.className = 'id-size-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const txt = btn.querySelector('span:first-child');
+          if (txt) txt.className = 'text-xs font-black text-[#18181B]';
+        }
+      });
+
+      const cropBox = document.getElementById('id-photo-crop-box');
+      const dimBadge = document.getElementById('id-photo-dim-badge');
+      if (cropBox) {
+        const baseH = 200;
+        const baseW = Math.round(baseH * preset.ratio);
+        cropBox.style.width = `${baseW}px`;
+        cropBox.style.height = `${baseH}px`;
+      }
+      if (dimBadge) {
+        dimBadge.textContent = preset.label;
+      }
+    }
+    window.setIdPhotoPreset = setIdPhotoPreset;
+
+    function updateIdPhotoZoom(val) {
+      currentIdPhotoZoom = parseInt(val, 10) / 100;
+      renderIdPhotoCanvas();
+    }
+    window.updateIdPhotoZoom = updateIdPhotoZoom;
+
+    function toggleIdPortraitGuide() {
+      isIdPortraitGuideVisible = !isIdPortraitGuideVisible;
+      const guide = document.getElementById('id-photo-portrait-guide');
+      const btn = document.getElementById('id-guide-toggle-btn');
+      if (guide) {
+        if (isIdPortraitGuideVisible) guide.classList.remove('hidden');
+        else guide.classList.add('hidden');
+      }
+      if (btn) {
+        btn.textContent = `Guide: ${isIdPortraitGuideVisible ? 'ON' : 'OFF'}`;
+      }
+    }
+    window.toggleIdPortraitGuide = toggleIdPortraitGuide;
+
+    function toggleIdPhotoSheetMode(checked) {
+      isIdSheetMode = checked;
+      const btn = document.getElementById('id-photo-export-btn');
+      if (btn) {
+        const span = btn.querySelector('span');
+        if (span) {
+          span.textContent = isIdSheetMode ? 'Export 4×6" Sheet (8-Up)' : 'Export ID Photo';
+        }
+      }
+    }
+    window.toggleIdPhotoSheetMode = toggleIdPhotoSheetMode;
+
+    function renderIdPhotoCanvas() {
+      const canvas = document.getElementById('id-photo-canvas');
+      if (!canvas || !currentIdPhotoImg) return;
+      const ctx = canvas.getContext('2d');
+
+      const wrapper = document.getElementById('id-photo-canvas-wrapper');
+      const maxW = (wrapper ? wrapper.clientWidth : 340) || 340;
+      const maxH = (wrapper ? wrapper.clientHeight : 270) || 270;
+
+      canvas.width = maxW;
+      canvas.height = maxH;
+
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(0, 0, maxW, maxH);
+
+      const imgAspect = currentIdPhotoImg.width / currentIdPhotoImg.height;
+      let drawW, drawH;
+      if (imgAspect > (maxW / maxH)) {
+        drawW = maxW * 0.9 * currentIdPhotoZoom;
+        drawH = drawW / imgAspect;
+      } else {
+        drawH = maxH * 0.9 * currentIdPhotoZoom;
+        drawW = drawH * imgAspect;
+      }
+
+      const drawX = (maxW - drawW) / 2;
+      const drawY = (maxH - drawH) / 2;
+
+      ctx.drawImage(currentIdPhotoImg, drawX, drawY, drawW, drawH);
+    }
+
+    function exportIdPhoto() {
+      if (!currentIdPhotoImg) {
+        showToast('Please select or capture a photo first');
+        return;
+      }
+
+      const preset = ID_PHOTO_PRESETS[currentIdPhotoPreset] || ID_PHOTO_PRESETS['us-passport'];
+
+      if (!isIdSheetMode) {
+        const outCanvas = document.createElement('canvas');
+        outCanvas.width = preset.pxW;
+        outCanvas.height = preset.pxH;
+        const outCtx = outCanvas.getContext('2d');
+
+        const imgAspect = currentIdPhotoImg.width / currentIdPhotoImg.height;
+        let cropW, cropH;
+        if (imgAspect > preset.ratio) {
+          cropH = currentIdPhotoImg.height;
+          cropW = cropH * preset.ratio;
+        } else {
+          cropW = currentIdPhotoImg.width;
+          cropH = cropW / preset.ratio;
+        }
+
+        cropW /= currentIdPhotoZoom;
+        cropH /= currentIdPhotoZoom;
+        const cropX = Math.max(0, (currentIdPhotoImg.width - cropW) / 2);
+        const cropY = Math.max(0, (currentIdPhotoImg.height - cropH) / 2);
+
+        outCtx.drawImage(currentIdPhotoImg, cropX, cropY, cropW, cropH, 0, 0, preset.pxW, preset.pxH);
+
+        const exportedUrl = outCanvas.toDataURL('image/jpeg', 0.95);
+        saveExportedToolImage(exportedUrl, `ID_Photo_${preset.name.replace(/\s+/g, '_')}`);
+        showToast(`Exported ID Photo: ${preset.pxW}×${preset.pxH} px`);
+        closeIdPhotoMaker();
+      } else {
+        const sheetCanvas = document.createElement('canvas');
+        sheetCanvas.width = 1800;
+        sheetCanvas.height = 1200;
+        const sheetCtx = sheetCanvas.getContext('2d');
+
+        sheetCtx.fillStyle = '#FFFFFF';
+        sheetCtx.fillRect(0, 0, 1800, 1200);
+
+        sheetCtx.fillStyle = '#64748B';
+        sheetCtx.font = 'bold 24px system-ui, sans-serif';
+        sheetCtx.fillText(`DocErena 4×6" Print Sheet • ${preset.name} (${preset.widthMm}×${preset.heightMm} mm)`, 60, 48);
+
+        const singleC = document.createElement('canvas');
+        singleC.width = preset.pxW;
+        singleC.height = preset.pxH;
+        const sCtx = singleC.getContext('2d');
+        const imgAspect = currentIdPhotoImg.width / currentIdPhotoImg.height;
+        let cropW = (imgAspect > preset.ratio) ? currentIdPhotoImg.height * preset.ratio : currentIdPhotoImg.width;
+        let cropH = (imgAspect > preset.ratio) ? currentIdPhotoImg.height : currentIdPhotoImg.width / preset.ratio;
+        cropW /= currentIdPhotoZoom;
+        cropH /= currentIdPhotoZoom;
+        let cropX = Math.max(0, (currentIdPhotoImg.width - cropW) / 2);
+        let cropY = Math.max(0, (currentIdPhotoImg.height - cropH) / 2);
+        sCtx.drawImage(currentIdPhotoImg, cropX, cropY, cropW, cropH, 0, 0, preset.pxW, preset.pxH);
+
+        const cols = 4;
+        const rows = 2;
+        const cellW = 380;
+        const cellH = Math.round(cellW / preset.ratio);
+        const marginX = (1800 - (cols * cellW)) / (cols + 1);
+        const marginY = 80 + (1120 - (rows * cellH)) / (rows + 1);
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = Math.round(marginX + c * (cellW + marginX));
+            const y = Math.round(marginY + r * (cellH + marginY));
+
+            sheetCtx.drawImage(singleC, 0, 0, preset.pxW, preset.pxH, x, y, cellW, cellH);
+
+            sheetCtx.strokeStyle = '#CBD5E1';
+            sheetCtx.lineWidth = 1.5;
+            sheetCtx.setLineDash([8, 6]);
+            sheetCtx.strokeRect(x - 2, y - 2, cellW + 4, cellH + 4);
+            sheetCtx.setLineDash([]);
+          }
+        }
+
+        const exportedUrl = sheetCanvas.toDataURL('image/jpeg', 0.95);
+        saveExportedToolImage(exportedUrl, `ID_Photo_Sheet_4x6_${preset.name.replace(/\s+/g, '_')}`);
+        showToast('Exported 4×6" 8-Photo Printable Sheet (1800×1200 px)');
+        closeIdPhotoMaker();
+      }
+    }
+    window.exportIdPhoto = exportIdPhoto;
+
+    function createDefaultPortraitSample() {
+      return new Promise(resolve => {
+        const c = document.createElement('canvas');
+        c.width = 600;
+        c.height = 750;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 600, 750);
+        grad.addColorStop(0, '#E2E8F0');
+        grad.addColorStop(1, '#CBD5E1');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 600, 750);
+
+        ctx.fillStyle = '#64748B';
+        ctx.beginPath();
+        ctx.arc(300, 310, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(300, 640, 240, 160, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 28px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sample Portrait', 300, 315);
+        resolve(c.toDataURL('image/jpeg', 0.92));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // 2. RESTORE PHOTO
+    // ------------------------------------------------------------
+    let restoreOriginalUrl = null;
+    let restoreRestoredUrl = null;
+    let currentRestoreIntensity = 80;
+    let isHoldingCompare = false;
+
+    function openRestorePhoto(imgUrl) {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-restore-photo');
+      if (modal) modal.classList.remove('hidden');
+
+      const src = imgUrl || (activeEnhancePage ? (activeEnhancePage.enhancedUrl || activeEnhancePage.croppedUrl) : (sessionPages.length > 0 ? (sessionPages[selectedOrganizerIndex || 0].enhancedUrl || sessionPages[selectedOrganizerIndex || 0].croppedUrl) : null));
+
+      if (src) {
+        initRestoreWithImage(src);
+      } else {
+        createDefaultFadedPhotoSample().then(dataUrl => {
+          initRestoreWithImage(dataUrl);
+        });
+      }
+
+      setupRestoreHoldListeners();
+    }
+    window.openRestorePhoto = openRestorePhoto;
+
+    function closeRestorePhoto() {
+      const modal = document.getElementById('modal-restore-photo');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeRestorePhoto = closeRestorePhoto;
+
+    function triggerRestorePhotoSelect() {
+      const input = document.getElementById('restore-photo-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerRestorePhotoSelect = triggerRestorePhotoSelect;
+
+    function handleRestorePhotoFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        initRestoreWithImage(evt.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleRestorePhotoFilePicked = handleRestorePhotoFilePicked;
+
+    function initRestoreWithImage(dataUrl) {
+      restoreOriginalUrl = dataUrl;
+      applyLocalPhotoRestoration(dataUrl, currentRestoreIntensity);
+    }
+    window.initRestoreWithImage = initRestoreWithImage;
+
+    function handleRestoreIntensityChange(val) {
+      currentRestoreIntensity = parseInt(val, 10);
+      const lbl = document.getElementById('restore-intensity-label');
+      if (lbl) lbl.textContent = `${currentRestoreIntensity}%`;
+      if (restoreOriginalUrl) {
+        applyLocalPhotoRestoration(restoreOriginalUrl, currentRestoreIntensity);
+      }
+    }
+    window.handleRestoreIntensityChange = handleRestoreIntensityChange;
+
+    function applyLocalPhotoRestoration(dataUrl, intensity) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.getElementById('restore-photo-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        const n = data.length;
+
+        const hist = new Uint32Array(256);
+        for (let i = 0; i < n; i += 4) {
+          const lum = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+          hist[lum]++;
+        }
+
+        const totalPixels = n / 4;
+        const p02 = totalPixels * 0.02;
+        const p98 = totalPixels * 0.98;
+
+        let count = 0;
+        let minLum = 0;
+        for (let l = 0; l < 256; l++) {
+          count += hist[l];
+          if (count >= p02) { minLum = l; break; }
+        }
+
+        count = 0;
+        let maxLum = 255;
+        for (let l = 255; l >= 0; l--) {
+          count += hist[l];
+          if (count >= totalPixels - p98) { maxLum = l; break; }
+        }
+
+        const lumRange = Math.max(1, maxLum - minLum);
+        const factor = intensity / 100;
+        const chromaFactor = 1.0 + (0.35 * factor);
+
+        for (let i = 0; i < n; i += 4) {
+          const origR = data[i];
+          const origG = data[i + 1];
+          const origB = data[i + 2];
+
+          let r = Math.min(255, Math.max(0, ((origR - minLum) / lumRange) * 255));
+          let g = Math.min(255, Math.max(0, ((origG - minLum) / lumRange) * 255));
+          let b = Math.min(255, Math.max(0, ((origB - minLum) / lumRange) * 255));
+
+          const curLum = 0.299 * r + 0.587 * g + 0.114 * b;
+          r = Math.min(255, Math.max(0, curLum + (r - curLum) * chromaFactor));
+          g = Math.min(255, Math.max(0, curLum + (g - curLum) * chromaFactor));
+          b = Math.min(255, Math.max(0, curLum + (b - curLum) * chromaFactor));
+
+          data[i] = Math.round(origR * (1 - factor) + r * factor);
+          data[i + 1] = Math.round(origG * (1 - factor) + g * factor);
+          data[i + 2] = Math.round(origB * (1 - factor) + b * factor);
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        restoreRestoredUrl = canvas.toDataURL('image/jpeg', 0.95);
+        updateRestoreBadge(false);
+      };
+      img.src = dataUrl;
+    }
+
+    function setupRestoreHoldListeners() {
+      const btn = document.getElementById('restore-hold-compare-btn');
+      if (!btn || btn._hasHoldListeners) return;
+      btn._hasHoldListeners = true;
+
+      const startHold = (e) => {
+        if (e) e.preventDefault();
+        isHoldingCompare = true;
+        renderRestoreCanvasState(restoreOriginalUrl);
+        updateRestoreBadge(true);
+      };
+
+      const stopHold = (e) => {
+        if (e) e.preventDefault();
+        isHoldingCompare = false;
+        renderRestoreCanvasState(restoreRestoredUrl);
+        updateRestoreBadge(false);
+      };
+
+      btn.addEventListener('mousedown', startHold);
+      btn.addEventListener('mouseup', stopHold);
+      btn.addEventListener('mouseleave', stopHold);
+      btn.addEventListener('touchstart', startHold, { passive: false });
+      btn.addEventListener('touchend', stopHold, { passive: false });
+      btn.addEventListener('touchcancel', stopHold, { passive: false });
+    }
+
+    function renderRestoreCanvasState(srcUrl) {
+      if (!srcUrl) return;
+      const canvas = document.getElementById('restore-photo-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = srcUrl;
+    }
+
+    function updateRestoreBadge(holdingOriginal) {
+      const badge = document.getElementById('restore-state-badge');
+      if (!badge) return;
+      if (holdingOriginal) {
+        badge.className = 'px-2.5 py-1 rounded-full bg-[#D97706] text-white text-[10px] font-black tracking-wider uppercase shadow-md flex items-center space-x-1';
+        badge.textContent = 'Original (Holding)';
+      } else {
+        badge.className = 'px-2.5 py-1 rounded-full bg-[#10B981] text-white text-[10px] font-black tracking-wider uppercase shadow-md flex items-center space-x-1';
+        badge.textContent = 'Restored';
+      }
+    }
+
+    function saveRestoredPhoto() {
+      if (!restoreRestoredUrl) {
+        showToast('No restored image to save');
+        return;
+      }
+      saveExportedToolImage(restoreRestoredUrl, 'Restored_Photo');
+      showToast('Restored photo saved to documents (Original preserved)');
+      closeRestorePhoto();
+    }
+    window.saveRestoredPhoto = saveRestoredPhoto;
+
+    function createDefaultFadedPhotoSample() {
+      return new Promise(resolve => {
+        const c = document.createElement('canvas');
+        c.width = 600;
+        c.height = 450;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#9C9588';
+        ctx.fillRect(0, 0, 600, 450);
+
+        ctx.fillStyle = '#827B6E';
+        ctx.beginPath();
+        ctx.moveTo(0, 450);
+        ctx.lineTo(150, 280);
+        ctx.lineTo(350, 340);
+        ctx.lineTo(500, 260);
+        ctx.lineTo(600, 450);
+        ctx.fill();
+
+        ctx.strokeStyle = '#D6D3CD';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(80, 50); ctx.lineTo(130, 220);
+        ctx.moveTo(420, 70); ctx.lineTo(390, 310);
+        ctx.stroke();
+
+        ctx.fillStyle = '#5A544A';
+        ctx.font = 'bold 24px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Faded Vintage Photograph', 300, 180);
+        resolve(c.toDataURL('image/jpeg', 0.90));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // 3. SMART ERASE
+    // ------------------------------------------------------------
+    let smartEraseBaseImg = null;
+    let smartEraseBrushSize = 24;
+    let smartEraseUndoStack = [];
+    let isSmartErasePainting = false;
+    let smartEraseLastPt = null;
+
+    function openSmartErase(imgUrl) {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-smart-erase');
+      if (modal) modal.classList.remove('hidden');
+
+      const src = imgUrl || (activeEnhancePage ? (activeEnhancePage.enhancedUrl || activeEnhancePage.croppedUrl) : (sessionPages.length > 0 ? (sessionPages[selectedOrganizerIndex || 0].enhancedUrl || sessionPages[selectedOrganizerIndex || 0].croppedUrl) : null));
+
+      smartEraseUndoStack = [];
+      updateSmartEraseUndoButton();
+
+      if (src) {
+        initSmartEraseImage(src);
+      } else {
+        createDefaultBlemishSample().then(dataUrl => {
+          initSmartEraseImage(dataUrl);
+        });
+      }
+
+      setupSmartEraseDrawing();
+    }
+    window.openSmartErase = openSmartErase;
+
+    function closeSmartErase() {
+      const modal = document.getElementById('modal-smart-erase');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeSmartErase = closeSmartErase;
+
+    function triggerSmartErasePhotoSelect() {
+      const input = document.getElementById('smart-erase-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerSmartErasePhotoSelect = triggerSmartErasePhotoSelect;
+
+    function handleSmartEraseFilePicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        initSmartEraseImage(evt.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleSmartEraseFilePicked = handleSmartEraseFilePicked;
+
+    function initSmartEraseImage(dataUrl) {
+      const img = new Image();
+      img.onload = function() {
+        smartEraseBaseImg = img;
+        const baseCanvas = document.getElementById('smart-erase-base-canvas');
+        const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+        if (!baseCanvas || !maskCanvas) return;
+
+        baseCanvas.width = img.width;
+        baseCanvas.height = img.height;
+        const bCtx = baseCanvas.getContext('2d');
+        bCtx.drawImage(img, 0, 0);
+
+        maskCanvas.width = img.width;
+        maskCanvas.height = img.height;
+        const mCtx = maskCanvas.getContext('2d');
+        mCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+        smartEraseUndoStack = [];
+        updateSmartEraseUndoButton();
+      };
+      img.src = dataUrl;
+    }
+    window.initSmartEraseImage = initSmartEraseImage;
+
+    function setSmartEraseBrushSize(size) {
+      smartEraseBrushSize = size;
+      [12, 24, 42].forEach(s => {
+        const btn = document.getElementById(`brush-size-${s}`);
+        if (!btn) return;
+        if (s === size) {
+          btn.className = 'w-8 h-8 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] flex items-center justify-center transition-all cursor-pointer';
+          const dot = btn.querySelector('div');
+          if (dot) dot.className = dot.className.replace('bg-[#18181B]', 'bg-[#7C3AED]');
+        } else {
+          btn.className = 'w-8 h-8 rounded-xl border-2 border-slate-200 hover:border-[#7C3AED] bg-white flex items-center justify-center transition-all cursor-pointer';
+          const dot = btn.querySelector('div');
+          if (dot) dot.className = dot.className.replace('bg-[#7C3AED]', 'bg-[#18181B]');
+        }
+      });
+    }
+    window.setSmartEraseBrushSize = setSmartEraseBrushSize;
+
+    function clearSmartEraseMask() {
+      const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+      if (maskCanvas) {
+        const ctx = maskCanvas.getContext('2d');
+        ctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      }
+    }
+    window.clearSmartEraseMask = clearSmartEraseMask;
+
+    function setupSmartEraseDrawing() {
+      const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+      if (!maskCanvas || maskCanvas._hasDrawListeners) return;
+      maskCanvas._hasDrawListeners = true;
+
+      function getPos(e) {
+        const rect = maskCanvas.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        const scaleX = maskCanvas.width / (rect.width || 1);
+        const scaleY = maskCanvas.height / (rect.height || 1);
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      }
+
+      function drawLine(p1, p2) {
+        const ctx = maskCanvas.getContext('2d');
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.55)';
+        ctx.lineWidth = smartEraseBrushSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+
+      const onStart = (e) => {
+        e.preventDefault();
+        isSmartErasePainting = true;
+        smartEraseLastPt = getPos(e);
+        const ctx = maskCanvas.getContext('2d');
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.55)';
+        ctx.beginPath();
+        ctx.arc(smartEraseLastPt.x, smartEraseLastPt.y, smartEraseBrushSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      const onMove = (e) => {
+        if (!isSmartErasePainting) return;
+        e.preventDefault();
+        const curPt = getPos(e);
+        drawLine(smartEraseLastPt, curPt);
+        smartEraseLastPt = curPt;
+      };
+
+      const onEnd = (e) => {
+        if (!isSmartErasePainting) return;
+        isSmartErasePainting = false;
+        smartEraseLastPt = null;
+      };
+
+      maskCanvas.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+
+      maskCanvas.addEventListener('touchstart', onStart, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd, { passive: false });
+    }
+
+    function applySmartErase() {
+      const baseCanvas = document.getElementById('smart-erase-base-canvas');
+      const maskCanvas = document.getElementById('smart-erase-mask-canvas');
+      if (!baseCanvas || !maskCanvas) return;
+
+      const bCtx = baseCanvas.getContext('2d');
+      const mCtx = maskCanvas.getContext('2d');
+      const w = baseCanvas.width;
+      const h = baseCanvas.height;
+
+      const baseImgData = bCtx.getImageData(0, 0, w, h);
+      const maskImgData = mCtx.getImageData(0, 0, w, h);
+
+      let hasMask = false;
+      const mData = maskImgData.data;
+      for (let i = 3; i < mData.length; i += 4) {
+        if (mData[i] > 20) { hasMask = true; break; }
+      }
+      if (!hasMask) {
+        showToast('Draw over an object or mark with the brush first');
+        return;
+      }
+
+      smartEraseUndoStack.push(bCtx.getImageData(0, 0, w, h));
+      updateSmartEraseUndoButton();
+
+      const bData = baseImgData.data;
+      const maskArr = new Uint8Array(w * h);
+      let maskedCount = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          if (mData[idx * 4 + 3] > 20) {
+            maskArr[idx] = 1;
+            maskedCount++;
+          }
+        }
+      }
+
+      // Collect perimeter boundary pixels (unmasked pixels adjacent to masked pixels)
+      const boundarySamples = [];
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const idx = y * w + x;
+          if (maskArr[idx] === 0) {
+            if (maskArr[idx - 1] === 1 || maskArr[idx + 1] === 1 ||
+                maskArr[idx - w] === 1 || maskArr[idx + w] === 1) {
+              const p = idx * 4;
+              boundarySamples.push({ x, y, r: bData[p], g: bData[p+1], b: bData[p+2] });
+            }
+          }
+        }
+      }
+
+      if (boundarySamples.length > 0) {
+        // Subsample boundary to max 64 points for fast smooth interpolation
+        const step = Math.max(1, Math.floor(boundarySamples.length / 64));
+        const sampledBoundary = [];
+        for (let i = 0; i < boundarySamples.length; i += step) {
+          sampledBoundary.push(boundarySamples[i]);
+        }
+
+        // Initialize all masked pixels with inverse-distance weighted boundary color
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = y * w + x;
+            if (maskArr[idx] === 1) {
+              let weightSum = 0;
+              let sumR = 0, sumG = 0, sumB = 0;
+              for (let s = 0; s < sampledBoundary.length; s++) {
+                const bp = sampledBoundary[s];
+                const distSq = (x - bp.x) * (x - bp.x) + (y - bp.y) * (y - bp.y) + 1;
+                const wgt = 1 / distSq;
+                weightSum += wgt;
+                sumR += bp.r * wgt;
+                sumG += bp.g * wgt;
+                sumB += bp.b * wgt;
+              }
+              const p = idx * 4;
+              bData[p] = Math.round(sumR / weightSum);
+              bData[p + 1] = Math.round(sumG / weightSum);
+              bData[p + 2] = Math.round(sumB / weightSum);
+            }
+          }
+        }
+
+        // Local relaxation smoothing passes (6 passes)
+        for (let iter = 0; iter < 6; iter++) {
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = y * w + x;
+              if (maskArr[idx] === 1) {
+                const p = idx * 4;
+                let sR = 0, sG = 0, sB = 0;
+                const neighbors = [idx - 1, idx + 1, idx - w, idx + w];
+                for (let k = 0; k < 4; k++) {
+                  const np = neighbors[k] * 4;
+                  sR += bData[np]; sG += bData[np+1]; sB += bData[np+2];
+                }
+                bData[p] = Math.round(sR / 4);
+                bData[p + 1] = Math.round(sG / 4);
+                bData[p + 2] = Math.round(sB / 4);
+              }
+            }
+          }
+        }
+      }
+
+      bCtx.putImageData(baseImgData, 0, 0);
+      mCtx.clearRect(0, 0, w, h);
+      showToast('Erase applied successfully');
+    }
+    window.applySmartErase = applySmartErase;
+
+    function undoSmartErase() {
+      if (smartEraseUndoStack.length === 0) return;
+      const prev = smartEraseUndoStack.pop();
+      const baseCanvas = document.getElementById('smart-erase-base-canvas');
+      if (baseCanvas && prev) {
+        baseCanvas.getContext('2d').putImageData(prev, 0, 0);
+      }
+      updateSmartEraseUndoButton();
+      showToast('Erase undone');
+    }
+    window.undoSmartErase = undoSmartErase;
+
+    function updateSmartEraseUndoButton() {
+      const btn = document.getElementById('smart-erase-undo-btn');
+      if (!btn) return;
+      btn.disabled = smartEraseUndoStack.length === 0;
+    }
+
+    function saveSmartEraseResult() {
+      const baseCanvas = document.getElementById('smart-erase-base-canvas');
+      if (!baseCanvas) return;
+      const dataUrl = baseCanvas.toDataURL('image/jpeg', 0.95);
+      saveExportedToolImage(dataUrl, 'Smart_Erased_Scan');
+      showToast('Erased scan saved to documents');
+      closeSmartErase();
+    }
+    window.saveSmartEraseResult = saveSmartEraseResult;
+
+    function createDefaultBlemishSample() {
+      return new Promise(resolve => {
+        const c = document.createElement('canvas');
+        c.width = 600;
+        c.height = 400;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, 600, 400);
+
+        ctx.fillStyle = '#1E1B18';
+        ctx.font = 'bold 20px system-ui, sans-serif';
+        ctx.fillText('OFFICIAL DOCUMENT SPECIFICATION', 50, 60);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.fillText('Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 50, 110);
+        ctx.fillText('Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 50, 140);
+        ctx.fillText('Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.', 50, 170);
+
+        ctx.fillStyle = '#92400E';
+        ctx.beginPath();
+        ctx.arc(460, 260, 36, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#B45309';
+        ctx.beginPath();
+        ctx.arc(475, 275, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        resolve(c.toDataURL('image/jpeg', 0.95));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // 4. SLIDES AND WHITEBOARD CAMERA MODES
+    // ------------------------------------------------------------
+    function openSlidesMode() {
+      closeCameraAllFeatures();
+      cameraMode = 'slides';
+      isBatchMode = false;
+      updateCameraSpecialModeBanner('Slides Mode (Anti-glare)', '★');
+      if (currentScreen !== 'camera') {
+        navigateTo('camera');
+      }
+      showToast('Slides Mode: High contrast & anti-glare active');
+    }
+    window.openSlidesMode = openSlidesMode;
+
+    function openWhiteboardMode() {
+      closeCameraAllFeatures();
+      cameraMode = 'whiteboard';
+      isBatchMode = false;
+      updateCameraSpecialModeBanner('Whiteboard Mode (Marker Boost)', '✎');
+      if (currentScreen !== 'camera') {
+        navigateTo('camera');
+      }
+      showToast('Whiteboard Mode: Marker saturation & background whitening');
+    }
+    window.openWhiteboardMode = openWhiteboardMode;
+
+    function updateCameraSpecialModeBanner(text, icon) {
+      const banner = document.getElementById('camera-special-mode-banner');
+      const textEl = document.getElementById('camera-special-mode-text');
+      const iconEl = document.getElementById('camera-special-mode-icon');
+      if (banner && text) {
+        if (textEl) textEl.textContent = text;
+        if (iconEl && icon) iconEl.textContent = icon;
+        banner.classList.remove('hidden');
+      } else if (banner) {
+        banner.classList.add('hidden');
+      }
+    }
+
+    // ------------------------------------------------------------
+    // 5. GREETING CARD STUDIO
+    // ------------------------------------------------------------
+    let currentCardTemplate = 'birthday';
+    let cardPersonalPhotoUrl = null;
+
+    function openGreetingCardMaker() {
+      closeCameraAllFeatures();
+      const modal = document.getElementById('modal-greeting-card');
+      if (modal) modal.classList.remove('hidden');
+      renderGreetingCardPreview();
+    }
+    window.openGreetingCardMaker = openGreetingCardMaker;
+
+    function closeGreetingCardMaker() {
+      const modal = document.getElementById('modal-greeting-card');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeGreetingCardMaker = closeGreetingCardMaker;
+
+    function setGreetingCardTemplate(tpl) {
+      currentCardTemplate = tpl;
+      ['birthday', 'thankyou', 'congrats', 'holiday'].forEach(t => {
+        const btn = document.getElementById(`card-tpl-${t}`);
+        if (!btn) return;
+        if (t === tpl) {
+          btn.className = 'card-tpl-chip py-2 px-1 rounded-xl border-2 border-[#7C3AED] bg-[#EDE9FE] text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const title = btn.querySelector('span:first-child');
+          if (title) title.className = 'text-xs font-black text-[#7C3AED]';
+        } else {
+          btn.className = 'card-tpl-chip py-2 px-1 rounded-xl border-2 border-slate-200 hover:border-purple-300 bg-white text-center flex flex-col items-center justify-center transition-all cursor-pointer';
+          const title = btn.querySelector('span:first-child');
+          if (title) title.className = 'text-xs font-black text-[#18181B]';
+        }
+      });
+      renderGreetingCardPreview();
+    }
+    window.setGreetingCardTemplate = setGreetingCardTemplate;
+
+    function triggerGreetingCardPhotoSelect() {
+      const input = document.getElementById('greeting-card-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerGreetingCardPhotoSelect = triggerGreetingCardPhotoSelect;
+
+    function handleGreetingCardPhotoPicked(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        cardPersonalPhotoUrl = evt.target.result;
+        const btnText = document.getElementById('card-photo-btn-text');
+        const status = document.getElementById('card-photo-status');
+        if (btnText) btnText.textContent = 'Change Photo';
+        if (status) status.textContent = 'Photo attached to card design';
+        renderGreetingCardPreview();
+      };
+      reader.readAsDataURL(files[0]);
+    }
+    window.handleGreetingCardPhotoPicked = handleGreetingCardPhotoPicked;
+
+    function renderGreetingCardPreview() {
+      const canvas = document.getElementById('greeting-card-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = 700;
+      canvas.height = 980;
+
+      const recipient = (document.getElementById('card-input-recipient')?.value || 'Dear Friend,').trim();
+      const message = (document.getElementById('card-input-message')?.value || 'Wishing you joy and wonderful moments!').trim();
+      const sender = (document.getElementById('card-input-sender')?.value || 'Warmly, Sophia').trim();
+
+      if (currentCardTemplate === 'birthday') {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#FFF1F2');
+        grad.addColorStop(0.5, '#FEF3C7');
+        grad.addColorStop(1, '#EDE9FE');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(30, 30, 640, 920);
+        ctx.strokeStyle = '#E11D48';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(40, 40, 620, 900);
+
+        ctx.fillStyle = '#BE123C';
+        ctx.font = '900 38px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('★ HAPPY BIRTHDAY ★', 350, 110);
+      } else if (currentCardTemplate === 'thankyou') {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#FAF5FF');
+        grad.addColorStop(1, '#F3E8FF');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#7C3AED';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(32, 32, 636, 916);
+        ctx.strokeStyle = '#A78BFA';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(42, 42, 616, 896);
+
+        ctx.fillStyle = '#6D28D9';
+        ctx.font = '900 36px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('THANK YOU SO MUCH', 350, 110);
+      } else if (currentCardTemplate === 'congrats') {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#EDE9FE');
+        grad.addColorStop(0.5, '#FEF08A');
+        grad.addColorStop(1, '#F3E8FF');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#854D0E';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(30, 30, 640, 920);
+
+        ctx.fillStyle = '#7E22CE';
+        ctx.font = '900 38px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('CONGRATULATIONS!', 350, 110);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 700, 980);
+        grad.addColorStop(0, '#F0FDF4');
+        grad.addColorStop(1, '#FEF2F2');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 700, 980);
+
+        ctx.strokeStyle = '#15803D';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(32, 32, 636, 916);
+        ctx.strokeStyle = '#DC2626';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(42, 42, 616, 896);
+
+        ctx.fillStyle = '#166534';
+        ctx.font = '900 36px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SEASON\'S GREETINGS', 350, 110);
+      }
+
+      let textStartY = 190;
+      if (cardPersonalPhotoUrl) {
+        const photoImg = new Image();
+        photoImg.onload = function() {
+          const pW = 340, pH = 240, pX = (700 - pW) / 2, pY = 160;
+          ctx.save();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(pX - 4, pY - 4, pW + 8, pH + 8);
+          ctx.strokeStyle = '#94A3B8';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(pX - 4, pY - 4, pW + 8, pH + 8);
+          ctx.drawImage(photoImg, pX, pY, pW, pH);
+          ctx.restore();
+          drawCardTypography(ctx, recipient, message, sender, 450);
+        };
+        photoImg.src = cardPersonalPhotoUrl;
+      } else {
+        drawCardTypography(ctx, recipient, message, sender, textStartY);
+      }
+    }
+    window.renderGreetingCardPreview = renderGreetingCardPreview;
+
+    function drawCardTypography(ctx, recipient, message, sender, startY) {
+      ctx.fillStyle = '#1E1B18';
+      ctx.font = 'bold 26px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(recipient, 350, startY);
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '500 20px system-ui, sans-serif';
+      const words = message.split(' ');
+      let line = '';
+      let y = startY + 50;
+      const maxWidth = 520;
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, 350, y);
+          line = words[i] + ' ';
+          y += 34;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, 350, y);
+
+      ctx.fillStyle = '#7C3AED';
+      ctx.font = 'italic bold 24px serif';
+      ctx.fillText(sender, 350, Math.max(y + 80, 840));
+    }
+
+    function exportGreetingCardPdf() {
+      const canvas = document.getElementById('greeting-card-canvas');
+      if (!canvas) return;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      saveExportedToolImage(dataUrl, `Greeting_Card_${currentCardTemplate}`);
+      showToast('Printable Greeting Card generated and saved to documents');
+      closeGreetingCardMaker();
+    }
+    window.exportGreetingCardPdf = exportGreetingCardPdf;
+
+    function saveExportedToolImage(dataUrl, titlePrefix) {
+      const newPage = {
+        id: 'page_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        title: `${titlePrefix} (${new Date().toLocaleTimeString()})`,
+        rawUrl: dataUrl,
+        croppedUrl: dataUrl,
+        enhancedUrl: dataUrl,
+        width: 800,
+        height: 1100,
+        rotation: 0,
+        filter: 'original',
+        brightness: 0,
+        isTimestamped: false,
+        pins: { tl: { x: 0, y: 0 }, tr: { x: 800, y: 0 }, br: { x: 800, y: 1100 }, bl: { x: 0, y: 1100 } }
+      };
+      sessionPages.push(newPage);
+      selectedOrganizerIndex = sessionPages.length - 1;
+      if (typeof updateBatchThumbBadge === 'function') updateBatchThumbBadge();
+      if (typeof renderOrganizerPages === 'function') renderOrganizerPages();
+    }
+
     function captureCurrentPage() {
       // Trigger mobile camera shutter haptic sound and flash
       if (typeof playNativeHapticSound === 'function') playNativeHapticSound('shutter');
@@ -6439,7 +8006,7 @@
         width: w,
         height: h,
         rotation: 0,
-        filter: isTimestamp ? 'original' : 'magic',
+        filter: isTimestamp ? 'original' : (cameraMode === 'slides' ? 'slides' : (cameraMode === 'whiteboard' ? 'whiteboard' : 'magic')),
         brightness: 0,
         isTimestamped: isTimestamp,
         timestampText: tsText,
@@ -6521,7 +8088,7 @@
             width: w,
             height: h,
             rotation: 0,
-            filter: isTimestamp ? 'original' : 'magic',
+            filter: isTimestamp ? 'original' : (cameraMode === 'slides' ? 'slides' : (cameraMode === 'whiteboard' ? 'whiteboard' : 'magic')),
             brightness: 0,
             isTimestamped: isTimestamp,
             timestampText: tsText,
@@ -7100,14 +8667,14 @@
     }
 
     function updateFilterPresetButtons() {
-      const presets = ['original', 'magic', 'grayscale', 'bw'];
+      const presets = ['original', 'magic', 'grayscale', 'bw', 'slides', 'whiteboard'];
       presets.forEach(p => {
         const btn = document.getElementById(`filter-btn-${p}`);
         if (!btn) return;
         if (p === currentFilter) {
-          btn.className = 'p-2 rounded-xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all';
+          btn.className = 'p-1.5 rounded-2xl border-2 border-[#8B5CF6] bg-[#EDE9FE]/50 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer';
         } else {
-          btn.className = 'p-2 rounded-xl border-2 border-slate-200 hover:border-[#8B5CF6] text-center flex flex-col items-center justify-center transition-all';
+          btn.className = 'p-1.5 rounded-2xl border-2 border-transparent hover:border-slate-300 text-center flex flex-col items-center justify-center transition-all shadow-xs cursor-pointer';
         }
       });
     }
@@ -7224,6 +8791,45 @@
               r = v;
               g = v;
               b = v;
+            } else if (currentFilter === 'slides') {
+              // Slides Mode: De-glare (compress over-exposed specular projector highlights) + edge contrast boost
+              if (lum > 200) {
+                const comp = 200 + (lum - 200) * 0.45;
+                r = Math.min(255, (r / (lum || 1)) * comp);
+                g = Math.min(255, (g / (lum || 1)) * comp);
+                b = Math.min(255, (b / (lum || 1)) * comp);
+              } else if (lum < 160) {
+                r = r * 0.88;
+                g = g * 0.88;
+                b = b * 0.88;
+              }
+              // Moderate color saturation boost (+20%) for diagram colors
+              r = Math.min(255, Math.max(0, lum + (r - lum) * 1.20));
+              g = Math.min(255, Math.max(0, lum + (g - lum) * 1.20));
+              b = Math.min(255, Math.max(0, lum + (b - lum) * 1.20));
+            } else if (currentFilter === 'whiteboard') {
+              // Whiteboard Mode: Whiten background surface to pure white (#FFFFFF), maximize marker ink saturation
+              const maxC = Math.max(r, g, b);
+              const minC = Math.min(r, g, b);
+              const chroma = maxC - minC;
+
+              // Dry-erase whiteboard surface detection: relatively bright & low chroma
+              if (lum > 135 && chroma < 38) {
+                r = 255;
+                g = 255;
+                b = 255;
+              } else {
+                // Marker ink (black, red, blue, green): Deepen luminance & boost saturation
+                if (lum < 100) {
+                  r = r * 0.65;
+                  g = g * 0.65;
+                  b = b * 0.65;
+                } else {
+                  r = Math.min(255, Math.max(0, lum + (r - lum) * 1.45));
+                  g = Math.min(255, Math.max(0, lum + (g - lum) * 1.45));
+                  b = Math.min(255, Math.max(0, lum + (b - lum) * 1.45));
+                }
+              }
             }
 
             // Apply brightness offset
@@ -7297,6 +8903,35 @@
           } else if (p.filter === 'bw') {
             const v = lum > 128 ? 255 : 0;
             data[i] = v; data[i + 1] = v; data[i + 2] = v;
+          } else if (p.filter === 'slides') {
+            let r = data[i], g = data[i+1], b = data[i+2];
+            if (lum > 200) {
+              const comp = 200 + (lum - 200) * 0.45;
+              r = Math.min(255, (r / (lum || 1)) * comp);
+              g = Math.min(255, (g / (lum || 1)) * comp);
+              b = Math.min(255, (b / (lum || 1)) * comp);
+            } else if (lum < 160) {
+              r *= 0.88; g *= 0.88; b *= 0.88;
+            }
+            data[i] = Math.min(255, Math.max(0, lum + (r - lum) * 1.20));
+            data[i+1] = Math.min(255, Math.max(0, lum + (g - lum) * 1.20));
+            data[i+2] = Math.min(255, Math.max(0, lum + (b - lum) * 1.20));
+          } else if (p.filter === 'whiteboard') {
+            let r = data[i], g = data[i+1], b = data[i+2];
+            const maxC = Math.max(r, g, b);
+            const minC = Math.min(r, g, b);
+            const chroma = maxC - minC;
+            if (lum > 135 && chroma < 38) {
+              data[i] = 255; data[i+1] = 255; data[i+2] = 255;
+            } else {
+              if (lum < 100) {
+                data[i] = r * 0.65; data[i+1] = g * 0.65; data[i+2] = b * 0.65;
+              } else {
+                data[i] = Math.min(255, Math.max(0, lum + (r - lum) * 1.45));
+                data[i+1] = Math.min(255, Math.max(0, lum + (g - lum) * 1.45));
+                data[i+2] = Math.min(255, Math.max(0, lum + (b - lum) * 1.45));
+              }
+            }
           }
         }
         ctx.putImageData(imgData, 0, 0);
