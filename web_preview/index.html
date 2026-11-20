@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#FCFAFD">
   <link rel="icon" type="image/png" href="docerena-logo.png">
   <script src="tailwind.js"></script>
+  <script src="jsqr.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -56,6 +57,16 @@
     /* Edge-to-edge system insets */
     .safe-top { padding-top: max(env(safe-area-inset-top, 0px), 12px); }
     .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); }
+
+    /* QR Code Viewfinder Laser Animation */
+    @keyframes qrLaserMove {
+      0% { top: 6%; opacity: 0.8; }
+      50% { top: 92%; opacity: 1; }
+      100% { top: 6%; opacity: 0.8; }
+    }
+    .animate-qr-laser {
+      animation: qrLaserMove 2.2s ease-in-out infinite;
+    }
 
     /* Full responsive viewport handling */
     @media (max-width: 640px) {
@@ -804,6 +815,46 @@
           <span class="text-[#C084FC] font-semibold text-[11px]">DocErena Verified &bull;</span>
           <span id="camera-timestamp-clock" class="text-white font-mono text-xs font-semibold">2026-11-19 12:00:00 UTC</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Dedicated QR / Code Scanning Viewfinder Overlay -->
+    <div id="camera-qr-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-between p-6 z-25 bg-black/35 pointer-events-none">
+      <!-- Top QR Status Header -->
+      <div class="w-full flex items-center justify-between pointer-events-auto pt-2">
+        <button onclick="closeScanCodeMode()" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all cursor-pointer" title="Back to Document Camera">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="px-4 py-1.5 rounded-full bg-[#7C3AED]/85 backdrop-blur-md border border-[#A855F7]/40 text-white font-bold text-xs tracking-wide shadow-lg flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Scan Code / QR</span>
+        </div>
+        <button onclick="cycleFlash()" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all cursor-pointer" title="Toggle Torch">
+          <svg class="w-5 h-5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>
+      </div>
+
+      <!-- Center Square Reticle (240x240 px) -->
+      <div class="relative w-[240px] h-[240px] flex items-center justify-center my-auto">
+        <!-- 4 Corner Brackets -->
+        <div class="absolute -top-1 -left-1 w-10 h-10 border-t-[4px] border-l-[4px] border-[#C084FC] rounded-tl-xl shadow-[0_0_12px_#A855F7]"></div>
+        <div class="absolute -top-1 -right-1 w-10 h-10 border-t-[4px] border-r-[4px] border-[#C084FC] rounded-tr-xl shadow-[0_0_12px_#A855F7]"></div>
+        <div class="absolute -bottom-1 -left-1 w-10 h-10 border-b-[4px] border-l-[4px] border-[#C084FC] rounded-bl-xl shadow-[0_0_12px_#A855F7]"></div>
+        <div class="absolute -bottom-1 -right-1 w-10 h-10 border-b-[4px] border-r-[4px] border-[#C084FC] rounded-br-xl shadow-[0_0_12px_#A855F7]"></div>
+        
+        <!-- Animated QR Laser Line -->
+        <div class="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-[#C084FC] to-transparent shadow-[0_0_10px_#A855F7] animate-qr-laser"></div>
+      </div>
+
+      <!-- Bottom Hint & Import Image Button -->
+      <div class="flex flex-col items-center space-y-3 pb-4 pointer-events-auto">
+        <div class="px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/15 text-white/90 text-xs font-medium tracking-wide shadow-md">
+          Align QR code within the frame
+        </div>
+        <button onclick="triggerQrImageImport()" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white font-semibold text-xs backdrop-blur-md shadow-md flex items-center space-x-2 transition-all cursor-pointer">
+          <svg class="w-4 h-4 text-[#C084FC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Import QR from Gallery</span>
+        </button>
       </div>
     </div>
 
@@ -2271,10 +2322,9 @@
               <span class="block text-center text-[12px] font-bold text-[#18181B] mt-1.5 leading-tight">Print</span>
             </button>
 
-            <!-- Tool: Scan QR (Soon) -->
-            <button onclick="showComingSoon('Scan QR', 'Fast offline camera scanner for QR codes and barcodes.')" data-tool-name="Scan QR" class="tool-card flex flex-col items-center group cursor-pointer focus:outline-none" title="Scan QR">
+            <!-- Tool: Scan QR (Verified Offline) -->
+            <button onclick="openScanCodeMode()" data-tool-name="Scan QR" class="tool-card flex flex-col items-center group cursor-pointer focus:outline-none" title="Scan QR">
               <div class="w-[62px] h-[62px] sm:w-[68px] sm:h-[68px] rounded-[22px] bg-[#E0F2FE] flex items-center justify-center relative shadow-xs group-hover:scale-105 active:scale-95 transition-transform">
-                <span class="absolute -top-1.5 -right-1 px-1.5 py-0.5 rounded-full bg-[#E9D5FF] text-[#6B21A8] font-black text-[9px] border border-white shadow-xs">Soon</span>
                 <svg class="w-7 h-7 text-[#4C1D95]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 7V5a1 1 0 0 1 1-1h2"/>
                   <path d="M17 4h2a1 1 0 0 1 1 1v2"/>
@@ -4980,10 +5030,9 @@
               <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">Smart Erase</span>
             </button>
 
-            <!-- 4. Scan Code -->
-            <button onclick="showComingSoon('Scan Code', 'Instantly read QR codes, barcodes, and digital links offline.')" class="flex flex-col items-center group focus:outline-none" title="Scan Code">
+            <!-- 4. Scan Code (Verified Offline) -->
+            <button onclick="openScanCodeMode()" class="flex flex-col items-center group focus:outline-none cursor-pointer" title="Scan Code">
               <div class="w-full aspect-square rounded-[20px] bg-[#FEF08A] hover:brightness-105 active:scale-95 flex items-center justify-center shadow-sm transition-transform relative">
-                <span class="absolute -top-1.5 -right-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] border border-[#DDD6FE]/60 text-[9px] font-bold shadow-xs">Soon</span>
                 <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1638]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="7" height="7" rx="1.5"/>
                   <rect x="14" y="3" width="7" height="7" rx="1.5"/>
@@ -5098,6 +5147,59 @@
               <span class="text-[11px] sm:text-xs font-semibold text-white/95 mt-1 sm:mt-1.5 text-center leading-tight">AI Chat</span>
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden Input for QR Code Image Import -->
+    <input type="file" id="qr-file-input" accept="image/*" class="hidden" onchange="handleQrFileInputChange(event)">
+
+    <!-- Offline QR / Code Scan Result Modal Dialog (z-[60] on top of camera) -->
+    <div id="modal-qr-result" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-xs flex items-center justify-center p-5 select-none animate-fadeIn" onclick="closeQrResultModal()">
+      <div class="bg-white dark:bg-slate-900 rounded-[28px] max-w-sm w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center space-y-4" onclick="event.stopPropagation()">
+        
+        <!-- Icon & Type Badge -->
+        <div class="flex flex-col items-center space-y-2">
+          <div class="w-14 h-14 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-xs">
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="5.5" y="5.5" width="2" height="2" fill="currentColor"/><rect x="16.5" y="5.5" width="2" height="2" fill="currentColor"/><rect x="5.5" y="16.5" width="2" height="2" fill="currentColor"/>
+              <path d="M14 14h3v3h-3z" fill="currentColor"/><path d="M18 18h3v3h-3z" fill="currentColor"/><path d="M14 20h2"/><path d="M20 15v2"/>
+            </svg>
+          </div>
+          <div id="qr-result-badge" class="inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] text-[11px] font-black tracking-wide uppercase">
+            <span>Decoded QR Code</span>
+          </div>
+        </div>
+
+        <div class="w-full space-y-1.5">
+          <h3 class="text-lg font-black text-[#18181B] dark:text-white">Scanned Code</h3>
+          <p class="text-xs text-[#64748B] dark:text-slate-400">Content extracted offline from code:</p>
+        </div>
+
+        <!-- Decoded Content Display Box -->
+        <div class="w-full bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-3.5 border border-slate-200/80 dark:border-slate-700 max-h-40 overflow-y-auto text-left break-all select-text">
+          <div id="qr-result-text" class="text-xs font-mono text-[#18181B] dark:text-slate-200 leading-relaxed font-semibold"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="w-full space-y-2 pt-1">
+          <!-- Copy Button (Instant 1-Tap Copy) -->
+          <button id="qr-copy-btn" onclick="copyDecodedQrText()" class="w-full py-3 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-purple-500/20 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span id="qr-copy-btn-text">Copy to Clipboard</span>
+          </button>
+
+          <!-- Separate Explicit Tap Open Link Button (Rendered only when content is URL) -->
+          <button id="qr-open-link-btn" onclick="openDecodedQrUrl()" class="hidden w-full py-3 rounded-2xl bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-sky-500/20 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Open Link in Browser</span>
+          </button>
+
+          <!-- Done / Scan Another Button -->
+          <button onclick="closeQrResultModal()" class="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold active:scale-98 transition-all cursor-pointer">
+            Scan Another / Close
+          </button>
         </div>
       </div>
     </div>
@@ -5782,6 +5884,7 @@
 
     function stopCamera() {
       if (typeof updateCameraTimestampPreview === 'function') updateCameraTimestampPreview(false);
+      if (typeof stopQrScanningLoop === 'function') stopQrScanningLoop();
       setTorch(false);
       if (activeCameraStream) {
         try {
@@ -5903,6 +6006,23 @@
         }
       });
 
+      // Manage QR Viewfinder overlay vs Document frame
+      const qrOverlay = document.getElementById('camera-qr-overlay');
+      const docFrame = document.getElementById('camera-doc-frame');
+
+      if (mode === 'code' || mode === 'qr') {
+        isBatchMode = false;
+        updateCameraTimestampPreview(false);
+        if (qrOverlay) qrOverlay.classList.remove('hidden');
+        if (docFrame) docFrame.classList.add('hidden');
+        startQrScanningLoop();
+        return;
+      } else {
+        if (qrOverlay) qrOverlay.classList.add('hidden');
+        if (docFrame) docFrame.classList.remove('hidden');
+        stopQrScanningLoop();
+      }
+
       if (mode === 'single' || mode === 'document' || mode === 'doc') {
         isBatchMode = false;
         updateCameraTimestampPreview(false);
@@ -5954,6 +6074,10 @@
     }
 
     function handleAllFeaturesAction(action) {
+      if (action === 'code' || action === 'scan-code' || action === 'qr') {
+        openScanCodeMode();
+        return;
+      }
       if (action === 'timestamp') {
         closeCameraAllFeatures();
         if (typeof setCameraScanMode === 'function') {
@@ -5981,6 +6105,292 @@
         navigateTo('extract-text-ocr');
       }
     }
+
+    // ============================================================
+    // OFFLINE SCAN CODE / QR CODE SUBSYSTEM (100% AIRPLANE-READY)
+    // ============================================================
+    let isScanCodeDialogOpen = false;
+    let qrScanInterval = null;
+    let lastScannedPayload = null;
+    let lastScannedTime = 0;
+    let previousCameraModeBeforeCode = 'single';
+    let currentDecodedPayload = '';
+
+    function openScanCodeMode() {
+      // 1. Preserve active camera draft intact (sessionPages is untouched)
+      if (cameraMode && cameraMode !== 'code') {
+        previousCameraModeBeforeCode = cameraMode;
+      }
+
+      // 2. Dismiss any open drawer modals
+      closeCameraAllFeatures();
+      if (typeof closeComingSoonModal === 'function') closeComingSoonModal();
+
+      // 3. Navigate to camera screen if on another tab/screen
+      if (currentScreen !== 'camera') {
+        navigateTo('camera');
+      }
+
+      // 4. Activate code mode
+      if (typeof setCameraScanMode === 'function') {
+        setCameraScanMode('code');
+      } else {
+        selectScanMode('code');
+      }
+      showToast('Scan Code active: Point at any QR code');
+    }
+    window.openScanCodeMode = openScanCodeMode;
+
+    function closeScanCodeMode() {
+      stopQrScanningLoop();
+      const qrOverlay = document.getElementById('camera-qr-overlay');
+      if (qrOverlay) qrOverlay.classList.add('hidden');
+      const docFrame = document.getElementById('camera-doc-frame');
+      if (docFrame) docFrame.classList.remove('hidden');
+
+      // Restore previous scan mode without losing any session draft pages
+      const restoreMode = previousCameraModeBeforeCode || 'single';
+      if (typeof setCameraScanMode === 'function') {
+        setCameraScanMode(restoreMode);
+      } else {
+        selectScanMode(restoreMode);
+      }
+      showToast(`Returned to ${restoreMode.toUpperCase()} camera`);
+    }
+    window.closeScanCodeMode = closeScanCodeMode;
+
+    function startQrScanningLoop() {
+      if (qrScanInterval) {
+        clearInterval(qrScanInterval);
+        qrScanInterval = null;
+      }
+
+      const offscreenCanvas = document.createElement('canvas');
+      const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+
+      qrScanInterval = setInterval(() => {
+        // Prevent repeated scans if modal is open, or camera mode changed
+        if (isScanCodeDialogOpen || cameraMode !== 'code') return;
+        const video = document.getElementById('camera-video');
+        if (!video || video.classList.contains('hidden') || video.readyState < 2 || video.videoWidth === 0) return;
+
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const scanDim = 420;
+        offscreenCanvas.width = scanDim;
+        offscreenCanvas.height = scanDim;
+
+        // Sample centered square from video feed
+        const cropSize = Math.min(vw, vh) * 0.75;
+        const sx = (vw - cropSize) / 2;
+        const sy = (vh - cropSize) / 2;
+
+        try {
+          ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, scanDim, scanDim);
+          const imgData = ctx.getImageData(0, 0, scanDim, scanDim);
+          if (typeof jsQR === 'function') {
+            const code = jsQR(imgData.data, scanDim, scanDim, { inversionAttempts: 'attemptBoth' });
+            if (code && code.data && code.data.trim().length > 0) {
+              handleDecodedCode(code.data.trim());
+            }
+          }
+        } catch(e) {
+          console.warn("QR frame decode error:", e);
+        }
+      }, 200);
+    }
+    window.startQrScanningLoop = startQrScanningLoop;
+
+    function stopQrScanningLoop() {
+      if (qrScanInterval) {
+        clearInterval(qrScanInterval);
+        qrScanInterval = null;
+      }
+    }
+    window.stopQrScanningLoop = stopQrScanningLoop;
+
+    function handleDecodedCode(rawContent) {
+      if (!rawContent) return;
+      const content = rawContent.trim();
+
+      // Crucial: Prevent repeated reads of the same code from stacking dialogs
+      if (isScanCodeDialogOpen) return;
+      const now = Date.now();
+      if (content === lastScannedPayload && (now - lastScannedTime) < 2500) {
+        return; // Debounce duplicate read of identical code within 2.5s
+      }
+
+      lastScannedPayload = content;
+      lastScannedTime = now;
+      isScanCodeDialogOpen = true;
+
+      // Haptic feedback & notification sound
+      if (typeof playNativeHapticSound === 'function') playNativeHapticSound('success');
+      if (navigator.vibrate) {
+        try { navigator.vibrate(45); } catch(e) {}
+      }
+
+      showQrResultModal(content);
+    }
+    window.handleDecodedCode = handleDecodedCode;
+
+    function showQrResultModal(content) {
+      currentDecodedPayload = content;
+      const modal = document.getElementById('modal-qr-result');
+      const textEl = document.getElementById('qr-result-text');
+      const badgeEl = document.getElementById('qr-result-badge');
+      const openBtn = document.getElementById('qr-open-link-btn');
+      const copyBtnText = document.getElementById('qr-copy-btn-text');
+
+      if (textEl) textEl.textContent = content;
+      if (copyBtnText) copyBtnText.textContent = 'Copy to Clipboard';
+
+      const isUrl = /^https?:\/\//i.test(content);
+      if (badgeEl) {
+        if (isUrl) {
+          badgeEl.className = 'inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-[#E0F2FE] text-[#0284C7] text-[11px] font-black tracking-wide uppercase';
+          badgeEl.innerHTML = '<svg class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>Website Link</span>';
+        } else {
+          badgeEl.className = 'inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] text-[11px] font-black tracking-wide uppercase';
+          badgeEl.innerHTML = '<svg class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Plain Text</span>';
+        }
+      }
+
+      if (openBtn) {
+        if (isUrl) {
+          openBtn.classList.remove('hidden');
+        } else {
+          openBtn.classList.add('hidden');
+        }
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+    window.showQrResultModal = showQrResultModal;
+
+    function closeQrResultModal() {
+      const modal = document.getElementById('modal-qr-result');
+      if (modal) modal.classList.add('hidden');
+      isScanCodeDialogOpen = false;
+      showToast('Ready for next scan');
+    }
+    window.closeQrResultModal = closeQrResultModal;
+
+    function copyDecodedQrText() {
+      if (!currentDecodedPayload) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentDecodedPayload).then(() => {
+          onCopySuccess();
+        }).catch(() => fallbackCopy());
+      } else {
+        fallbackCopy();
+      }
+
+      function fallbackCopy() {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = currentDecodedPayload;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          onCopySuccess();
+        } catch(e) {
+          showToast('Failed to copy to clipboard');
+        }
+      }
+
+      function onCopySuccess() {
+        const btnText = document.getElementById('qr-copy-btn-text');
+        if (btnText) btnText.textContent = 'Copied to Clipboard!';
+        showToast('Decoded text copied to clipboard');
+        setTimeout(() => {
+          if (btnText) btnText.textContent = 'Copy to Clipboard';
+        }, 2200);
+      }
+    }
+    window.copyDecodedQrText = copyDecodedQrText;
+
+    function openDecodedQrUrl() {
+      if (!currentDecodedPayload) return;
+      const url = currentDecodedPayload.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        showToast('Not a valid web link');
+        return;
+      }
+
+      // Check native Android bridge first
+      if (window.DocErenaNative && typeof window.DocErenaNative.openExternalUrl === 'function') {
+        try {
+          window.DocErenaNative.openExternalUrl(url);
+          showToast('Opening link in browser...');
+          return;
+        } catch(e) {
+          console.warn("DocErenaNative.openExternalUrl warning:", e);
+        }
+      }
+
+      try {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        showToast('Opening link...');
+      } catch(e) {
+        showToast('Could not open browser');
+      }
+    }
+    window.openDecodedQrUrl = openDecodedQrUrl;
+
+    function triggerQrImageImport() {
+      const input = document.getElementById('qr-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerQrImageImport = triggerQrImageImport;
+
+    function handleQrFileInputChange(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const file = files[0];
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width || 600;
+          canvas.height = img.height || 600;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          try {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            if (typeof jsQR === 'function') {
+              const code = jsQR(imgData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+              if (code && code.data && code.data.trim().length > 0) {
+                handleDecodedCode(code.data.trim());
+                return;
+              }
+            }
+          } catch(err) {
+            console.warn("Image file QR decode error:", err);
+          }
+
+          // Blurry, unreadable, or non-QR image: honest non-crashing feedback
+          showToast('No readable QR code found in selected image');
+        };
+        img.onerror = function() {
+          showToast('Unable to load image for QR decoding');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    window.handleQrFileInputChange = handleQrFileInputChange;
 
     function captureCurrentPage() {
       // Trigger mobile camera shutter haptic sound and flash

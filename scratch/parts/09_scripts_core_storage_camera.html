@@ -650,6 +650,7 @@
 
     function stopCamera() {
       if (typeof updateCameraTimestampPreview === 'function') updateCameraTimestampPreview(false);
+      if (typeof stopQrScanningLoop === 'function') stopQrScanningLoop();
       setTorch(false);
       if (activeCameraStream) {
         try {
@@ -771,6 +772,23 @@
         }
       });
 
+      // Manage QR Viewfinder overlay vs Document frame
+      const qrOverlay = document.getElementById('camera-qr-overlay');
+      const docFrame = document.getElementById('camera-doc-frame');
+
+      if (mode === 'code' || mode === 'qr') {
+        isBatchMode = false;
+        updateCameraTimestampPreview(false);
+        if (qrOverlay) qrOverlay.classList.remove('hidden');
+        if (docFrame) docFrame.classList.add('hidden');
+        startQrScanningLoop();
+        return;
+      } else {
+        if (qrOverlay) qrOverlay.classList.add('hidden');
+        if (docFrame) docFrame.classList.remove('hidden');
+        stopQrScanningLoop();
+      }
+
       if (mode === 'single' || mode === 'document' || mode === 'doc') {
         isBatchMode = false;
         updateCameraTimestampPreview(false);
@@ -822,6 +840,10 @@
     }
 
     function handleAllFeaturesAction(action) {
+      if (action === 'code' || action === 'scan-code' || action === 'qr') {
+        openScanCodeMode();
+        return;
+      }
       if (action === 'timestamp') {
         closeCameraAllFeatures();
         if (typeof setCameraScanMode === 'function') {
@@ -849,6 +871,292 @@
         navigateTo('extract-text-ocr');
       }
     }
+
+    // ============================================================
+    // OFFLINE SCAN CODE / QR CODE SUBSYSTEM (100% AIRPLANE-READY)
+    // ============================================================
+    let isScanCodeDialogOpen = false;
+    let qrScanInterval = null;
+    let lastScannedPayload = null;
+    let lastScannedTime = 0;
+    let previousCameraModeBeforeCode = 'single';
+    let currentDecodedPayload = '';
+
+    function openScanCodeMode() {
+      // 1. Preserve active camera draft intact (sessionPages is untouched)
+      if (cameraMode && cameraMode !== 'code') {
+        previousCameraModeBeforeCode = cameraMode;
+      }
+
+      // 2. Dismiss any open drawer modals
+      closeCameraAllFeatures();
+      if (typeof closeComingSoonModal === 'function') closeComingSoonModal();
+
+      // 3. Navigate to camera screen if on another tab/screen
+      if (currentScreen !== 'camera') {
+        navigateTo('camera');
+      }
+
+      // 4. Activate code mode
+      if (typeof setCameraScanMode === 'function') {
+        setCameraScanMode('code');
+      } else {
+        selectScanMode('code');
+      }
+      showToast('Scan Code active: Point at any QR code');
+    }
+    window.openScanCodeMode = openScanCodeMode;
+
+    function closeScanCodeMode() {
+      stopQrScanningLoop();
+      const qrOverlay = document.getElementById('camera-qr-overlay');
+      if (qrOverlay) qrOverlay.classList.add('hidden');
+      const docFrame = document.getElementById('camera-doc-frame');
+      if (docFrame) docFrame.classList.remove('hidden');
+
+      // Restore previous scan mode without losing any session draft pages
+      const restoreMode = previousCameraModeBeforeCode || 'single';
+      if (typeof setCameraScanMode === 'function') {
+        setCameraScanMode(restoreMode);
+      } else {
+        selectScanMode(restoreMode);
+      }
+      showToast(`Returned to ${restoreMode.toUpperCase()} camera`);
+    }
+    window.closeScanCodeMode = closeScanCodeMode;
+
+    function startQrScanningLoop() {
+      if (qrScanInterval) {
+        clearInterval(qrScanInterval);
+        qrScanInterval = null;
+      }
+
+      const offscreenCanvas = document.createElement('canvas');
+      const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+
+      qrScanInterval = setInterval(() => {
+        // Prevent repeated scans if modal is open, or camera mode changed
+        if (isScanCodeDialogOpen || cameraMode !== 'code') return;
+        const video = document.getElementById('camera-video');
+        if (!video || video.classList.contains('hidden') || video.readyState < 2 || video.videoWidth === 0) return;
+
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const scanDim = 420;
+        offscreenCanvas.width = scanDim;
+        offscreenCanvas.height = scanDim;
+
+        // Sample centered square from video feed
+        const cropSize = Math.min(vw, vh) * 0.75;
+        const sx = (vw - cropSize) / 2;
+        const sy = (vh - cropSize) / 2;
+
+        try {
+          ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, scanDim, scanDim);
+          const imgData = ctx.getImageData(0, 0, scanDim, scanDim);
+          if (typeof jsQR === 'function') {
+            const code = jsQR(imgData.data, scanDim, scanDim, { inversionAttempts: 'attemptBoth' });
+            if (code && code.data && code.data.trim().length > 0) {
+              handleDecodedCode(code.data.trim());
+            }
+          }
+        } catch(e) {
+          console.warn("QR frame decode error:", e);
+        }
+      }, 200);
+    }
+    window.startQrScanningLoop = startQrScanningLoop;
+
+    function stopQrScanningLoop() {
+      if (qrScanInterval) {
+        clearInterval(qrScanInterval);
+        qrScanInterval = null;
+      }
+    }
+    window.stopQrScanningLoop = stopQrScanningLoop;
+
+    function handleDecodedCode(rawContent) {
+      if (!rawContent) return;
+      const content = rawContent.trim();
+
+      // Crucial: Prevent repeated reads of the same code from stacking dialogs
+      if (isScanCodeDialogOpen) return;
+      const now = Date.now();
+      if (content === lastScannedPayload && (now - lastScannedTime) < 2500) {
+        return; // Debounce duplicate read of identical code within 2.5s
+      }
+
+      lastScannedPayload = content;
+      lastScannedTime = now;
+      isScanCodeDialogOpen = true;
+
+      // Haptic feedback & notification sound
+      if (typeof playNativeHapticSound === 'function') playNativeHapticSound('success');
+      if (navigator.vibrate) {
+        try { navigator.vibrate(45); } catch(e) {}
+      }
+
+      showQrResultModal(content);
+    }
+    window.handleDecodedCode = handleDecodedCode;
+
+    function showQrResultModal(content) {
+      currentDecodedPayload = content;
+      const modal = document.getElementById('modal-qr-result');
+      const textEl = document.getElementById('qr-result-text');
+      const badgeEl = document.getElementById('qr-result-badge');
+      const openBtn = document.getElementById('qr-open-link-btn');
+      const copyBtnText = document.getElementById('qr-copy-btn-text');
+
+      if (textEl) textEl.textContent = content;
+      if (copyBtnText) copyBtnText.textContent = 'Copy to Clipboard';
+
+      const isUrl = /^https?:\/\//i.test(content);
+      if (badgeEl) {
+        if (isUrl) {
+          badgeEl.className = 'inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-[#E0F2FE] text-[#0284C7] text-[11px] font-black tracking-wide uppercase';
+          badgeEl.innerHTML = '<svg class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>Website Link</span>';
+        } else {
+          badgeEl.className = 'inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-[#EDE9FE] text-[#7C3AED] text-[11px] font-black tracking-wide uppercase';
+          badgeEl.innerHTML = '<svg class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Plain Text</span>';
+        }
+      }
+
+      if (openBtn) {
+        if (isUrl) {
+          openBtn.classList.remove('hidden');
+        } else {
+          openBtn.classList.add('hidden');
+        }
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+    window.showQrResultModal = showQrResultModal;
+
+    function closeQrResultModal() {
+      const modal = document.getElementById('modal-qr-result');
+      if (modal) modal.classList.add('hidden');
+      isScanCodeDialogOpen = false;
+      showToast('Ready for next scan');
+    }
+    window.closeQrResultModal = closeQrResultModal;
+
+    function copyDecodedQrText() {
+      if (!currentDecodedPayload) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentDecodedPayload).then(() => {
+          onCopySuccess();
+        }).catch(() => fallbackCopy());
+      } else {
+        fallbackCopy();
+      }
+
+      function fallbackCopy() {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = currentDecodedPayload;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          onCopySuccess();
+        } catch(e) {
+          showToast('Failed to copy to clipboard');
+        }
+      }
+
+      function onCopySuccess() {
+        const btnText = document.getElementById('qr-copy-btn-text');
+        if (btnText) btnText.textContent = 'Copied to Clipboard!';
+        showToast('Decoded text copied to clipboard');
+        setTimeout(() => {
+          if (btnText) btnText.textContent = 'Copy to Clipboard';
+        }, 2200);
+      }
+    }
+    window.copyDecodedQrText = copyDecodedQrText;
+
+    function openDecodedQrUrl() {
+      if (!currentDecodedPayload) return;
+      const url = currentDecodedPayload.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        showToast('Not a valid web link');
+        return;
+      }
+
+      // Check native Android bridge first
+      if (window.DocErenaNative && typeof window.DocErenaNative.openExternalUrl === 'function') {
+        try {
+          window.DocErenaNative.openExternalUrl(url);
+          showToast('Opening link in browser...');
+          return;
+        } catch(e) {
+          console.warn("DocErenaNative.openExternalUrl warning:", e);
+        }
+      }
+
+      try {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        showToast('Opening link...');
+      } catch(e) {
+        showToast('Could not open browser');
+      }
+    }
+    window.openDecodedQrUrl = openDecodedQrUrl;
+
+    function triggerQrImageImport() {
+      const input = document.getElementById('qr-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+    window.triggerQrImageImport = triggerQrImageImport;
+
+    function handleQrFileInputChange(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const file = files[0];
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width || 600;
+          canvas.height = img.height || 600;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          try {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            if (typeof jsQR === 'function') {
+              const code = jsQR(imgData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+              if (code && code.data && code.data.trim().length > 0) {
+                handleDecodedCode(code.data.trim());
+                return;
+              }
+            }
+          } catch(err) {
+            console.warn("Image file QR decode error:", err);
+          }
+
+          // Blurry, unreadable, or non-QR image: honest non-crashing feedback
+          showToast('No readable QR code found in selected image');
+        };
+        img.onerror = function() {
+          showToast('Unable to load image for QR decoding');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    window.handleQrFileInputChange = handleQrFileInputChange;
 
     function captureCurrentPage() {
       // Trigger mobile camera shutter haptic sound and flash

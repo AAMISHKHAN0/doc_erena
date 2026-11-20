@@ -184,6 +184,46 @@
       </div>
     </div>
 
+    <!-- Dedicated QR / Code Scanning Viewfinder Overlay -->
+    <div id="camera-qr-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-between p-6 z-25 bg-black/35 pointer-events-none">
+      <!-- Top QR Status Header -->
+      <div class="w-full flex items-center justify-between pointer-events-auto pt-2">
+        <button onclick="closeScanCodeMode()" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all cursor-pointer" title="Back to Document Camera">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="px-4 py-1.5 rounded-full bg-[#7C3AED]/85 backdrop-blur-md border border-[#A855F7]/40 text-white font-bold text-xs tracking-wide shadow-lg flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Scan Code / QR</span>
+        </div>
+        <button onclick="cycleFlash()" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all cursor-pointer" title="Toggle Torch">
+          <svg class="w-5 h-5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>
+      </div>
+
+      <!-- Center Square Reticle (240x240 px) -->
+      <div class="relative w-[240px] h-[240px] flex items-center justify-center my-auto">
+        <!-- 4 Corner Brackets -->
+        <div class="absolute -top-1 -left-1 w-10 h-10 border-t-[4px] border-l-[4px] border-[#C084FC] rounded-tl-xl shadow-[0_0_12px_#A855F7]"></div>
+        <div class="absolute -top-1 -right-1 w-10 h-10 border-t-[4px] border-r-[4px] border-[#C084FC] rounded-tr-xl shadow-[0_0_12px_#A855F7]"></div>
+        <div class="absolute -bottom-1 -left-1 w-10 h-10 border-b-[4px] border-l-[4px] border-[#C084FC] rounded-bl-xl shadow-[0_0_12px_#A855F7]"></div>
+        <div class="absolute -bottom-1 -right-1 w-10 h-10 border-b-[4px] border-r-[4px] border-[#C084FC] rounded-br-xl shadow-[0_0_12px_#A855F7]"></div>
+        
+        <!-- Animated QR Laser Line -->
+        <div class="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-[#C084FC] to-transparent shadow-[0_0_10px_#A855F7] animate-qr-laser"></div>
+      </div>
+
+      <!-- Bottom Hint & Import Image Button -->
+      <div class="flex flex-col items-center space-y-3 pb-4 pointer-events-auto">
+        <div class="px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/15 text-white/90 text-xs font-medium tracking-wide shadow-md">
+          Align QR code within the frame
+        </div>
+        <button onclick="triggerQrImageImport()" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white font-semibold text-xs backdrop-blur-md shadow-md flex items-center space-x-2 transition-all cursor-pointer">
+          <svg class="w-4 h-4 text-[#C084FC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Import QR from Gallery</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Honest Camera Error / Permission Banner -->
     <div id="camera-error-banner" class="hidden absolute top-4 left-4 right-4 p-3.5 bg-amber-950/90 border border-amber-500/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-amber-200 z-35 shadow-xl backdrop-blur-md">
       <div class="flex items-center space-x-3">

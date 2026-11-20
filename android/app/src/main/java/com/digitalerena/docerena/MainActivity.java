@@ -475,5 +475,24 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        @JavascriptInterface
+        public void openExternalUrl(String url) {
+            runOnUiThread(() -> {
+                try {
+                    if (url == null || url.trim().isEmpty()) return;
+                    String safeUrl = url.trim();
+                    if (!safeUrl.startsWith("http://") && !safeUrl.startsWith("https://")) {
+                        safeUrl = "https://" + safeUrl;
+                    }
+                    Uri uri = Uri.parse(safeUrl);
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Cannot open browser: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 }

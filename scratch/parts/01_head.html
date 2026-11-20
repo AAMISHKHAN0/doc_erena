@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#FCFAFD">
   <link rel="icon" type="image/png" href="docerena-logo.png">
   <script src="tailwind.js"></script>
+  <script src="jsqr.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -56,6 +57,16 @@
     /* Edge-to-edge system insets */
     .safe-top { padding-top: max(env(safe-area-inset-top, 0px), 12px); }
     .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); }
+
+    /* QR Code Viewfinder Laser Animation */
+    @keyframes qrLaserMove {
+      0% { top: 6%; opacity: 0.8; }
+      50% { top: 92%; opacity: 1; }
+      100% { top: 6%; opacity: 0.8; }
+    }
+    .animate-qr-laser {
+      animation: qrLaserMove 2.2s ease-in-out infinite;
+    }
 
     /* Full responsive viewport handling */
     @media (max-width: 640px) {
